@@ -16,7 +16,7 @@
 			.then((r) => r.json())
 			.then((data) => {
 				userProjects = data;
-				localStorage.setItem('userProfile', JSON.stringify(data));
+				localStorage.setItem('userProjects', JSON.stringify(data));
 			});
 	});
 </script>
