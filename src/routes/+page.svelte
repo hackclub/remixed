@@ -6,7 +6,7 @@
 		'https://hackatime.hackclub.com/oauth/authorize?' +
 		new URLSearchParams({
 			client_id: env.PUBLIC_HACKATIME_OAUTH_UID as string,
-			redirect_uri: 'http://localhost:5173/auth/callback',
+			redirect_uri: env.PUBLIC_CALLBACK_URL as string,
 			response_type: 'code'
 		}).toString();
 	let selectedIndex: number | null = $state(null);
