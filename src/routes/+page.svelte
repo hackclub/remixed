@@ -1,5 +1,10 @@
 <script lang="ts">
-	let records = $state(['RHYTHM GAMES', 'THE SECOND ONE', 'THE THIRd ONE', 'fourth']);
+	let records = $state([
+		{ title: 'GAME', desc: 'make a fucking rhythm game' },
+		{ title: 'WEBSITE', desc: 'make a fucking website' },
+		{ title: 'MUSIC', desc: 'make some fucking beats' },
+		{ title: 'OTHER', desc: 'anything else related to music' }
+	]);
 	let selectedIndex: number | null = $state(null);
 	const expandAmount = 300;
 
@@ -15,16 +20,23 @@
 <div class="relative mt-16 flex w-screen justify-center">
 	{#each records as record, i}
 		<button
-			class="absolute w-200 h-200 rounded-full border border-blue-500 bg-red-500 flex items-start justify-center pt-4 cursor-pointer transition-all"
+			class="absolute flex h-200 w-200 cursor-pointer flex-col items-center gap-16 rounded-full border border-blue-500 bg-red-500 pt-4 transition-all"
 			style="top: {getRecordTop(i)}px; z-index: {i}"
-			onclick={() => selectedIndex = selectedIndex === i ? null : i}
+			onclick={() => (selectedIndex = selectedIndex === i ? null : i)}
 		>
-			<h1 class="text-white">{record}</h1>
+			<h1 class="text-white">{record.title}</h1>
+			<p>{record.desc}</p>
 		</button>
 	{/each}
 
 	<div
-		class="absolute w-200 bg-stone-800 rounded-b-sm z-50 h-200 transition-all "
+		class="absolute z-50 h-200 w-200 rounded-b-sm bg-stone-800 text-center text-white transition-all"
 		style="top: {getSleeveTop()}px"
-	></div>
+	>
+		<h1 class="m-16 text-5xl italic">Remixed</h1>
+		<p>
+			turn your music taste into a website, create a rhythm game, or ship a music related project!!
+			💖
+		</p>
+	</div>
 </div>
