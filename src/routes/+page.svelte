@@ -1,6 +1,14 @@
 <script lang="ts">
+	import { env } from '$env/dynamic/public';
 	import { records } from '$lib/records';
 
+	let hackatimeOauthUrl =
+		'https://hackatime.hackclub.com/oauth/authorize?' +
+		new URLSearchParams({
+			client_id: env.PUBLIC_HACKATIME_OAUTH_UID as string,
+			redirect_uri: 'http://localhost:5173/auth/callback',
+			response_type: 'code'
+		}).toString();
 	let selectedIndex: number | null = $state(null);
 	const expandAmount = 300;
 
@@ -13,6 +21,7 @@
 	}
 </script>
 
+<a href={hackatimeOauthUrl}>LOGIN</a>
 <div class="relative mt-16 flex w-screen justify-center">
 	{#each records as record, i}
 		<button
