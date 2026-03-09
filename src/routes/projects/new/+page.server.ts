@@ -22,6 +22,6 @@ export const actions = {
 			hackatimeProjects: []
 		});
 
-		redirect(303, '/dashboard');
+		redirect(303, '/projects');
 	}
 } satisfies Actions;

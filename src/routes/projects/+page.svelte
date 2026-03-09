@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Sidebar from '$lib/Sidebar.svelte';
 	import { onMount } from 'svelte';
 
 	let userProjects = $state(null);
@@ -20,9 +21,13 @@
 	});
 </script>
 
-<h1>LIST YOUR PROJECTS</h1>
-{#if userProjects}
-	<pre>
+<Sidebar />
+<div class="ml-40">
+	<h1>LIST YOUR PROJECTS</h1>
+	<a href="/projects/new">Create New</a>
+	{#if userProjects}
+		<pre>
 		<p>{JSON.stringify(userProjects, null, 2)}</p>
 	</pre>
-{/if}
+	{/if}
+</div>
