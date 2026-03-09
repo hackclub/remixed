@@ -1,0 +1,80 @@
+import { pgTable, serial, text, integer, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+
+export const categoryEnum = pgEnum('category', ['GAME', 'WEBSITE', 'MUSIC', 'OTHER']);
+export const shipStatusEnum = pgEnum('ship_status', ['pending', 'approved', 'rejected']);
+export const orderStatusEnum = pgEnum('order_status', ['pending', 'fulfilled']);
+
+export const users = pgTable('users', {
+	id: serial('id').primaryKey(),
+	hackatimeId: text('hackatime_id').notNull().unique(),
+	username: text('username').notNull(),
+	avatarUrl: text('avatar_url'),
+	accessToken: text('access_token').notNull(), // encrypted
+	beatsBalance: integer('beats_balance').notNull().default(0),
+	createdAt: timestamp('created_at').notNull().defaultNow()
+});
+
+export const projects = pgTable('projects', {
+	id: serial('id').primaryKey(),
+	userId: integer('user_id')
+		.notNull()
+		.references(() => users.id),
+	title: text('title').notNull(),
+	description: text('description'),
+	category: categoryEnum('category').notNull(),
+	hackatimeProjectName: text('hackatime_project_name').notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow()
+});
+
+export const ships = pgTable('ships', {
+	id: serial('id').primaryKey(),
+	projectId: integer('project_id')
+		.notNull()
+		.references(() => projects.id),
+	status: shipStatusEnum('status').notNull().default('pending'),
+	submittedAt: timestamp('submitted_at').notNull().defaultNow()
+});
+
+export const reviews = pgTable('reviews', {
+	id: serial('id').primaryKey(),
+	shipId: integer('ship_id')
+		.notNull()
+		.references(() => ships.id),
+	reviewerId: integer('reviewer_id')
+		.notNull()
+		.references(() => users.id),
+	decision: shipStatusEnum('decision').notNull(),
+	note: text('note'),
+	createdAt: timestamp('created_at').notNull().defaultNow()
+});
+
+export const beatsLedger = pgTable('beats_ledger', {
+	id: serial('id').primaryKey(),
+	userId: integer('user_id')
+		.notNull()
+		.references(() => users.id),
+	delta: integer('delta').notNull(),
+	reason: text('reason').notNull(),
+	refId: integer('ref_id'),
+	createdAt: timestamp('created_at').notNull().defaultNow()
+});
+
+export const shopItems = pgTable('shop_items', {
+	id: serial('id').primaryKey(),
+	name: text('name').notNull(),
+	description: text('description'),
+	cost: integer('cost').notNull(),
+	stock: integer('stock')
+});
+
+export const orders = pgTable('orders', {
+	id: serial('id').primaryKey(),
+	userId: integer('user_id')
+		.notNull()
+		.references(() => users.id),
+	itemId: integer('item_id')
+		.notNull()
+		.references(() => shopItems.id),
+	status: orderStatusEnum('status').notNull().default('pending'),
+	createdAt: timestamp('created_at').notNull().defaultNow()
+});
