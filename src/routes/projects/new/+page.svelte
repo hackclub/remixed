@@ -1,4 +1,3 @@
-<h1>MAKE NEW PROJECT</h1>
 <form method="POST" class="m-auto flex w-80 flex-col">
 	<label for="title">Title</label>
 	<input type="text" id="title" name="title" class="bg-gray-300 p-4" required />
