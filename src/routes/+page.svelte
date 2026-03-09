@@ -5,8 +5,8 @@
 	let hackatimeOauthUrl =
 		'https://hackatime.hackclub.com/oauth/authorize?' +
 		new URLSearchParams({
-			client_id: env.PUBLIC_HACKATIME_OAUTH_UID as string,
-			redirect_uri: env.PUBLIC_CALLBACK_URL as string,
+			client_id: env.PUBLIC_HACKATIME_OAUTH_UID!,
+			redirect_uri: env.PUBLIC_CALLBACK_URL!,
 			response_type: 'code'
 		}).toString();
 	let selectedIndex: number | null = $state(null);

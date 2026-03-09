@@ -12,8 +12,8 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 		body: new URLSearchParams({
 			client_id: env.PUBLIC_HACKATIME_OAUTH_UID,
 			client_secret: senv.HACKATIME_OAUTH_SECRET,
-			code: url.searchParams.get('code') as string,
-			redirect_uri: env.PUBLIC_CALLBACK_URL as string,
+			code: url.searchParams.get('code')!,
+			redirect_uri: env.PUBLIC_CALLBACK_URL!,
 			grant_type: 'authorization_code'
 		}).toString()
 	});
