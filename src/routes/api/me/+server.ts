@@ -1,24 +1,25 @@
 import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
+import { db } from '$lib/server/db';
+import { users } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 
-export const GET: RequestHandler = async ({ url, cookies }) => {
-	const slackIdReq = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/me', {
-		headers: { Authorization: `Bearer ${cookies.get('access_token')}` }
-	});
-	const slackId = (await slackIdReq.json()).slack_id;
+export const GET: RequestHandler = async ({ cookies }) => {
+	const userId = cookies.get('session_user_id');
+	if (!userId) return new Response('Unauthorized', { status: 401 });
 
-	const slackInfoReq = await fetch('https://slack.com/api/users.profile.get', {
+	const user = await db.query.users.findFirst({ where: eq(users.id, Number(userId)) });
+	if (!user) return new Response('Unauthorized', { status: 401 });
+
+	const slackProfile = await fetch('https://slack.com/api/users.profile.get', {
 		method: 'POST',
-		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded'
-		},
+		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 		body: new URLSearchParams({
 			token: env.SLACK_BOT_USER_OAUTH_TOKEN,
-			user: slackId
+			user: user.slackId
 		})
-	});
-	const slackInfo = await slackInfoReq.json();
-	// console.log(slackInfo);
-	// return new Response('SHIT');
-	return new Response(JSON.stringify(slackInfo.profile));
+	}).then((r) => r.json());
+	console.log(slackProfile);
+
+	return new Response(JSON.stringify(slackProfile.profile));
 };

@@ -3,8 +3,12 @@
 	let userProfile = $state(null);
 
 	onMount(() => {
-		const cached = localStorage.getItem('userProfile');
-		if (cached) userProfile = JSON.parse(cached);
+		try {
+			const cached = localStorage.getItem('userProfile');
+			if (cached) userProfile = JSON.parse(cached);
+		} catch {
+			localStorage.removeItem('userProfile');
+		}
 
 		fetch('/api/me')
 			.then((r) => r.json())
