@@ -18,6 +18,6 @@
 <h1>dashboard</h1>
 {#if userProfile}
 	<pre>
-	<p>{JSON.stringify(userProfile, null, 2)}</p>
+		<p>{JSON.stringify(userProfile, null, 2)}</p>
 	</pre>
 {/if}

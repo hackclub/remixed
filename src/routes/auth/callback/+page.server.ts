@@ -2,6 +2,8 @@ import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { env } from '$env/dynamic/public';
 import { env as senv } from '$env/dynamic/private';
+import { db } from '$lib/server/db';
+import { users } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async ({ url, cookies }) => {
 	const tokenReq = await fetch('https://hackatime.hackclub.com/oauth/token', {
@@ -17,7 +19,34 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 			grant_type: 'authorization_code'
 		}).toString()
 	});
-	const tokenResp = await tokenReq.json();
-	cookies.set('access_token', tokenResp.access_token, { path: '/' });
+	const { access_token } = await tokenReq.json();
+
+	const hackatimeInfo = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/me', {
+		headers: { Authorization: `Bearer ${access_token}` }
+	}).then((r) => r.json());
+
+	const slackProfile = await fetch('https://slack.com/api/users.profile.get', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+		body: new URLSearchParams({
+			token: senv.SLACK_BOT_USER_OAUTH_TOKEN,
+			user: hackatimeInfo.slack_id
+		})
+	}).then((r) => r.json());
+
+	const hackatimeId = String(hackatimeInfo.id);
+	const username = slackProfile.profile.display_name;
+	const avatarUrl = slackProfile.profile?.image_72 || null;
+
+	const [user] = await db
+		.insert(users)
+		.values({ hackatimeId, username, avatarUrl, accessToken: access_token })
+		.onConflictDoUpdate({
+			target: users.hackatimeId,
+			set: { username, avatarUrl, accessToken: access_token }
+		})
+		.returning({ id: users.id });
+
+	cookies.set('session_user_id', String(user.id), { path: '/' });
 	redirect(307, '/dashboard');
 };
