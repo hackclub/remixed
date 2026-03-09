@@ -10,7 +10,7 @@ export const users = pgTable('users', {
 	username: text('username').notNull(),
 	avatarUrl: text('avatar_url'),
 	accessToken: text('access_token').notNull(), // encrypted
-	beatsBalance: integer('beats_balance').notNull().default(0),
+	notesBalance: integer('notes_balance').notNull().default(0),
 	createdAt: timestamp('created_at').notNull().defaultNow()
 });
 
@@ -48,7 +48,7 @@ export const reviews = pgTable('reviews', {
 	createdAt: timestamp('created_at').notNull().defaultNow()
 });
 
-export const beatsLedger = pgTable('beats_ledger', {
+export const notesLedger = pgTable('notes_ledger', {
 	id: serial('id').primaryKey(),
 	userId: integer('user_id')
 		.notNull()
