@@ -19,7 +19,6 @@ export const GET: RequestHandler = async ({ cookies }) => {
 			user: user.slackId
 		})
 	}).then((r) => r.json());
-	console.log(slackProfile);
 
 	return new Response(JSON.stringify(slackProfile.profile));
 };

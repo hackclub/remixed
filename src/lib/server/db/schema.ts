@@ -22,7 +22,7 @@ export const projects = pgTable('projects', {
 	title: text('title').notNull(),
 	description: text('description'),
 	category: categoryEnum('category').notNull(),
-	hackatimeProjectName: text('hackatime_project_name').notNull(),
+	hackatimeProjects: text('hackatime_projects').array().notNull().default([]),
 	createdAt: timestamp('created_at').notNull().defaultNow()
 });
 
