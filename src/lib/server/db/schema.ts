@@ -6,8 +6,7 @@ export const orderStatusEnum = pgEnum('order_status', ['pending', 'fulfilled']);
 
 export const users = pgTable('users', {
 	id: serial('id').primaryKey(),
-	hackatimeId: text('hackatime_id').notNull().unique(),
-	slackId: text('slack_id'),
+	slackId: text('slack_id').notNull().unique(),
 	username: text('username').notNull(),
 	avatarUrl: text('avatar_url'),
 	accessToken: text('access_token').notNull(), // encrypted
