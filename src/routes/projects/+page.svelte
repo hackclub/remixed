@@ -27,7 +27,7 @@
 	<a href="/projects/new">Create New</a>
 	{#if userProjects}
 		<pre>
-		<p>{JSON.stringify(userProjects, null, 2)}</p>
-	</pre>
+			<p>{JSON.stringify(userProjects, null, 2)}</p>
+		</pre>
 	{/if}
 </div>
