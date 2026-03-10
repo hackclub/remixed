@@ -35,7 +35,7 @@
 				</p>
 			</div>
 			<div>
-				<h1 class="mb-8 font-nikkyou text-5xl text-primary">{data.project?.title}</h1>
+				<h1 class="mb-4 font-nikkyou text-5xl text-primary">{data.project?.title}</h1>
 				{#if data.project?.description!.trim().length != 0}
 					<p class="font-zcool text-text">{data.project?.description}</p>
 				{:else}
@@ -44,18 +44,24 @@
 			</div>
 		</div>
 		<div class="mt-8 flex gap-8">
-			<a
-				href="github.com"
-				class="w-full rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
-			>
-				Repository
-			</a>
-			<a
-				href="github.com"
-				class="w-full rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
-			>
-				Demo
-			</a>
+			<!-- TODO: add like a play icon like its a play button on a boombox or smth -->
+			{#if data.project?.githubUrl}
+				<a
+					href={data.project.githubUrl}
+					class="w-full rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+				>
+					Repository
+				</a>
+			{/if}
+
+			{#if data.project?.demoUrl}
+				<a
+					href={data.project.demoUrl}
+					class="w-full rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+				>
+					Demo
+				</a>
+			{/if}
 		</div>
 	</main>
 </div>
