@@ -19,23 +19,43 @@
 </script>
 
 <Sidebar />
-<div class="mt-8 mr-8 ml-40">
-	<div class="flex flex-row justify-center gap-8">
-		<!-- TODO: make the cover art like balatro or smth -->
-		<div class="">
-			<img src="/gup.webp" alt="cover art" class="mb-4 aspect-square h-80 w-80 object-cover" />
-			<p class="text-center font-gothic text-xl text-primary">{hoursText}</p>
-			<p class="text-center font-gothic text-sm text-secondary italic">
-				{data.project?.category.replaceAll('_', ' ')}
-			</p>
+<div class="pt-8 pr-8 pl-40">
+	<main class="mx-auto w-200">
+		<div class="flex w-full flex-row justify-evenly gap-8">
+			<!-- TODO: make the cover art like balatro or smth -->
+			<div>
+				<img
+					src="/gup.webp"
+					alt="cover art"
+					class="mb-4 aspect-square h-80 min-w-80 object-cover"
+				/>
+				<p class="text-center font-gothic text-xl text-primary">{hoursText}</p>
+				<p class="text-center font-gothic text-sm text-secondary italic">
+					{data.project?.category.replaceAll('_', ' ')}
+				</p>
+			</div>
+			<div>
+				<h1 class="mb-8 font-nikkyou text-5xl text-primary">{data.project?.title}</h1>
+				{#if data.project?.description!.trim().length != 0}
+					<p class="font-zcool text-text">{data.project?.description}</p>
+				{:else}
+					<p class="text-center font-zcool text-xl text-secondary">No Description Provided</p>
+				{/if}
+			</div>
 		</div>
-		<div class="w-80">
-			<h1 class="mb-8 text-center font-nikkyou text-5xl text-primary">{data.project?.title}</h1>
-			{#if data.project?.description!.trim().length != 0}
-				<p class="font-zcool text-text">{data.project?.description}</p>
-			{:else}
-				<p class="text-center font-zcool text-xl text-secondary">No Description Provided</p>
-			{/if}
+		<div class="mt-8 flex gap-8">
+			<a
+				href="github.com"
+				class="w-full rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+			>
+				Repository
+			</a>
+			<a
+				href="github.com"
+				class="w-full rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+			>
+				Demo
+			</a>
 		</div>
-	</div>
+	</main>
 </div>
