@@ -30,7 +30,12 @@ export const actions = {
 		const data = await request.formData();
 		const title = data.get('title') as string;
 		const description = data.get('desc') as string | null;
-		const category = (data.get('category') ?? 'OTHER') as 'GAME' | 'WEBSITE' | 'MUSIC' | 'OTHER';
+		const category = (data.get('category') ?? 'OTHER') as
+			| 'GAME'
+			| 'WEBSITE'
+			| 'DESKTOP_APP'
+			| 'CLI'
+			| 'OTHER';
 		const hackatimeProjects = data.getAll('hackatime_projects') as string[];
 		console.log('FUCK', hackatimeProjects);
 

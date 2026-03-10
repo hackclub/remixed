@@ -1,6 +1,6 @@
 import { pgTable, serial, text, integer, timestamp, pgEnum } from 'drizzle-orm/pg-core';
 
-export const categoryEnum = pgEnum('category', ['GAME', 'WEBSITE', 'MUSIC', 'OTHER']);
+export const categoryEnum = pgEnum('category', ['GAME', 'WEBSITE', 'DESKTOP_APP', 'CLI', 'OTHER']);
 export const shipStatusEnum = pgEnum('ship_status', ['pending', 'approved', 'rejected']);
 export const orderStatusEnum = pgEnum('order_status', ['pending', 'fulfilled']);
 
@@ -21,6 +21,7 @@ export const projects = pgTable('projects', {
 		.references(() => users.id),
 	title: text('title').notNull(),
 	description: text('description'),
+	coverArt: text('cover_art_url'),
 	category: categoryEnum('category').notNull(),
 	hackatimeProjects: text('hackatime_projects').array().notNull().default([]),
 	createdAt: timestamp('created_at').notNull().defaultNow()

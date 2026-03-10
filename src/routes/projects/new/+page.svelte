@@ -30,7 +30,8 @@
 	>
 		<option value="GAME">Game</option>
 		<option value="WEBSITE">Website</option>
-		<option value="MUSIC">Music</option>
+		<option value="DESKTOP_APP">Desktop App</option>
+		<option value="CLI">CLI</option>
 		<option value="OTHER">Other</option>
 	</select>
 	<label class="mt-4 font-nikkyou text-2xl text-primary" for="category">Hackatime Projects</label>

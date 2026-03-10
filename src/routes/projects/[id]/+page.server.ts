@@ -7,11 +7,9 @@ import { decrypt } from '$lib/server/crypto';
 export const load: PageServerLoad = async ({ locals, params }) => {
 	if (!locals.user) return new Response('Unauthorized', { status: 401 });
 	const accessToken = decrypt(locals.user.accessToken);
+	const projectId = Number(params.id);
 
-	const [project] = await db
-		.select()
-		.from(projects)
-		.where(eq(Number(params.id), projects.id));
+	const [project] = await db.select().from(projects).where(eq(projectId, projects.id));
 	let hackatimeSeconds: null | number = null;
 	if (project.hackatimeProjects.length != 0) {
 		const hackatimeUrl =
