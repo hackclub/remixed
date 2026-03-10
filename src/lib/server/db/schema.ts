@@ -24,6 +24,8 @@ export const projects = pgTable('projects', {
 	coverArt: text('cover_art_url'),
 	category: categoryEnum('category').notNull(),
 	hackatimeProjects: text('hackatime_projects').array().notNull().default([]),
+	githubUrl: text('github_url'),
+	demoUrl: text('demo_url'),
 	createdAt: timestamp('created_at').notNull().defaultNow()
 });
 
