@@ -1,1 +1,22 @@
 @import 'tailwindcss';
+
+@theme {
+  --font-gothic: "GothicOne", sans-serif;
+  --font-nikkyou: "Nikkyou", sans-serif;
+  --font-zcool: "ZCOOL", sans-serif;
+}
+
+@font-face {
+  src: url("/fonts/DelaGothicOne-Regular.ttf");
+  font-family: "GothicOne";
+}
+
+@font-face {
+  src: url("/fonts/NikkyouSans-B6aV.ttf");
+  font-family: "Nikkyou";
+}
+
+@font-face {
+  src: url("/fonts/ZCOOLKuaiLe-Regular.ttf");
+  font-family: "ZCOOL";
+}
