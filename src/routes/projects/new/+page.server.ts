@@ -3,6 +3,7 @@ import { projects } from '$lib/server/db/schema';
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { decrypt } from '$lib/server/crypto';
+import type { ProjectCategory } from '$lib';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) return new Response('Unauthorized', { status: 401 });
@@ -30,12 +31,7 @@ export const actions = {
 		const data = await request.formData();
 		const title = data.get('title') as string;
 		const description = data.get('desc') as string | null;
-		const category = (data.get('category') ?? 'OTHER') as
-			| 'GAME'
-			| 'WEBSITE'
-			| 'DESKTOP_APP'
-			| 'CLI'
-			| 'OTHER';
+		const category = (data.get('category') ?? 'OTHER') as ProjectCategory;
 		const hackatimeProjects = data.getAll('hackatime_projects') as string[];
 		console.log('FUCK', hackatimeProjects);
 

@@ -3,8 +3,13 @@
 	import Sidebar from '$lib/Sidebar.svelte';
 	import type { PageProps } from './$types';
 
-	let hoursText = $state('');
 	let { data }: PageProps = $props();
+
+	let hoursText: string = $state('');
+	let editing: boolean = $state(false);
+	let draft = $state({ ...data.project });
+
+	const isOwner = data.currentUserId == data.project?.userId;
 
 	function formatHoursText() {
 		if (data.hackatimeSeconds == null) return;
@@ -13,6 +18,11 @@
 		const minuteTextRaw = String(minutes - hours * 60);
 		const minuteText = minuteTextRaw.slice(0, minuteTextRaw.indexOf('.'));
 		hoursText = `${hours}h ${minuteText}m`;
+	}
+
+	function cancelEdit() {
+		draft = { ...data.project };
+		editing = false;
 	}
 
 	formatHoursText();
@@ -34,12 +44,25 @@
 					{data.project?.category.replaceAll('_', ' ')}
 				</p>
 			</div>
-			<div>
-				<h1 class="mb-4 font-nikkyou text-5xl text-primary">{data.project?.title}</h1>
-				{#if data.project?.description!.trim().length != 0}
-					<p class="font-zcool text-text">{data.project?.description}</p>
+			<div class="w-md">
+				{#if editing}
+					<input
+						type="text"
+						bind:value={draft.title}
+						class="mb-4 font-nikkyou text-5xl text-primary"
+					/>
+					<textarea
+						type="text"
+						bind:value={draft.description}
+						class="h-80 w-full font-zcool text-text"
+					></textarea>
 				{:else}
-					<p class="text-center font-zcool text-xl text-secondary">No Description Provided</p>
+					<h1 class="mb-4 font-nikkyou text-5xl text-primary">{data.project?.title}</h1>
+					{#if data.project?.description!.trim().length != 0}
+						<p class="w-full font-zcool text-text">{data.project?.description}</p>
+					{:else}
+						<p class="text-center font-zcool text-xl text-secondary">No Description Provided</p>
+					{/if}
 				{/if}
 			</div>
 		</div>
@@ -48,7 +71,7 @@
 			{#if data.project?.githubUrl}
 				<a
 					href={data.project.githubUrl}
-					class="w-full rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+					class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
 				>
 					Repository
 				</a>
@@ -57,10 +80,32 @@
 			{#if data.project?.demoUrl}
 				<a
 					href={data.project.demoUrl}
-					class="w-full rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+					class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
 				>
 					Demo
 				</a>
+			{/if}
+
+			{#if !editing}
+				<button
+					class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+					onclick={() => (editing = true)}
+				>
+					Edit
+				</button>
+			{:else}
+				<button
+					class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+					onclick={() => (editing = false)}
+				>
+					Cancel
+				</button>
+				<button
+					class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+					formaction="?/update"
+				>
+					Submit
+				</button>
 			{/if}
 		</div>
 	</main>
