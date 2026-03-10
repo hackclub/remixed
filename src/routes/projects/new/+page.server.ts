@@ -31,6 +31,8 @@ export const actions = {
 		const title = data.get('title') as string;
 		const description = data.get('desc') as string | null;
 		const category = (data.get('category') ?? 'OTHER') as 'GAME' | 'WEBSITE' | 'MUSIC' | 'OTHER';
+		const hackatimeProjects = data.getAll('hackatime_projects') as string[];
+		console.log('FUCK', hackatimeProjects);
 
 		if (!title) return fail(400, { error: 'Missing required fields' });
 
@@ -39,7 +41,7 @@ export const actions = {
 			title,
 			description,
 			category,
-			hackatimeProjects: []
+			hackatimeProjects
 		});
 
 		redirect(303, '/projects');
