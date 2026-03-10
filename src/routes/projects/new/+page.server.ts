@@ -1,7 +1,27 @@
 import { db } from '$lib/server/db';
 import { projects } from '$lib/server/db/schema';
 import { redirect, fail } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
+import { decrypt } from '$lib/server/crypto';
+
+export const load: PageServerLoad = async ({ locals }) => {
+	if (!locals.user) return new Response('Unauthorized', { status: 401 });
+	const accessToken = decrypt(locals.user.accessToken);
+
+	const hackatimeProjects = await fetch(
+		'https://hackatime.hackclub.com/api/v1/authenticated/projects?' +
+			new URLSearchParams({ start: '2026-03-07' }),
+		{
+			method: 'GET',
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				'Content-Type': 'application/x-www-form-urlencoded'
+			}
+		}
+	).then((r) => r.json());
+
+	return hackatimeProjects;
+};
 
 export const actions = {
 	default: async ({ locals, request }) => {

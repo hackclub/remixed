@@ -1,5 +1,9 @@
-<script>
+<script lang="ts">
 	import Sidebar from '$lib/Sidebar.svelte';
+	import { onMount } from 'svelte';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
 </script>
 
 <Sidebar />
@@ -29,7 +33,18 @@
 		<option value="MUSIC">Music</option>
 		<option value="OTHER">Other</option>
 	</select>
-	<p>todo: hackatime</p>
+	<label class="mt-4 font-nikkyou text-2xl text-primary" for="category">Hackatime Projects</label>
+	<select
+		multiple
+		name="hackatime_projects"
+		id="hackatime"
+		class="rounded-md bg-accent p-4 text-center font-gothic font-bold text-text ring-primary focus:ring-2 focus:outline-none"
+	>
+		{#each data.projects as proj}
+			<option value={proj.name}>{proj.name}</option>
+		{/each}
+	</select>
+	<sub class="mt-2 text-center font-zcool text-text">Ctrl+Click to select multiple</sub>
 
 	<input
 		type="submit"
