@@ -38,11 +38,11 @@
 				rotate: {i == hoveredIndex ? 45 : -90}deg;
 				"
 			href={record.route}
-			class="absolute flex h-30 w-30 -rotate-90 rounded-full border-2 border-secondary bg-red-500 transition-all duration-200 hover:rotate-45"
+			class="absolute flex size-36 -rotate-90 rounded-full border-2 border-secondary bg-red-500 transition-all duration-200 hover:rotate-45"
 			onmouseenter={() => (hoveredIndex = i)}
 			onmouseleave={() => (hoveredIndex = currentPageIndex)}
 		>
-			<h1 class="mt-4 w-full text-center font-gothic">{record.name}</h1>
+			<h1 class="mt-6 w-full text-center font-gothic">{record.name}</h1>
 		</a>
 	{/each}
 </div>
