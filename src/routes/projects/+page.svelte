@@ -30,7 +30,7 @@
 
 	<div class="flex flex-wrap gap-6">
 		{#each userProjects as project}
-			<div class="relative">
+			<a class="relative transition hover:scale-105" href="/projects/{project.id}">
 				<img src="/cassette.png" alt="cassette" />
 				<div
 					class="absolute top-10 left-1/2 flex h-14 w-80 -translate-x-1/2 items-center justify-center"
@@ -44,7 +44,7 @@
 				>
 					{project.description}
 				</p>
-			</div>
+			</a>
 		{/each}
 	</div>
 </div>
