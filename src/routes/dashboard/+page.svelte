@@ -21,7 +21,7 @@
 </script>
 
 <Sidebar />
-<div class="ml-40">
+<div class="ml-40 text-text">
 	{#if userProfile}
 		<pre>
 		<p>{JSON.stringify(userProfile, null, 2)}</p>
