@@ -6,7 +6,8 @@
 		{ name: 'Dashboard', route: '/dashboard' },
 		{ name: 'Projects', route: '/projects' },
 		{ name: 'Discover', route: '/discover' },
-		{ name: 'Shop', route: '/shop' }
+		{ name: 'Shop', route: '/shop' },
+		{ name: 'Log Out', route: '/auth/logout' }
 	];
 
 	let currentPageIndex: number = $state(
