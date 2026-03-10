@@ -38,6 +38,7 @@
 				rotate: {i == hoveredIndex ? 45 : -90}deg;
 				"
 			href={record.route}
+			data-sveltekit-preload-data={record.route != '/auth/logout' ? '' : 'off'}
 			class="absolute flex size-36 -rotate-90 rounded-full border-2 border-secondary bg-red-500 transition-all duration-200 hover:rotate-45"
 			onmouseenter={() => (hoveredIndex = i)}
 			onmouseleave={() => (hoveredIndex = currentPageIndex)}

@@ -5,3 +5,4 @@ export const load: PageServerLoad = async ({ cookies }) => {
 	cookies.delete('session_user_id', { path: '/' });
 	redirect(302, '/');
 };
+export const prerender = false;
