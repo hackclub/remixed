@@ -33,16 +33,16 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			);
 	}
 
-	const hackatimeProjects = await getProjects(locals.user.id, accessToken);
+	// const hackatimeProjects = await getProjects(locals.user.id, accessToken);
 
 	return {
 		project,
 		hackatimeSeconds,
-		currentUserId: locals.user.id,
-		hackatimeProjects: hackatimeProjects.map((p: any) => ({
-			name: p.name,
-			selectable: p.claimedBy == null || p.claimedBy == projectId
-		}))
+		currentUserId: locals.user.id
+		// hackatimeProjects: hackatimeProjects.map((p: any) => ({
+		// 	name: p.name,
+		// 	selectable: p.claimedBy == null || p.claimedBy == projectId
+		// }))
 	};
 };
 
@@ -56,7 +56,6 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		console.log(data);
-		return;
 		const title = data.get('title') as string;
 		const description = data.get('description') as string;
 		const coverArt = data.get('coverArt') as string | null;

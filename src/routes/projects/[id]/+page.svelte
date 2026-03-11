@@ -5,6 +5,7 @@
 
 	let { data }: PageProps = $props();
 
+	let hackatimeProjects: null | any[] = $state(null);
 	let hoursText: string = $state('');
 	let editing: boolean = $state(false);
 	let draft = $state({ ...data.project });
@@ -20,6 +21,15 @@
 		hoursText = `${hours}h ${minuteText}m`;
 	}
 
+	function startEdit() {
+		editing = true;
+		if (hackatimeProjects == null) {
+			fetch('/api/hackatime')
+				.then((resp) => resp.json())
+				.then((r) => (hackatimeProjects = r));
+		}
+	}
+
 	function cancelEdit() {
 		draft = { ...data.project };
 		editing = false;
@@ -29,8 +39,8 @@
 </script>
 
 <Sidebar />
-<div class="pt-8 pr-8 pl-40">
-	<main class="mx-auto w-200">
+<div class="h-screen pt-8 pr-8 pl-40">
+	<main class="mx-auto flex h-full w-200 items-center">
 		<form method="POST" action="?/update">
 			<div class="flex w-full flex-row justify-evenly gap-8">
 				<!-- TODO: make the cover art like balatro or smth -->
@@ -62,14 +72,19 @@
 							name="hackatimeProjects"
 							class="w-full rounded-md bg-accent p-4 text-center font-gothic font-bold text-text ring-primary focus:ring-2 focus:outline-none"
 						>
-							{#each data.hackatimeProjects as proj}
-								{#if proj.selectable}
-									<option value={proj.name}>{proj.name}</option>
+							{#each hackatimeProjects as proj}
+								{#if proj.claimedBy == null || proj.claimedBy == data.project!.id}
+									<option selected={proj.claimedBy == data.project!.id} value={proj.name}>
+										{proj.name}
+									</option>
 								{:else}
 									<option disabled value={proj.name}>{proj.name}</option>
 								{/if}
 							{/each}
 						</select>
+						<sub class="mt-2 mb-4 block text-center font-zcool text-text"
+							>Ctrl+Click to select multiple</sub
+						>
 					{:else}
 						<p class="text-center font-gothic text-xl text-primary">{hoursText}</p>
 					{/if}
@@ -77,6 +92,7 @@
 						<select
 							name="category"
 							id="category"
+							bind:value={draft.category}
 							class="w-full rounded-md bg-accent p-2 text-center font-gothic text-sm font-bold text-text ring-primary focus:ring-2 focus:outline-none"
 						>
 							<option value="GAME">Game</option>
@@ -114,9 +130,17 @@
 					{/if}
 				</div>
 			</div>
-			<div class="mt-8 flex gap-8">
+			<div class="mt-8 flex gap-4">
 				<!-- TODO: add like a play icon like its a play button on a boombox or smth -->
-				{#if data.project?.githubUrl}
+				{#if editing}
+					<input
+						placeholder="Github URL"
+						type="text"
+						name="githubUrl"
+						bind:value={draft.githubUrl}
+						class="w-full rounded-md bg-accent px-4 py-2 font-mono text-xs text-text ring-primary outline-none focus:ring-2"
+					/>
+				{:else if data.project?.githubUrl}
 					<a
 						href={data.project.githubUrl}
 						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
@@ -125,7 +149,15 @@
 					</a>
 				{/if}
 
-				{#if data.project?.demoUrl}
+				{#if editing}
+					<input
+						placeholder="Demo URL"
+						type="text"
+						name="demoUrl"
+						bind:value={draft.demoUrl}
+						class="w-full rounded-md bg-accent px-4 py-2 font-mono text-xs text-text ring-primary outline-none focus:ring-2"
+					/>
+				{:else if data.project?.demoUrl}
 					<a
 						href={data.project.demoUrl}
 						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
@@ -137,18 +169,20 @@
 				{#if !editing}
 					<button
 						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
-						onclick={() => (editing = true)}
+						onclick={startEdit}
 					>
 						Edit
 					</button>
 				{:else}
 					<button
+						type="button"
 						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
-						onclick={() => (editing = false)}
+						onclick={cancelEdit}
 					>
 						Cancel
 					</button>
 					<button
+						type="submit"
 						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
 						formaction="?/update"
 					>
