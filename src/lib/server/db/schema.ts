@@ -24,6 +24,7 @@ export const projects = pgTable('projects', {
 	coverArt: text('cover_art_url'),
 	category: categoryEnum('category').notNull(),
 	hackatimeProjects: text('hackatime_projects').array().notNull().default([]),
+	hackatimeSeconds: integer('hackatime_seconds'),
 	githubUrl: text('github_url'),
 	demoUrl: text('demo_url'),
 	createdAt: timestamp('created_at').notNull().defaultNow()
@@ -34,6 +35,7 @@ export const ships = pgTable('ships', {
 	projectId: integer('project_id')
 		.notNull()
 		.references(() => projects.id),
+	hours: integer('hours').notNull(),
 	status: shipStatusEnum('status').notNull().default('pending'),
 	submittedAt: timestamp('submitted_at').notNull().defaultNow()
 });

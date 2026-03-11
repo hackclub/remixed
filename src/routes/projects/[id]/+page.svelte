@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CassetteProject from '$lib/CassetteProject.svelte';
 	import Sidebar from '$lib/Sidebar.svelte';
+	import { onMount } from 'svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -12,9 +13,8 @@
 
 	const isOwner = data.currentUserId == data.project?.userId;
 
-	function formatHoursText() {
-		if (data.hackatimeSeconds == null) return;
-		const minutes = data.hackatimeSeconds! / 60.0;
+	function formatHoursText(seconds: number) {
+		const minutes = seconds / 60.0;
 		const hours = Math.floor(minutes / 60.0);
 		const minuteTextRaw = String(minutes - hours * 60);
 		const minuteText = minuteTextRaw.slice(0, minuteTextRaw.indexOf('.'));
@@ -35,7 +35,17 @@
 		editing = false;
 	}
 
-	formatHoursText();
+	onMount(() => {
+		if (isOwner) {
+			fetch(`/api/project_time?id=${data.project!.id}`)
+				.then((resp) => resp.text())
+				.then((text) => formatHoursText(text));
+		}
+	});
+
+	if (data.project!.hackatimeSeconds) {
+		formatHoursText(data.project!.hackatimeSeconds);
+	}
 </script>
 
 <Sidebar />
