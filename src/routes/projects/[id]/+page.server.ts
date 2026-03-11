@@ -18,7 +18,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		const hackatimeUrl =
 			'https://hackatime.hackclub.com/api/v1/authenticated/projects?' +
 			new URLSearchParams({ start: '2026-03-07', projects: project.hackatimeProjects.join(',') });
-		console.log(hackatimeUrl);
 		hackatimeSeconds = await fetch(hackatimeUrl, {
 			method: 'GET',
 			headers: {
@@ -35,7 +34,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	}
 
 	const hackatimeProjects = await getProjects(locals.user.id, accessToken);
-	console.log(hackatimeProjects);
 
 	return {
 		project,

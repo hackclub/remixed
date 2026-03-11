@@ -36,7 +36,8 @@
 				<!-- TODO: make the cover art like balatro or smth -->
 				<div>
 					<img
-						src={data.project?.coverArt ?? '/gup.webp'}
+						src={draft?.coverArt ?? '/404.jpg'}
+						onerror={(e: any) => (e.currentTarget.src = '/404.jpg')}
 						alt="cover art"
 						class="mb-4 aspect-square h-80 min-w-80 object-cover"
 					/>
@@ -72,9 +73,23 @@
 					{:else}
 						<p class="text-center font-gothic text-xl text-primary">{hoursText}</p>
 					{/if}
-					<p class="text-center font-gothic text-sm text-secondary italic">
-						{data.project?.category.replaceAll('_', ' ')}
-					</p>
+					{#if editing}
+						<select
+							name="category"
+							id="category"
+							class="w-full rounded-md bg-accent p-2 text-center font-gothic text-sm font-bold text-text ring-primary focus:ring-2 focus:outline-none"
+						>
+							<option value="GAME">Game</option>
+							<option value="WEBSITE">Website</option>
+							<option value="DESKTOP_APP">Desktop App</option>
+							<option value="CLI">CLI</option>
+							<option value="OTHER">Other</option>
+						</select>
+					{:else}
+						<p class="text-center font-gothic text-sm text-secondary italic">
+							{data.project?.category.replaceAll('_', ' ')}
+						</p>
+					{/if}
 				</div>
 				<div class="w-md">
 					{#if editing}
