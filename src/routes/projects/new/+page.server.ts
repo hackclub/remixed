@@ -4,12 +4,20 @@ import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { decrypt } from '$lib/server/crypto';
 import type { ProjectCategory } from '$lib';
+import { eq } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) return new Response('Unauthorized', { status: 401 });
 	const accessToken = decrypt(locals.user.accessToken);
 
-	const hackatimeProjects = await fetch(
+	const claimedProjects = (
+		await db
+			.select({ hackatimeProjects: projects.hackatimeProjects })
+			.from(projects)
+			.where(eq(projects.userId, locals.user.id))
+	).flatMap((p) => p.hackatimeProjects);
+
+	const allHackatimeProjects = await fetch(
 		'https://hackatime.hackclub.com/api/v1/authenticated/projects?' +
 			new URLSearchParams({ start: '2026-03-07' }),
 		{
@@ -20,8 +28,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 			}
 		}
 	).then((r) => r.json());
+	console.log(allHackatimeProjects);
 
-	return hackatimeProjects;
+	return {
+		projects: allHackatimeProjects.projects.map((proj: any) => {
+			return { name: proj.name, claimed: claimedProjects.includes(proj.name) };
+		})
+	};
 };
 
 export const actions = {

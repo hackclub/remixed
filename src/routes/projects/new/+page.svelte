@@ -42,7 +42,11 @@
 		class="rounded-md bg-accent p-4 text-center font-gothic font-bold text-text ring-primary focus:ring-2 focus:outline-none"
 	>
 		{#each data.projects as proj}
-			<option value={proj.name}>{proj.name}</option>
+			{#if proj.claimed}
+				<option disabled value={proj.name}>{proj.name}</option>
+			{:else}
+				<option value={proj.name}>{proj.name}</option>
+			{/if}
 		{/each}
 	</select>
 	<sub class="mt-2 text-center font-zcool text-text">Ctrl+Click to select multiple</sub>
