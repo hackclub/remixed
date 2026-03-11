@@ -48,6 +48,8 @@ export const actions: Actions = {
 		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
 
 		const data = await request.formData();
+		console.log(data);
+		return;
 		const title = data.get('title') as string;
 		const description = data.get('description') as string;
 		const coverArt = data.get('coverArt') as string | null;
