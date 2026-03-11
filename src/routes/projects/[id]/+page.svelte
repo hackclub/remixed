@@ -59,8 +59,15 @@
 						<select
 							multiple
 							name="hackatimeProjects"
-							class="rounded-md bg-accent p-4 text-center font-gothic font-bold text-text ring-primary focus:ring-2 focus:outline-none"
+							class="w-full rounded-md bg-accent p-4 text-center font-gothic font-bold text-text ring-primary focus:ring-2 focus:outline-none"
 						>
+							{#each data.hackatimeProjects as proj}
+								{#if proj.selectable}
+									<option value={proj.name}>{proj.name}</option>
+								{:else}
+									<option disabled value={proj.name}>{proj.name}</option>
+								{/if}
+							{/each}
 						</select>
 					{:else}
 						<p class="text-center font-gothic text-xl text-primary">{hoursText}</p>

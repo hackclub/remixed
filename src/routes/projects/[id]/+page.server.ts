@@ -5,6 +5,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { decrypt } from '$lib/server/crypto';
 import { fail } from '@sveltejs/kit';
 import type { ProjectCategory } from '$lib';
+import { getProjects } from '$lib/server/hackatimeProjects';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	if (!locals.user) return new Response('Unauthorized', { status: 401 });
@@ -32,10 +33,18 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 					.reduce((a: number, b: number) => a + b, 0)
 			);
 	}
+
+	const hackatimeProjects = await getProjects(locals.user.id, accessToken);
+	console.log(hackatimeProjects);
+
 	return {
 		project,
 		hackatimeSeconds,
-		currentUserId: locals.user.id
+		currentUserId: locals.user.id,
+		hackatimeProjects: hackatimeProjects.map((p: any) => ({
+			name: p.name,
+			selectable: p.claimedBy == null || p.claimedBy == projectId
+		}))
 	};
 };
 
