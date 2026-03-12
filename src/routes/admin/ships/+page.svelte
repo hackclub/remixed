@@ -6,15 +6,16 @@
 	let normalPayout = $state(0);
 	let lowEffortPayout = $state(0);
 	let highEffortPayout = $state(0);
+	let rejectShipId = $state('');
 </script>
 
 <Sidebar />
 <div
 	class="fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-md bg-accent p-8 text-text shadow-md"
 	popover
-	id="confirm-accept"
+	id="confirm-approve"
 >
-	<h1 class="mb-8 text-center font-nikkyou text-3xl">ACCEPT</h1>
+	<h1 class="mb-8 text-center font-nikkyou text-3xl">APPROVE</h1>
 	<button
 		class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-white"
 		>Normal ({normalPayout})</button
@@ -29,24 +30,31 @@
 	>
 	<button
 		class="w-full cursor-pointer rounded-md bg-text px-4 py-4 text-center font-gothic text-xl text-secondary"
-		popovertarget="confirm-accept">Cancel</button
+		popovertarget="confirm-approve">Cancel</button
 	>
 </div>
+
 <div
 	class="fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-md bg-accent p-8 text-text shadow-md"
 	popover
 	id="confirm-reject"
 >
 	<h1 class="mb-8 text-center font-nikkyou text-3xl">REJECT</h1>
-	<button
-		class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-white"
-		>Reject</button
-	>
-	<button
-		class="w-full cursor-pointer rounded-md bg-text px-4 py-4 text-center font-gothic text-xl text-secondary"
-		popovertarget="confirm-reject">Cancel</button
-	>
+	<form action="?/reject" method="POST">
+		<input type="hidden" name="shipId" value={rejectShipId} />
+		<button
+			type="submit"
+			class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-white"
+			>Reject</button
+		>
+		<button
+			type="button"
+			class="w-full cursor-pointer rounded-md bg-text px-4 py-4 text-center font-gothic text-xl text-secondary"
+			popovertarget="confirm-reject">Cancel</button
+		>
+	</form>
 </div>
+
 <div class="pt-10 pr-10 pl-40">
 	<table class="w-full">
 		<thead class="font-gothic text-primary">
@@ -87,10 +95,12 @@
 					<td>
 						<button
 							class="cursor-pointer bg-green-500 px-4 text-white"
-							popovertarget="confirm-accept">Accept</button
+							popovertarget="confirm-approve">Approve</button
 						>
-						<button class="cursor-pointer bg-primary px-4 text-white" popovertarget="confirm-reject"
-							>Reject</button
+						<button
+							class="cursor-pointer bg-primary px-4 text-white"
+							popovertarget="confirm-reject"
+							onclick={() => (rejectShipId = shipInfo.ship.id)}>Reject</button
 						>
 					</td>
 				</tr>

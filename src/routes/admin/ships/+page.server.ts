@@ -1,6 +1,6 @@
 import { decrypt } from '$lib/server/crypto';
 import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { projects, ships, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -22,4 +22,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	return {
 		ships: projectShips
 	};
+};
+
+export const actions: Actions = {
+	reject: async ({ request }) => {
+		const data = await request.formData();
+		const shipId = Number(data.get('shipId'));
+		await db.update(ships).set({ status: 'REJECTED' }).where(eq(ships.id, shipId));
+	}
 };
