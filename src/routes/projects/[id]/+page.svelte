@@ -10,6 +10,7 @@
 	let hackatimeProjects: null | any[] = $state(null);
 	let hoursText: string = $state('LOADING');
 	let editing: boolean = $state(false);
+
 	let draft = $state({ ...data.project });
 
 	const isOwner = data.currentUserId == data.project?.userId;

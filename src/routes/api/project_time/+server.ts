@@ -9,7 +9,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const accessToken = decrypt(locals.user.accessToken);
 
 	const projectId = Number(url.searchParams.get('id'));
-	const [project] = await db.select().from(projects).where(eq(projectId, projects.id));
+	const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
 
 	let hackatimeSeconds: null | number = null;
 	if (project.hackatimeProjects.length != 0) {
@@ -31,6 +31,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			);
 	}
 
-	await db.update(projects).set({ hackatimeSeconds }).where(eq(projectId, projects.id));
+	await db.update(projects).set({ hackatimeSeconds }).where(eq(projects.id, projectId));
 	return new Response(hackatimeSeconds?.toString());
 };

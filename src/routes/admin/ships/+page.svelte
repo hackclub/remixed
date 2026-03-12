@@ -110,15 +110,15 @@
 					<td>
 						<a href={shipInfo.project.demoUrl} target="_blank" rel="noopener noreferrer"> Demo </a>
 					</td>
-					<td title={shipInfo.project.hackatimeProjects}>
+					<td title={JSON.stringify(shipInfo.project.hackatimeProjects)}>
 						{formatHours(shipInfo.ship.seconds)}
 					</td>
 					<td>
 						<button
 							class="cursor-pointer bg-green-500 px-4 text-white"
 							onclick={() => {
-								activeUserId = shipInfo.user.id;
-								activeShipId = shipInfo.ship.id;
+								activeUserId = String(shipInfo.user.id);
+								activeShipId = String(shipInfo.ship.id);
 								currentSeconds = shipInfo.ship.seconds;
 							}}
 							popovertarget="confirm-approve">Approve</button
@@ -126,7 +126,7 @@
 						<button
 							class="cursor-pointer bg-primary px-4 text-white"
 							popovertarget="confirm-reject"
-							onclick={() => (activeShipId = shipInfo.ship.id)}>Reject</button
+							onclick={() => (activeShipId = String(shipInfo.ship.id))}>Reject</button
 						>
 					</td>
 				</tr>

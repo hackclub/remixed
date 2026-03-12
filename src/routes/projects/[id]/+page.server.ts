@@ -33,7 +33,7 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { error: 'Unauthorized' });
 		const projectId = Number(params.id);
 
-		const [project] = await db.select().from(projects).where(eq(projectId, projects.id));
+		const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
 		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
 
 		const data = await request.formData();
@@ -55,7 +55,7 @@ export const actions: Actions = {
 	ship: async ({ locals, params }) => {
 		if (!locals.user) return fail(401, { error: 'Unauthorized' });
 		const projectId = Number(params.id);
-		const [project] = await db.select().from(projects).where(eq(projectId, projects.id));
+		const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
 		const approvedShips = await db
 			.select()
 			.from(ships)
