@@ -1,8 +1,9 @@
 import { pgTable, serial, text, integer, timestamp, pgEnum } from 'drizzle-orm/pg-core';
 
+export const roleEnum = pgEnum('role', ['USER', 'ADMIN']);
 export const categoryEnum = pgEnum('category', ['GAME', 'WEBSITE', 'DESKTOP_APP', 'CLI', 'OTHER']);
-export const shipStatusEnum = pgEnum('ship_status', ['pending', 'approved', 'rejected']);
-export const orderStatusEnum = pgEnum('order_status', ['pending', 'fulfilled']);
+export const shipStatusEnum = pgEnum('ship_status', ['PENDING', 'APPROVED', 'REJECTED']);
+export const orderStatusEnum = pgEnum('order_status', ['PENDING', 'FULFILLED']);
 
 export const users = pgTable('users', {
 	id: serial('id').primaryKey(),
@@ -11,7 +12,8 @@ export const users = pgTable('users', {
 	avatarUrl: text('avatar_url'),
 	accessToken: text('access_token').notNull(), // encrypted
 	notesBalance: integer('notes_balance').notNull().default(0),
-	createdAt: timestamp('created_at').notNull().defaultNow()
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	role: roleEnum('role').notNull().default('USER')
 });
 
 export const projects = pgTable('projects', {
@@ -35,8 +37,8 @@ export const ships = pgTable('ships', {
 	projectId: integer('project_id')
 		.notNull()
 		.references(() => projects.id),
-	hours: integer('hours').notNull(),
-	status: shipStatusEnum('status').notNull().default('pending'),
+	seconds: integer('seconds').notNull(),
+	status: shipStatusEnum('status').notNull().default('PENDING'),
 	submittedAt: timestamp('submitted_at').notNull().defaultNow()
 });
 
@@ -80,6 +82,6 @@ export const orders = pgTable('orders', {
 	itemId: integer('item_id')
 		.notNull()
 		.references(() => shopItems.id),
-	status: orderStatusEnum('status').notNull().default('pending'),
+	status: orderStatusEnum('status').notNull().default('PENDING'),
 	createdAt: timestamp('created_at').notNull().defaultNow()
 });

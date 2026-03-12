@@ -178,6 +178,16 @@
 
 				{#if !editing}
 					<button
+						type="submit"
+						form="ship-form"
+						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+					>
+						Ship
+					</button>
+				{/if}
+
+				{#if !editing}
+					<button
 						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
 						onclick={startEdit}
 					>
@@ -202,4 +212,5 @@
 			</div>
 		</form>
 	</main>
+	<form action="?/ship" method="POST" id="ship-form" hidden></form>
 </div>

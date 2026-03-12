@@ -1,11 +1,12 @@
 import { db } from '$lib/server/db';
-import { projects } from '$lib/server/db/schema';
+import { projects, ships } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { decrypt } from '$lib/server/crypto';
 import { fail } from '@sveltejs/kit';
 import type { ProjectCategory } from '$lib';
 import { getProjects } from '$lib/server/hackatimeProjects';
+import { request } from 'node:http';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	if (!locals.user) return new Response('Unauthorized', { status: 401 });
@@ -13,11 +14,16 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const projectId = Number(params.id);
 
 	console.time('thng');
-	const [project] = await db.select().from(projects).where(eq(projectId, projects.id));
+	const [[project], projectShips] = await Promise.all([
+		db.select().from(projects).where(eq(projects.id, projectId)),
+		db.select().from(ships).where(eq(ships.projectId, projectId))
+	]);
 	console.timeEnd('thng');
+	const hasPendingShip = projectShips.some((s) => s.status == 'PENDING');
 
 	return {
 		project,
+		hasPendingShip,
 		currentUserId: locals.user.id
 	};
 };
@@ -44,5 +50,12 @@ export const actions: Actions = {
 			.update(projects)
 			.set({ title, description, coverArt, githubUrl, demoUrl, category, hackatimeProjects })
 			.where(eq(projects.id, projectId));
+	},
+	ship: async ({ locals, params }) => {
+		if (!locals.user) return fail(401, { error: 'Unauthorized' });
+		const projectId = Number(params.id);
+		const [project] = await db.select().from(projects).where(eq(projectId, projects.id));
+		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
+		await db.insert(ships).values({ projectId, seconds: project.hackatimeSeconds });
 	}
 };

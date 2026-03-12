@@ -7,7 +7,11 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const userId = url.searchParams.get('id') ? Number(url.searchParams.get('id')) : locals.user?.id;
 	if (!userId) return new Response('Unauthorized', { status: 401 });
 
-	const userProjects = await db.select().from(projects).where(eq(projects.userId, userId));
+	const userProjects = await db
+		.select()
+		.from(projects)
+		.where(eq(projects.userId, userId))
+		.orderBy(projects.id);
 
 	return new Response(JSON.stringify(userProjects));
 };

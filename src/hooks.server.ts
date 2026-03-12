@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 
-const PROTECTED = ['/dashboard', '/projects', '/api/me', '/api/projects'];
+const PROTECTED = ['/dashboard', '/projects', '/api/me', '/api/projects', '/api/ship'];
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const userId = event.cookies.get('session_user_id');
@@ -18,6 +18,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const isProtected = PROTECTED.some((path) => event.url.pathname.startsWith(path));
 	if (isProtected && !event.locals.user) redirect(303, '/');
+
+	if (event.url.pathname.startsWith('/admin') && event.locals.user?.role == 'USER') {
+		redirect(303, '/');
+	}
 
 	return resolve(event);
 };
