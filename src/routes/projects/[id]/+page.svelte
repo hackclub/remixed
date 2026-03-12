@@ -8,7 +8,7 @@
 	let { data }: PageProps = $props();
 
 	let hackatimeProjects: null | any[] = $state(null);
-	let hoursText: string = $state('');
+	let hoursText: string = $state('LOADING');
 	let editing: boolean = $state(false);
 	let draft = $state({ ...data.project });
 
@@ -76,7 +76,7 @@
 							class="w-full rounded-md bg-accent p-4 text-center font-gothic font-bold text-text ring-primary focus:ring-2 focus:outline-none"
 						>
 							{#each hackatimeProjects as proj}
-								{#if proj.claimedBy == null || proj.claimedBy == data.project!.id}
+								{#if proj.claimedBy == null}
 									<option selected={proj.claimedBy == data.project!.id} value={proj.name}>
 										{proj.name}
 									</option>

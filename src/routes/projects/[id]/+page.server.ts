@@ -44,7 +44,8 @@ export const actions: Actions = {
 		const githubUrl = data.get('githubUrl') as string | null;
 		const demoUrl = data.get('demoUrl') as string | null;
 		const category = data.get('category') as ProjectCategory;
-		const hackatimeProjects = data.getAll('hackatimeProjects') as string[];
+		const newHackatimeProjects = (data.getAll('hackatimeProjects') ?? []) as string[];
+		const hackatimeProjects = [...newHackatimeProjects, ...project.hackatimeProjects];
 
 		await db
 			.update(projects)
