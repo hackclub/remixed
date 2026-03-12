@@ -42,19 +42,6 @@ export const ships = pgTable('ships', {
 	submittedAt: timestamp('submitted_at').notNull().defaultNow()
 });
 
-export const reviews = pgTable('reviews', {
-	id: serial('id').primaryKey(),
-	shipId: integer('ship_id')
-		.notNull()
-		.references(() => ships.id),
-	reviewerId: integer('reviewer_id')
-		.notNull()
-		.references(() => users.id),
-	decision: shipStatusEnum('decision').notNull(),
-	note: text('note'),
-	createdAt: timestamp('created_at').notNull().defaultNow()
-});
-
 export const notesLedger = pgTable('notes_ledger', {
 	id: serial('id').primaryKey(),
 	userId: integer('user_id')

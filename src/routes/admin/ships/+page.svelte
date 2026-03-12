@@ -2,11 +2,18 @@
 	import { formatHours } from '$lib';
 	import Sidebar from '$lib/Sidebar.svelte';
 
+	const hourMult = 60 * 60;
+	const normalMult = 5.0;
+	const lowEffortMult = 3.0;
+	const highEffortMult = 8.5;
+
 	let { data } = $props();
-	let normalPayout = $state(0);
-	let lowEffortPayout = $state(0);
-	let highEffortPayout = $state(0);
-	let rejectShipId = $state('');
+	let currentSeconds = $state(0);
+	let normalPayout = $derived(Math.ceil((currentSeconds * normalMult) / hourMult));
+	let lowEffortPayout = $derived(Math.ceil((currentSeconds * lowEffortMult) / hourMult));
+	let highEffortPayout = $derived(Math.ceil((currentSeconds * highEffortMult) / hourMult));
+	let activeShipId = $state('');
+	let activeUserId = $state('');
 </script>
 
 <Sidebar />
@@ -16,22 +23,36 @@
 	id="confirm-approve"
 >
 	<h1 class="mb-8 text-center font-nikkyou text-3xl">APPROVE</h1>
-	<button
-		class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-white"
-		>Normal ({normalPayout})</button
-	>
-	<button
-		class="mb-1 w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xs text-white"
-		>Low Effort ({lowEffortPayout})</button
-	>
-	<button
-		class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xs text-white"
-		>High Effort ({highEffortPayout})</button
-	>
-	<button
-		class="w-full cursor-pointer rounded-md bg-text px-4 py-4 text-center font-gothic text-xl text-secondary"
-		popovertarget="confirm-approve">Cancel</button
-	>
+	<form action="?/approve" method="POST">
+		<input type="hidden" name="shipId" value={activeShipId} />
+		<input type="hidden" name="userId" value={activeUserId} />
+		<button
+			type="submit"
+			name="payout"
+			value={normalPayout}
+			class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-white"
+			>Normal ({normalPayout})</button
+		>
+		<button
+			type="submit"
+			name="payout"
+			value={lowEffortPayout}
+			class="mb-1 w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xs text-white"
+			>Low Effort ({lowEffortPayout})</button
+		>
+		<button
+			type="submit"
+			name="payout"
+			value={highEffortPayout}
+			class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xs text-white"
+			>High Effort ({highEffortPayout})</button
+		>
+		<button
+			type="button"
+			class="w-full cursor-pointer rounded-md bg-text px-4 py-4 text-center font-gothic text-xl text-secondary"
+			popovertarget="confirm-approve">Cancel</button
+		>
+	</form>
 </div>
 
 <div
@@ -41,7 +62,7 @@
 >
 	<h1 class="mb-8 text-center font-nikkyou text-3xl">REJECT</h1>
 	<form action="?/reject" method="POST">
-		<input type="hidden" name="shipId" value={rejectShipId} />
+		<input type="hidden" name="shipId" value={activeShipId} />
 		<button
 			type="submit"
 			class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-white"
@@ -95,12 +116,17 @@
 					<td>
 						<button
 							class="cursor-pointer bg-green-500 px-4 text-white"
+							onclick={() => {
+								activeUserId = shipInfo.user.id;
+								activeShipId = shipInfo.ship.id;
+								currentSeconds = shipInfo.ship.seconds;
+							}}
 							popovertarget="confirm-approve">Approve</button
 						>
 						<button
 							class="cursor-pointer bg-primary px-4 text-white"
 							popovertarget="confirm-reject"
-							onclick={() => (rejectShipId = shipInfo.ship.id)}>Reject</button
+							onclick={() => (activeShipId = shipInfo.ship.id)}>Reject</button
 						>
 					</td>
 				</tr>
