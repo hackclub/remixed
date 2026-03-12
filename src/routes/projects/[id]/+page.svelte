@@ -3,6 +3,7 @@
 	import Sidebar from '$lib/Sidebar.svelte';
 	import { onMount } from 'svelte';
 	import type { PageProps } from './$types';
+	import { formatHours } from '$lib';
 
 	let { data }: PageProps = $props();
 
@@ -12,14 +13,6 @@
 	let draft = $state({ ...data.project });
 
 	const isOwner = data.currentUserId == data.project?.userId;
-
-	function formatHoursText(seconds: number) {
-		const minutes = seconds / 60.0;
-		const hours = Math.floor(minutes / 60.0);
-		const minuteTextRaw = String(minutes - hours * 60);
-		const minuteText = minuteTextRaw.slice(0, minuteTextRaw.indexOf('.'));
-		hoursText = `${hours}h ${minuteText}m`;
-	}
 
 	function startEdit() {
 		editing = true;
@@ -39,12 +32,12 @@
 		if (isOwner) {
 			fetch(`/api/project_time?id=${data.project!.id}`)
 				.then((resp) => resp.text())
-				.then((text) => formatHoursText(text));
+				.then((text) => (hoursText = formatHours(Number(text))));
 		}
 	});
 
 	if (data.project!.hackatimeSeconds) {
-		formatHoursText(data.project!.hackatimeSeconds);
+		hoursText = formatHours(data.project!.hackatimeSeconds);
 	}
 </script>
 
@@ -177,13 +170,15 @@
 				{/if}
 
 				{#if !editing}
-					<button
-						type="submit"
-						form="ship-form"
-						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
-					>
-						Ship
-					</button>
+					{#if !data.hasPendingShip}
+						<button
+							type="submit"
+							form="ship-form"
+							class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+						>
+							Ship
+						</button>
+					{/if}
 				{/if}
 
 				{#if !editing}
