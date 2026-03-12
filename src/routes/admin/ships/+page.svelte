@@ -110,7 +110,7 @@
 					<td>
 						<a href={shipInfo.project.demoUrl} target="_blank" rel="noopener noreferrer"> Demo </a>
 					</td>
-					<td title={JSON.stringify(shipInfo.project.hackatimeProjects)}>
+					<td title={shipInfo.project.hackatimeProjects.join(', ')}>
 						{formatHours(shipInfo.ship.seconds)}
 					</td>
 					<td>

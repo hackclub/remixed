@@ -90,7 +90,12 @@
 							>Ctrl+Click to select multiple</sub
 						>
 					{:else}
-						<p class="text-center font-gothic text-xl text-primary">{hoursText}</p>
+						<p
+							class="text-center font-gothic text-xl text-primary"
+							title={data.project!.hackatimeProjects!.join(', ')}
+						>
+							{hoursText}
+						</p>
 					{/if}
 					{#if editing}
 						<select
@@ -134,6 +139,7 @@
 					{/if}
 				</div>
 			</div>
+
 			<div class="mt-8 flex gap-4">
 				<!-- TODO: add like a play icon like its a play button on a boombox or smth -->
 				{#if editing}
