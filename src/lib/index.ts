@@ -1,6 +1,7 @@
 // place files you want to import through the `$lib` alias in this folder.
 
 export type ProjectCategory = 'GAME' | 'WEBSITE' | 'DESKTOP_APP' | 'CLI' | 'OTHER';
+export type ShipStatusPub = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export function formatHours(seconds: number) {
 	const minutes = seconds / 60.0;

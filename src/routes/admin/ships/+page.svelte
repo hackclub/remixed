@@ -3,12 +3,53 @@
 	import Sidebar from '$lib/Sidebar.svelte';
 
 	let { data } = $props();
+	let normalPayout = $state(0);
+	let lowEffortPayout = $state(0);
+	let highEffortPayout = $state(0);
 </script>
 
 <Sidebar />
+<div
+	class="fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-md bg-accent p-8 text-text shadow-md"
+	popover
+	id="confirm-accept"
+>
+	<h1 class="mb-8 text-center font-nikkyou text-3xl">ACCEPT</h1>
+	<button
+		class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-white"
+		>Normal ({normalPayout})</button
+	>
+	<button
+		class="mb-1 w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xs text-white"
+		>Low Effort ({lowEffortPayout})</button
+	>
+	<button
+		class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xs text-white"
+		>High Effort ({highEffortPayout})</button
+	>
+	<button
+		class="w-full cursor-pointer rounded-md bg-text px-4 py-4 text-center font-gothic text-xl text-secondary"
+		popovertarget="confirm-accept">Cancel</button
+	>
+</div>
+<div
+	class="fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-md bg-accent p-8 text-text shadow-md"
+	popover
+	id="confirm-reject"
+>
+	<h1 class="mb-8 text-center font-nikkyou text-3xl">REJECT</h1>
+	<button
+		class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-white"
+		>Reject</button
+	>
+	<button
+		class="w-full cursor-pointer rounded-md bg-text px-4 py-4 text-center font-gothic text-xl text-secondary"
+		popovertarget="confirm-reject">Cancel</button
+	>
+</div>
 <div class="pt-10 pr-10 pl-40">
 	<table class="w-full">
-		<thead class="font-gothic">
+		<thead class="font-gothic text-primary">
 			<tr>
 				<th>ID</th>
 				<th>User</th>
@@ -18,7 +59,7 @@
 				<th>Time</th>
 			</tr>
 		</thead>
-		<tbody class="font-zcool">
+		<tbody class="font-zcool text-text">
 			{#each data.ships as shipInfo}
 				<tr>
 					<td>{shipInfo.ship.projectId}</td>
@@ -44,8 +85,13 @@
 						{formatHours(shipInfo.ship.seconds)}
 					</td>
 					<td>
-						<button class="cursor-pointer bg-green-500 px-4 text-white">Accept</button>
-						<button class="cursor-pointer bg-primary px-4 text-white">Reject</button>
+						<button
+							class="cursor-pointer bg-green-500 px-4 text-white"
+							popovertarget="confirm-accept">Accept</button
+						>
+						<button class="cursor-pointer bg-primary px-4 text-white" popovertarget="confirm-reject"
+							>Reject</button
+						>
 					</td>
 				</tr>
 			{/each}
@@ -55,7 +101,7 @@
 
 <style>
 	td {
-		border: 2px solid black;
+		border: 2px solid currentColor;
 		padding: 4px 8px;
 	}
 	a {
