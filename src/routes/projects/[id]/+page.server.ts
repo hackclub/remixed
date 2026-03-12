@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { projects, ships } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { decrypt } from '$lib/server/crypto';
 import { fail } from '@sveltejs/kit';
@@ -55,7 +55,14 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { error: 'Unauthorized' });
 		const projectId = Number(params.id);
 		const [project] = await db.select().from(projects).where(eq(projectId, projects.id));
+		const approvedShips = await db
+			.select()
+			.from(ships)
+			.where(and(eq(ships.status, 'APPROVED'), eq(ships.projectId, projectId)));
+		const shippedSeconds = approvedShips.reduce((sum, s) => sum + s.seconds, 0);
+		const newSeconds = project.hackatimeSeconds! - shippedSeconds;
+
 		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
-		await db.insert(ships).values({ projectId, seconds: project.hackatimeSeconds });
+		await db.insert(ships).values({ projectId, seconds: newSeconds });
 	}
 };
