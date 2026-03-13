@@ -5,7 +5,7 @@
 
 <a
 	href="/projects/{project.id}"
-	class="relative size-80 overflow-hidden shadow-md transition hover:scale-105 hover:shadow-xl"
+	class="relative size-80 min-h-80 overflow-hidden shadow-md transition hover:scale-105 hover:shadow-xl"
 >
 	<CoverArt class="absolute -z-1 " src={project.coverArt} />
 	<div class="absolute top-2/3 left-1/2 w-90 -translate-1/2 -rotate-12 bg-primary">
