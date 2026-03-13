@@ -1,6 +1,6 @@
 import { pgTable, serial, text, integer, timestamp, pgEnum } from 'drizzle-orm/pg-core';
 
-export const roleEnum = pgEnum('role', ['USER', 'ADMIN']);
+export const roleEnum = pgEnum('role', ['USER', 'REVIEWER', 'ORGANIZER']);
 export const categoryEnum = pgEnum('category', ['GAME', 'WEBSITE', 'DESKTOP_APP', 'CLI', 'OTHER']);
 export const shipStatusEnum = pgEnum('ship_status', ['PENDING', 'APPROVED', 'REJECTED']);
 export const orderStatusEnum = pgEnum('order_status', ['PENDING', 'FULFILLED']);
@@ -13,7 +13,7 @@ export const users = pgTable('users', {
 	accessToken: text('access_token').notNull(), // encrypted
 	notesBalance: integer('notes_balance').notNull().default(0),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
-	role: roleEnum('role').notNull().default('USER')
+	roles: roleEnum('roles').array().notNull().default(['USER'])
 });
 
 export const projects = pgTable('projects', {
