@@ -126,19 +126,24 @@
 						>
 						</textarea>
 					{:else}
-						<div class="h-0 grow overflow-auto text-accent">
+						<div class="h-0 grow overflow-auto whitespace-break-spaces text-accent">
 							<p class="text-center font-zcool">
 								{draft.description}
 							</p>
 						</div>
 					{/if}
 				</div>
-				<div class="relative">
+				<div class="relative m-4 aspect-square">
+					<img
+						src="/cd.png"
+						alt="cd"
+						class="cd-spin absolute z-1 aspect-square w-full animate-spin object-cover opacity-30"
+					/>
 					<img
 						src={draft?.coverArt ?? '/404.jpg'}
 						onerror={(e: any) => (e.currentTarget.src = '/404.jpg')}
 						alt="cover art"
-						class="aspect-square w-full bg-red-500 object-cover"
+						class="cd-spin aspect-square w-full animate-spin mask-[url(/cd.png)] mask-cover object-cover"
 					/>
 					{#if editing}
 						<div class="absolute bottom-8 left-1/2 w-9/10 -translate-x-1/2">
@@ -237,3 +242,9 @@
 	</main>
 	<form action="?/ship" method="POST" id="ship-form" hidden></form>
 </div>
+
+<style>
+	.cd-spin {
+		--animate-spin: spin 8s linear infinite;
+	}
+</style>
