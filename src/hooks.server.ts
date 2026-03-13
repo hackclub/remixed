@@ -19,7 +19,17 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isProtected = PROTECTED.some((path) => event.url.pathname.startsWith(path));
 	if (isProtected && !event.locals.user) redirect(303, '/');
 
-	if (event.url.pathname.startsWith('/admin') && !event.locals.user?.roles.includes('REVIEWER')) {
+	if (
+		event.url.pathname.startsWith('/admin/ships') &&
+		!event.locals.user?.roles.includes('REVIEWER')
+	) {
+		redirect(303, '/');
+	}
+
+	if (
+		event.url.pathname.startsWith('/admin/users') &&
+		!event.locals.user?.roles.includes('ORGANIZER')
+	) {
 		redirect(303, '/');
 	}
 

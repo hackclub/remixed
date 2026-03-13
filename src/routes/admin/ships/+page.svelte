@@ -2,18 +2,18 @@
 	import { formatHours } from '$lib';
 	import Sidebar from '$lib/Sidebar.svelte';
 
-	const hourMult = 60 * 60;
-	const normalMult = 5.0;
-	const lowEffortMult = 3.0;
-	const highEffortMult = 8.5;
-
 	let { data } = $props();
+	const payoutMults = data.payoutMults;
+	const isOrg = data.roles.includes('ORGANIZER');
+
+	const hourMult = 60 * 60;
+
 	let currentSeconds = $state(0);
-	let normalPayout = $derived(Math.ceil((currentSeconds * normalMult) / hourMult));
-	let lowEffortPayout = $derived(Math.ceil((currentSeconds * lowEffortMult) / hourMult));
-	let highEffortPayout = $derived(Math.ceil((currentSeconds * highEffortMult) / hourMult));
+	let notesMult = $state(payoutMults.reviewer[0]);
+	let notesPayout = $derived(Math.ceil((currentSeconds * notesMult) / hourMult));
 	let activeShipId = $state('');
 	let activeUserId = $state('');
+	let orgMultMode = $state(false);
 </script>
 
 <Sidebar />
@@ -26,26 +26,33 @@
 	<form action="?/approve" method="POST">
 		<input type="hidden" name="shipId" value={activeShipId} />
 		<input type="hidden" name="userId" value={activeUserId} />
+		<input type="hidden" name="shipSeconds" value={currentSeconds} />
+		<div class="flex justify-between font-gothic">
+			<span>{formatHours(currentSeconds)}</span>
+			<span>x</span>
+			<span>{notesMult}</span>
+			<span>=</span>
+			<span>{notesPayout}</span>
+		</div>
+		<input
+			type="range"
+			name="payoutMult"
+			class="w-full"
+			step="0.2"
+			bind:value={notesMult}
+			min={orgMultMode ? payoutMults.organizer[0] : payoutMults.reviewer[0]}
+			max={orgMultMode ? payoutMults.organizer[1] : payoutMults.reviewer[1]}
+		/>
+		{#if isOrg}
+			<label class="my-4 block cursor-pointer font-gothic">
+				<input type="checkbox" bind:checked={orgMultMode} />
+				Organizer Payout
+			</label>
+		{/if}
 		<button
 			type="submit"
-			name="payout"
-			value={normalPayout}
-			class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-white"
-			>Normal ({normalPayout})</button
-		>
-		<button
-			type="submit"
-			name="payout"
-			value={lowEffortPayout}
-			class="mb-1 w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xs text-white"
-			>Low Effort ({lowEffortPayout})</button
-		>
-		<button
-			type="submit"
-			name="payout"
-			value={highEffortPayout}
-			class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xs text-white"
-			>High Effort ({highEffortPayout})</button
+			class="mb-2 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-white"
+			popovertarget="confirm-approve">Approve</button
 		>
 		<button
 			type="button"

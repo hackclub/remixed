@@ -6,10 +6,14 @@ import { notesLedger, projects, ships, users } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import type { ShipStatusPub } from '$lib';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
-	const accessToken = decrypt(locals.user!.accessToken);
+const payoutMults = {
+	reviewer: [10.0, 15.0],
+	organizer: [10.0, 25.0]
+};
 
+export const load: PageServerLoad = async ({ locals, url }) => {
 	const status = (url.searchParams.get('status') ?? 'PENDING') as ShipStatusPub;
+	const [user] = await db.select().from(users).where(eq(users.id, locals.user!.id));
 
 	const projectShips = await db
 		.select({ ship: ships, project: projects, user: users })
@@ -20,7 +24,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		.orderBy(ships.id);
 	console.log(projectShips);
 	return {
-		ships: projectShips
+		ships: projectShips,
+		roles: user.roles,
+		payoutMults
 	};
 };
 
@@ -30,11 +36,25 @@ export const actions: Actions = {
 		const shipId = Number(data.get('shipId'));
 		await db.update(ships).set({ status: 'REJECTED' }).where(eq(ships.id, shipId));
 	},
-	approve: async ({ request }) => {
+	approve: async ({ request, locals }) => {
 		const data = await request.formData();
+		console.log(data);
 		const shipId = Number(data.get('shipId'));
 		const userId = Number(data.get('userId'));
-		const payout = Number(data.get('payout'));
+		const payoutMult = Number(data.get('payoutMult'));
+		const shipSeconds = Number(data.get('shipSeconds'));
+
+		const [user] = await db.select().from(users).where(eq(users.id, locals.user!.id));
+		if (user.roles.includes('ORGANIZER')) {
+			if (payoutMult < payoutMults.organizer[0] || payoutMult > payoutMults.organizer[1]) {
+				return;
+			}
+		} else {
+			if (payoutMult < payoutMults.reviewer[0] || payoutMult > payoutMults.reviewer[1]) {
+				return;
+			}
+		}
+		const payout = Math.ceil((payoutMult * shipSeconds) / (60.0 * 60.0));
 
 		await Promise.all([
 			db.update(ships).set({ status: 'APPROVED' }).where(eq(ships.id, shipId)),
