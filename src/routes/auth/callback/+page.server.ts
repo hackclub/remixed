@@ -37,7 +37,7 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 
 	const slackId = hackatimeInfo.slack_id;
 	const username = slackProfile.profile.display_name;
-	const avatarUrl = slackProfile.profile?.image_72 || null;
+	const avatarUrl = slackProfile.profile?.image_1024 || null;
 
 	const [user] = await db
 		.insert(users)
