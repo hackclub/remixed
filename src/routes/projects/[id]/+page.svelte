@@ -146,7 +146,7 @@
 						class="cd-spin aspect-square w-full animate-spin mask-[url(/cd.png)] mask-cover object-cover"
 					/>
 					{#if editing}
-						<div class="absolute bottom-8 left-1/2 w-9/10 -translate-x-1/2">
+						<div class="absolute bottom-8 left-1/2 z-2 w-9/10 -translate-x-1/2">
 							<input
 								type="text"
 								name="coverArt"
