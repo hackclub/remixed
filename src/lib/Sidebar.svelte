@@ -7,6 +7,7 @@
 		{ name: 'Projects', route: '/projects' },
 		{ name: 'Discover', route: '/discover' },
 		{ name: 'Shop', route: '/shop' },
+		{ name: 'Profile', route: '/user' },
 		{ name: 'Log Out', route: '/auth/logout' }
 	];
 
