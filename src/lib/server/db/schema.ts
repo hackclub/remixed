@@ -1,6 +1,6 @@
 import { pgTable, serial, text, integer, timestamp, pgEnum } from 'drizzle-orm/pg-core';
 
-export const roleEnum = pgEnum('role', ['USER', 'REVIEWER', 'ORGANIZER']);
+export const roleEnum = pgEnum('role', ['USER', 'STAFF', 'REVIEWER', 'ORGANIZER']);
 export const categoryEnum = pgEnum('category', ['GAME', 'WEBSITE', 'DESKTOP_APP', 'CLI', 'OTHER']);
 export const shipStatusEnum = pgEnum('ship_status', ['PENDING', 'APPROVED', 'REJECTED']);
 export const orderStatusEnum = pgEnum('order_status', ['PENDING', 'FULFILLED']);

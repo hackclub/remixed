@@ -30,6 +30,7 @@
 				Organizer
 			</option>
 			<option value="REVIEWER" selected={activeUserRoles.includes('REVIEWER')}> Reviewer </option>
+			<option value="STAFF" selected={activeUserRoles.includes('STAFF')}> Staff </option>
 		</select>
 		<sub class="mb-4 block text-center font-zcool text-text">Ctrl+Click to select multiple</sub>
 		<button
