@@ -1,12 +1,11 @@
 import { db } from '$lib/server/db';
-import { projects, ships } from '$lib/server/db/schema';
+import { projects, ships, users } from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { decrypt } from '$lib/server/crypto';
 import { fail } from '@sveltejs/kit';
 import type { ProjectCategory } from '$lib';
 import { getProjects } from '$lib/server/hackatimeProjects';
-import { request } from 'node:http';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	if (!locals.user) return new Response('Unauthorized', { status: 401 });
@@ -14,15 +13,22 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const projectId = Number(params.id);
 
 	console.time('thng');
-	const [[project], projectShips] = await Promise.all([
-		db.select().from(projects).where(eq(projects.id, projectId)),
+	const [[projectInfo], projectShips] = await Promise.all([
+		db
+			.select()
+			.from(projects)
+			.innerJoin(users, eq(users.id, projects.userId))
+			.where(eq(projects.id, projectId)),
 		db.select().from(ships).where(eq(ships.projectId, projectId))
 	]);
+	const project = projectInfo.projects;
+	const user = projectInfo.users;
 	console.timeEnd('thng');
 	const hasPendingShip = projectShips.some((s) => s.status == 'PENDING');
 
 	return {
 		project,
+		user,
 		hasPendingShip,
 		currentUserId: locals.user.id
 	};

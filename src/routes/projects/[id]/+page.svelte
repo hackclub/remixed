@@ -79,7 +79,12 @@
 							class="mb-4 rounded-md bg-accent px-4 py-2 text-center font-nikkyou text-5xl text-primary ring-secondary outline-none focus:ring-2"
 						/>
 					{:else}
-						<h1 class="mb-4 text-center font-nikkyou text-5xl text-primary">{draft.title}</h1>
+						<h1 class="text-center font-nikkyou text-5xl text-primary">{draft.title}</h1>
+						<a
+							href="/user/{data.user.id}"
+							class="mb-4 text-center font-nikkyou text-xl text-primary underline"
+							>{data.user.username}</a
+						>
 					{/if}
 					<div class="flex justify-between">
 						{#if editing}
