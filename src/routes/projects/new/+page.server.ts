@@ -25,8 +25,8 @@ export const actions = {
 		if (!locals.user) return fail(401, { error: 'Unauthorized' });
 
 		const data = await request.formData();
-		const title = data.get('title') as string;
-		const description = data.get('desc') as string | null;
+		const title = (data.get('title') as string)?.trim();
+		const description = (data.get('desc') as string | null)?.trim();
 		const category = (data.get('category') ?? 'OTHER') as ProjectCategory;
 		const hackatimeProjects = data.getAll('hackatime_projects') as string[];
 		console.log('FUCK', hackatimeProjects);
