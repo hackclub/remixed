@@ -40,10 +40,14 @@ export const actions: Actions = {
 		const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
 		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
 
-		const takenHackatimeProjects = await db
-			.select({ existingHackatimeProjects: projects.hackatimeProjects })
-			.from(projects)
-			.where(eq(projects.userId, project.userId));
+		const takenHackatimeProjects = (
+			await db
+				.select({ existingHackatimeProjects: projects.hackatimeProjects })
+				.from(projects)
+				.where(eq(projects.userId, project.userId))
+		)
+			.map((p) => p.existingHackatimeProjects)
+			.reduce((sum, s) => sum.concat(s), []);
 		console.log(takenHackatimeProjects);
 
 		const data = await request.formData();
@@ -56,6 +60,10 @@ export const actions: Actions = {
 		const category = data.get('category') as ProjectCategory;
 		const newHackatimeProjects = (data.getAll('hackatimeProjects') ?? []) as string[];
 		const updatedHackatimeProjects = [...newHackatimeProjects, ...project.hackatimeProjects];
+
+		if (newHackatimeProjects.some((elem) => takenHackatimeProjects.includes(elem))) {
+			return fail(400, 'Hackatime project taken');
+		}
 
 		await db
 			.update(projects)
