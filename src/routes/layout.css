@@ -6,11 +6,13 @@
 	--font-nikkyou: 'Nikkyou', sans-serif;
 	--font-zcool: 'ZCOOL', sans-serif;
 	--font-jua: 'Jua', sans-serif;
-	--color-text: #003049;
-	--color-primary: #d62828;
-	--color-secondary: #f77f00;
-	--color-accent: #fcbf49;
-	--color-bg: #eae2b7;
+	--color-text: #1B2A42;
+	--color-primary: #AFF23B;
+	--color-secondary: #70FFFF;
+	--color-accent-red: #F96891;
+	--color-accent-purple: #C57FFE;
+	--color-light: #ECFCFF;
+	--color-bg: #DBC2FD;
 	--tw-prose-headings: var(--color-text);
 }
 

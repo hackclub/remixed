@@ -26,8 +26,11 @@
 <Sidebar />
 <div class="ml-32 p-8">
 	<div class="mb-6 flex items-center justify-center gap-8">
-		<h1 class="font-nikkyou text-3xl font-bold text-primary">Projects</h1>
-		<a href="/projects/new" class="rounded-md bg-primary px-4 py-2 text-lg text-accent">+ New</a>
+		<h1 class="font-nikkyou text-3xl font-bold text-text">Projects</h1>
+		<a
+			href="/projects/new"
+			class="text-accent rounded-md bg-primary px-4 py-2 font-nikkyou text-lg text-text">+ New</a
+		>
 	</div>
 
 	<div class="flex w-full flex-wrap justify-center gap-6">

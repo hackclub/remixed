@@ -55,7 +55,7 @@
 				<select
 					multiple
 					name="hackatimeProjects"
-					class="w-full rounded-md bg-primary p-4 text-center font-gothic font-bold text-accent ring-primary focus:ring-2 focus:outline-none"
+					class="w-full rounded-md bg-primary p-4 text-center font-gothic font-bold text-text ring-primary focus:ring-2 focus:outline-none"
 				>
 					{#each hackatimeProjects as proj}
 						{#if proj.claimedBy == null}
@@ -76,7 +76,7 @@
 							type="text"
 							name="title"
 							bind:value={draft.title}
-							class="mb-4 rounded-md bg-accent px-4 py-2 text-center font-nikkyou text-5xl text-primary ring-secondary outline-none focus:ring-2"
+							class="mb-4 rounded-md bg-accent-purple px-4 py-2 text-center font-nikkyou text-5xl text-primary ring-secondary outline-none focus:ring-2"
 						/>
 					{:else}
 						<h1 class="text-center font-nikkyou text-5xl text-primary">{draft.title}</h1>
@@ -91,7 +91,7 @@
 							<button
 								type="button"
 								popovertarget="hackatime-project-select"
-								class="mb-2 cursor-pointer rounded-md bg-accent p-2 font-gothic text-text"
+								class="mb-2 cursor-pointer rounded-md bg-accent-purple p-2 font-gothic text-text"
 							>
 								Hackatime
 							</button>
@@ -99,7 +99,7 @@
 								name="category"
 								id="category"
 								bind:value={draft.category}
-								class="mb-2 cursor-pointer rounded-md bg-accent p-2 text-center font-gothic text-sm font-bold text-text ring-primary focus:ring-2 focus:outline-none"
+								class="mb-2 cursor-pointer rounded-md bg-accent-purple p-2 text-center font-gothic text-sm font-bold text-text ring-secondary focus:ring-2 focus:outline-none"
 							>
 								<option value="GAME">Game</option>
 								<option value="WEBSITE">Website</option>
@@ -109,13 +109,13 @@
 							</select>
 						{:else}
 							<span
-								class="font-gothic text-xl text-accent"
+								class="font-gothic text-xl text-accent-purple"
 								title={data.project!.hackatimeProjects!.join(', ')}
 							>
 								{hoursText}
 							</span>
 							<span
-								class="font-gothic text-xl text-accent"
+								class=" font-gothic text-xl text-accent-purple"
 								title={data.project!.hackatimeProjects!.join(', ')}
 							>
 								{data.project?.category.replaceAll('_', ' ')}
@@ -127,12 +127,12 @@
 						<textarea
 							name="description"
 							bind:value={draft.description}
-							class="h-0 grow overflow-auto rounded-md bg-accent p-2 text-center font-zcool text-text ring-secondary outline-none focus:ring-2"
+							class="h-0 grow overflow-auto rounded-md bg-accent-purple p-2 font-zcool text-text ring-secondary outline-none focus:ring-2"
 						>
 						</textarea>
 					{:else}
 						<div
-							class="prose h-0 grow overflow-auto text-center font-zcool whitespace-break-spaces text-accent"
+							class="prose mt-4 h-0 grow overflow-auto font-zcool text-light prose-headings:text-accent-red prose-a:text-accent-purple prose-strong:text-accent-red prose-code:text-accent-purple"
 						>
 							{@html data.descriptionHtml}
 						</div>
@@ -157,9 +157,9 @@
 								name="coverArt"
 								placeholder="Image URL"
 								bind:value={draft.coverArt}
-								class="w-full rounded-md bg-accent px-4 py-2 font-mono text-xs text-text ring-primary outline-none focus:ring-2"
+								class="w-full rounded-md bg-accent-purple px-4 py-2 font-mono text-xs text-text ring-secondary outline-none focus:ring-2"
 							/>
-							<p class="mt-2 rounded-md bg-accent p-2 text-center font-zcool text-sm">
+							<p class="mt-2 rounded-md bg-accent-purple p-2 text-center font-zcool text-sm">
 								Upload images to <a
 									class="underline"
 									href="https://hackclub.enterprise.slack.com/archives/C016DEDUL87">#cdn</a
@@ -179,12 +179,12 @@
 						type="text"
 						name="githubUrl"
 						bind:value={draft.githubUrl}
-						class="w-full rounded-md bg-accent px-4 py-2 font-mono text-xs text-text ring-primary outline-none focus:ring-2"
+						class="w-full rounded-md bg-accent-purple px-4 py-2 font-mono text-xs text-text ring-secondary outline-none focus:ring-2"
 					/>
 				{:else if validUrl(data.project?.githubUrl ?? null)}
 					<a
 						href={data.project?.githubUrl}
-						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-text"
 					>
 						Repository
 					</a>
@@ -196,12 +196,12 @@
 						type="text"
 						name="demoUrl"
 						bind:value={draft.demoUrl}
-						class="w-full rounded-md bg-accent px-4 py-2 font-mono text-xs text-text ring-primary outline-none focus:ring-2"
+						class="w-full rounded-md bg-accent-purple px-4 py-2 font-mono text-xs text-text ring-secondary outline-none focus:ring-2"
 					/>
 				{:else if validUrl(data.project?.demoUrl ?? null)}
 					<a
 						href={data.project?.demoUrl}
-						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-text"
 					>
 						Demo
 					</a>
@@ -212,7 +212,7 @@
 						<button
 							type="submit"
 							form="ship-form"
-							class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+							class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-text"
 						>
 							Ship
 						</button>
@@ -221,7 +221,7 @@
 
 				{#if !editing}
 					<button
-						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+						class="w-full cursor-pointer rounded-md bg-secondary px-4 py-2 text-center font-gothic text-xl text-text"
 						onclick={startEdit}
 					>
 						Edit
@@ -229,14 +229,14 @@
 				{:else}
 					<button
 						type="button"
-						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+						class="w-full cursor-pointer rounded-md bg-secondary px-4 py-2 text-center font-gothic text-xl text-text"
 						onclick={cancelEdit}
 					>
 						Cancel
 					</button>
 					<button
 						type="submit"
-						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
+						class="w-full cursor-pointer rounded-md bg-secondary px-4 py-2 text-center font-gothic text-xl text-text"
 						formaction="?/update"
 					>
 						Submit

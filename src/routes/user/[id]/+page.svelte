@@ -8,7 +8,7 @@
 <Sidebar />
 <div class="flex h-screen justify-evenly pt-10 pr-10 pl-40">
 	<div class="w-80">
-		<h1 class="text-center font-nikkyou text-3xl font-bold text-primary">{data.user.username}</h1>
+		<h1 class="text-center font-nikkyou text-3xl font-bold text-text">{data.user.username}</h1>
 		<img src={data.user.avatarUrl} alt="profile" class="rounded-md" />
 	</div>
 	<div class="flex h-full flex-col gap-8">

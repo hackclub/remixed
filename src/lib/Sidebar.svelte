@@ -8,11 +8,11 @@
 		{ name: 'Discover', route: '/discover' },
 		{ name: 'Shop', route: '/shop' },
 		{ name: 'Profile', route: '/user' },
-		{ name: 'Log Out', route: 'LOGOUT' },
+		{ name: 'Log Out', route: 'LOGOUT' }
 	];
 
 	let currentPageIndex: number = $state(
-		records.findIndex((rec) => page.url.pathname.startsWith(rec.route)),
+		records.findIndex((rec) => page.url.pathname.startsWith(rec.route))
 	);
 	let hoveredIndex: number = $state(currentPageIndex);
 
@@ -21,10 +21,10 @@
 	}
 
 	function getBgColor(i: number): string {
-		return i == currentPageIndex ? 'var(--color-secondary)' : 'var(--color-primary)';
+		return i == currentPageIndex ? 'var(--color-primary)' : 'var(--color-text)';
 	}
 	function getTextColor(i: number): string {
-		return i == currentPageIndex ? 'var(--color-primary)' : 'var(--color-secondary)';
+		return i == currentPageIndex ? 'var(--color-text)' : 'var(--color-primary)';
 	}
 
 	function getStyles(i: number): string {
@@ -39,7 +39,7 @@
 </script>
 
 <div
-	class="fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-md bg-accent p-8 text-text shadow-md"
+	class="bg-accent fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-md p-8 text-text shadow-md"
 	popover
 	id="confirm-signout"
 >
