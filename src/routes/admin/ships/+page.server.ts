@@ -1,5 +1,5 @@
 import { decrypt } from '$lib/server/crypto';
-import { redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { notesLedger, projects, ships, users } from '$lib/server/db/schema';
@@ -13,7 +13,7 @@ const payoutMults = {
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const status = (url.searchParams.get('status') ?? 'PENDING') as ShipStatusPub;
-	const [user] = await db.select().from(users).where(eq(users.id, locals.user!.id));
+	// const [user] = await db.select().from(users).where(eq(users.id, locals.user!.id));
 
 	const projectShips = await db
 		.select({ ship: ships, project: projects, user: users })
@@ -25,13 +25,15 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	console.log(projectShips);
 	return {
 		ships: projectShips,
-		roles: user.roles,
+		roles: locals.user?.roles,
 		payoutMults,
 	};
 };
 
 export const actions: Actions = {
-	reject: async ({ request }) => {
+	reject: async ({ locals, request }) => {
+		if (!locals.user?.roles.includes('REVIEWER')) return fail(403, { error: 'Forbidden' });
+
 		const data = await request.formData();
 		const shipId = Number(data.get('shipId'));
 		await db.update(ships).set({ status: 'REJECTED' }).where(eq(ships.id, shipId));

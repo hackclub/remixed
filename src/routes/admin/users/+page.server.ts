@@ -2,21 +2,23 @@ import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
+import { fail } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const allUsers = await db.select().from(users);
-	console.log(allUsers);
 	return {
 		users: allUsers,
 	};
 };
 
 export const actions: Actions = {
-	updateRoles: async ({ request }) => {
+	updateRoles: async ({ request, locals }) => {
+		if (!locals.user?.roles.includes('REVIEWER')) return fail(403, { error: 'Forbidden' });
+
 		const data = await request.formData();
 		console.log(data);
-		const userId = data.get('userId');
-		const userRoles = data.getAll('userRoles');
+		const userId = Number(data.get('userId'));
+		const userRoles = data.getAll('userRoles') as ('USER' | 'STAFF' | 'REVIEWER' | 'ORGANIZER')[];
 
 		await db
 			.update(users)

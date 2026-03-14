@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import { projects } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
+import { fail } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	if (!locals.user) return new Response('Unauthorized', { status: 401 });
@@ -10,6 +11,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 	const projectId = Number(url.searchParams.get('id'));
 	const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
+	if (!project || project.userId != locals.user.id)
+		return new Response('Forbidden', { status: 403 });
 
 	let hackatimeSeconds: null | number = null;
 	if (project.hackatimeProjects.length != 0) {

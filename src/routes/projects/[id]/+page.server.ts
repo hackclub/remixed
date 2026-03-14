@@ -40,6 +40,12 @@ export const actions: Actions = {
 		const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
 		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
 
+		const takenHackatimeProjects = await db
+			.select({ existingHackatimeProjects: projects.hackatimeProjects })
+			.from(projects)
+			.where(eq(projects.userId, project.userId));
+		console.log(takenHackatimeProjects);
+
 		const data = await request.formData();
 		console.log(data);
 		const title = (data.get('title') as string)?.trim();
@@ -49,11 +55,19 @@ export const actions: Actions = {
 		const demoUrl = (data.get('demoUrl') as string | null)?.trim();
 		const category = data.get('category') as ProjectCategory;
 		const newHackatimeProjects = (data.getAll('hackatimeProjects') ?? []) as string[];
-		const hackatimeProjects = [...newHackatimeProjects, ...project.hackatimeProjects];
+		const updatedHackatimeProjects = [...newHackatimeProjects, ...project.hackatimeProjects];
 
 		await db
 			.update(projects)
-			.set({ title, description, coverArt, githubUrl, demoUrl, category, hackatimeProjects })
+			.set({
+				title,
+				description,
+				coverArt,
+				githubUrl,
+				demoUrl,
+				category,
+				hackatimeProjects: updatedHackatimeProjects,
+			})
 			.where(eq(projects.id, projectId));
 	},
 	ship: async ({ locals, params }) => {
