@@ -54,6 +54,7 @@
 				<th>User</th>
 				<th>Slack</th>
 				<th>Notes</th>
+				<th>Referrals</th>
 				<th>Roles</th>
 			</tr>
 		</thead>
@@ -77,6 +78,9 @@
 					</td>
 					<td>
 						{user.notesBalance}
+					</td>
+					<td>
+						{user.referrals}
 					</td>
 					<td>
 						<button
