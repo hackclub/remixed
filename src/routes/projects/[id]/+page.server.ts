@@ -63,19 +63,19 @@ export const actions: Actions = {
 		const projectId = Number(params.id);
 		const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
 
-		if (project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
+		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
 		if (!validUrl(project.githubUrl) || !validUrl(project.demoUrl)) {
 			return fail(400, 'Github and Demo URLs required');
 		}
 
-		const approvedShips = await db
-			.select()
-			.from(ships)
-			.where(and(eq(ships.status, 'APPROVED'), eq(ships.projectId, projectId)));
-		const shippedSeconds = approvedShips.reduce((sum, s) => sum + s.seconds, 0);
+		const projectShips = await db.select().from(ships).where(eq(ships.projectId, projectId));
+		if (projectShips.some((p) => p.status == 'PENDING')) return fail(400, 'Already shipped');
+
+		const shippedSeconds = projectShips
+			.filter((p) => p.status == 'APPROVED')
+			.reduce((sum, s) => sum + s.seconds, 0);
 		const newSeconds = project.hackatimeSeconds! - shippedSeconds;
 
-		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
 		await db.insert(ships).values({ projectId, seconds: newSeconds });
 	},
 };
