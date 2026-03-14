@@ -131,10 +131,10 @@
 						>
 						</textarea>
 					{:else}
-						<div class="h-0 grow overflow-auto whitespace-break-spaces text-accent">
-							<p class="text-center font-zcool">
-								{draft.description}
-							</p>
+						<div
+							class="prose h-0 grow overflow-auto text-center font-zcool whitespace-break-spaces text-accent"
+						>
+							{@html data.descriptionHtml}
 						</div>
 					{/if}
 				</div>

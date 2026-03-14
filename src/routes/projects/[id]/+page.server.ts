@@ -6,6 +6,8 @@ import { decrypt } from '$lib/server/crypto';
 import { fail, isValidationError } from '@sveltejs/kit';
 import { validUrl, type ProjectCategory } from '$lib';
 import { getProjects } from '$lib/server/hackatimeProjects';
+import sanitizeHtml from 'sanitize-html';
+import { marked } from 'marked';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	if (!locals.user) return new Response('Unauthorized', { status: 401 });
@@ -24,8 +26,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const user = projectInfo.users;
 	const hasPendingShip = projectShips.some((s) => s.status == 'PENDING');
 
+	const descriptionHtml = sanitizeHtml(await marked(project.description ?? ''));
+
 	return {
 		project,
+		descriptionHtml,
 		user,
 		hasPendingShip,
 		currentUserId: locals.user.id,

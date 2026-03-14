@@ -1,3 +1,4 @@
+@plugin '@tailwindcss/typography';
 @import 'tailwindcss';
 
 @theme {
@@ -5,12 +6,16 @@
 	--font-nikkyou: 'Nikkyou', sans-serif;
 	--font-zcool: 'ZCOOL', sans-serif;
 	--font-jua: 'Jua', sans-serif;
-
 	--color-text: #003049;
 	--color-primary: #d62828;
 	--color-secondary: #f77f00;
 	--color-accent: #fcbf49;
 	--color-bg: #eae2b7;
+	--tw-prose-headings: var(--color-text);
+}
+
+@layer utilities {
+	.prose {}
 }
 
 @font-face {
