@@ -69,8 +69,11 @@
 				</select>
 				<sub class="mt-2 block text-center font-zcool text-text">Ctrl+Click to select multiple</sub>
 			</div>
-			<div class="grid w-full grid-cols-2 gap-8 bg-black">
-				<div class="flex w-full flex-col bg-text p-4">
+			<div class="relative grid w-full grid-cols-2 gap-8 rounded-lg bg-text">
+				<div
+					class="absolute top-1/2 left-1/2 h-9/10 -translate-1/2 rounded-xl border-2 border-secondary"
+				></div>
+				<div class="flex w-full flex-col p-4">
 					{#if editing}
 						<input
 							type="text"
