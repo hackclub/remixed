@@ -5,6 +5,7 @@ import { env as senv } from '$env/dynamic/private';
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { encrypt } from '$lib/server/crypto';
+import { eq, sql } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ url, cookies }) => {
 	const tokenReq = await fetch('https://hackatime.hackclub.com/oauth/token', {
@@ -39,6 +40,8 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 	const username = slackProfile.profile.display_name;
 	const avatarUrl = slackProfile.profile?.image_1024 || null;
 
+	const [existingUser] = await db.select().from(users).where(eq(users.slackId, slackId));
+
 	const [user] = await db
 		.insert(users)
 		.values({ slackId, username, avatarUrl, accessToken: encrypt(access_token) })
@@ -48,6 +51,17 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 		})
 		.returning({ id: users.id });
 
+	const referrerId = Number(cookies.get('ref'));
+	if (!existingUser && referrerId) {
+		if (referrerId != user.id) {
+			await db
+				.update(users)
+				.set({ referrals: sql`${users.referrals} + 1` })
+				.where(eq(users.id, referrerId));
+		}
+	}
+
+	cookies.delete('ref', { path: '/' });
 	cookies.set('session_user_id', String(user.id), { path: '/' });
 	redirect(307, '/dashboard');
 };

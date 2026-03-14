@@ -14,6 +14,7 @@ export const users = pgTable('users', {
 	notesBalance: integer('notes_balance').notNull().default(0),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	roles: roleEnum('roles').array().notNull().default(['USER']),
+	referrals: integer('referrals').notNull().default(0),
 });
 
 export const projects = pgTable('projects', {
