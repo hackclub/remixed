@@ -137,7 +137,7 @@
 							<textarea
 								name="description"
 								bind:value={draft.description}
-								class="h-0 grow overflow-auto rounded-md bg-accent-purple p-2 font-zcool text-text ring-secondary outline-none focus:ring-2"
+								class="h-0 grow overflow-auto rounded-md bg-accent-purple p-2 font-jua text-text ring-secondary outline-none focus:ring-2"
 							>
 							</textarea>
 							<p class="mt-2 text-center font-gothic text-xs text-accent-red">
@@ -145,7 +145,7 @@
 							</p>
 						{:else}
 							<div
-								class="prose mt-4 h-0 grow overflow-auto font-zcool text-light prose-headings:text-accent-red prose-a:text-accent-purple prose-strong:text-accent-red prose-code:text-accent-purple"
+								class="prose mt-4 h-0 grow overflow-auto font-jua text-light prose-headings:text-accent-red prose-a:text-accent-purple prose-strong:text-accent-red prose-code:text-accent-purple"
 							>
 								{@html data.descriptionHtml}
 							</div>
