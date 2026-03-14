@@ -208,7 +208,7 @@
 				{/if}
 
 				{#if !editing}
-					{#if !data.hasPendingShip && validUrl(data.project?.demoUrl ?? null) && validUrl(data.project?.githubUrl ?? null)}
+					{#if !data.hasPendingShip && validUrl(data.project?.demoUrl ?? null) && validUrl(data.project?.githubUrl ?? null) && data.project?.hackatimeProjects.length != 0}
 						<button
 							type="submit"
 							form="ship-form"

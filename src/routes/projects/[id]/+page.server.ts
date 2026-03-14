@@ -12,7 +12,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const accessToken = decrypt(locals.user.accessToken);
 	const projectId = Number(params.id);
 
-	console.time('thng');
 	const [[projectInfo], projectShips] = await Promise.all([
 		db
 			.select()
@@ -23,7 +22,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	]);
 	const project = projectInfo.projects;
 	const user = projectInfo.users;
-	console.timeEnd('thng');
 	const hasPendingShip = projectShips.some((s) => s.status == 'PENDING');
 
 	return {
@@ -67,6 +65,9 @@ export const actions: Actions = {
 		if (!validUrl(project.githubUrl) || !validUrl(project.demoUrl)) {
 			return fail(400, 'Github and Demo URLs required');
 		}
+		if (project.hackatimeProjects.length == 0) {
+			return fail(400, 'Must have a Hackatime project');
+		}
 
 		const projectShips = await db.select().from(ships).where(eq(ships.projectId, projectId));
 		if (projectShips.some((p) => p.status == 'PENDING')) return fail(400, 'Already shipped');
@@ -75,6 +76,8 @@ export const actions: Actions = {
 			.filter((p) => p.status == 'APPROVED')
 			.reduce((sum, s) => sum + s.seconds, 0);
 		const newSeconds = project.hackatimeSeconds! - shippedSeconds;
+
+		if (newSeconds < 3600) return fail(400, 'Must have at least an hour before shipping');
 
 		await db.insert(ships).values({ projectId, seconds: newSeconds });
 	},
