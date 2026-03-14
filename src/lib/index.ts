@@ -10,3 +10,13 @@ export function formatHours(seconds: number) {
 	const minuteText = minuteTextRaw.slice(0, minuteTextRaw.indexOf('.')).padStart(1, '0');
 	return `${hours}h ${minuteText}m`;
 }
+
+export function validUrl(url: string | null): boolean {
+	if (!url) return false;
+	try {
+		new URL(url);
+		return true;
+	} catch {
+		return false;
+	}
+}

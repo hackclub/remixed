@@ -3,7 +3,7 @@
 	import Sidebar from '$lib/Sidebar.svelte';
 	import { onMount } from 'svelte';
 	import type { PageProps } from './$types';
-	import { formatHours } from '$lib';
+	import { formatHours, validUrl } from '$lib';
 
 	let { data }: PageProps = $props();
 
@@ -181,9 +181,9 @@
 						bind:value={draft.githubUrl}
 						class="w-full rounded-md bg-accent px-4 py-2 font-mono text-xs text-text ring-primary outline-none focus:ring-2"
 					/>
-				{:else if data.project?.githubUrl}
+				{:else if validUrl(data.project?.githubUrl ?? null)}
 					<a
-						href={data.project.githubUrl}
+						href={data.project?.githubUrl}
 						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
 					>
 						Repository
@@ -198,9 +198,9 @@
 						bind:value={draft.demoUrl}
 						class="w-full rounded-md bg-accent px-4 py-2 font-mono text-xs text-text ring-primary outline-none focus:ring-2"
 					/>
-				{:else if data.project?.demoUrl}
+				{:else if validUrl(data.project?.demoUrl ?? null)}
 					<a
-						href={data.project.demoUrl}
+						href={data.project?.demoUrl}
 						class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-accent"
 					>
 						Demo
@@ -208,7 +208,7 @@
 				{/if}
 
 				{#if !editing}
-					{#if !data.hasPendingShip}
+					{#if !data.hasPendingShip && validUrl(data.project?.demoUrl ?? null) && validUrl(data.project?.githubUrl ?? null)}
 						<button
 							type="submit"
 							form="ship-form"

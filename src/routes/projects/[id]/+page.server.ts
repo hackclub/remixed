@@ -3,8 +3,8 @@ import { projects, ships, users } from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { decrypt } from '$lib/server/crypto';
-import { fail } from '@sveltejs/kit';
-import type { ProjectCategory } from '$lib';
+import { fail, isValidationError } from '@sveltejs/kit';
+import { validUrl, type ProjectCategory } from '$lib';
 import { getProjects } from '$lib/server/hackatimeProjects';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -44,11 +44,11 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		console.log(data);
-		const title = data.get('title') as string;
-		const description = data.get('description') as string;
-		const coverArt = data.get('coverArt') as string | null;
-		const githubUrl = data.get('githubUrl') as string | null;
-		const demoUrl = data.get('demoUrl') as string | null;
+		const title = (data.get('title') as string)?.trim();
+		const description = (data.get('description') as string)?.trim();
+		const coverArt = (data.get('coverArt') as string | null)?.trim();
+		const githubUrl = (data.get('githubUrl') as string | null)?.trim();
+		const demoUrl = (data.get('demoUrl') as string | null)?.trim();
 		const category = data.get('category') as ProjectCategory;
 		const newHackatimeProjects = (data.getAll('hackatimeProjects') ?? []) as string[];
 		const hackatimeProjects = [...newHackatimeProjects, ...project.hackatimeProjects];
@@ -62,6 +62,12 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { error: 'Unauthorized' });
 		const projectId = Number(params.id);
 		const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
+
+		if (project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
+		if (!validUrl(project.githubUrl) || !validUrl(project.demoUrl)) {
+			return fail(400, 'Github and Demo URLs required');
+		}
+
 		const approvedShips = await db
 			.select()
 			.from(ships)
