@@ -1,6 +1,7 @@
 @plugin '@tailwindcss/typography';
 @import 'tailwindcss';
 
+
 @theme {
 	--font-gothic: 'GothicOne', sans-serif;
 	--font-nikkyou: 'Nikkyou', sans-serif;

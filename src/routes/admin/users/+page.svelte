@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Sidebar from '$lib/Sidebar.svelte';
+	import { stylePopover } from '$lib/styles.js';
 	let { data } = $props();
 
 	let activeUserId = $state(null);
@@ -13,18 +14,14 @@
 
 <Sidebar />
 
-<div
-	class="fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-md bg-accent p-8 text-text shadow-md"
-	popover
-	id="manage-roles"
->
+<div class={stylePopover} popover id="manage-roles">
 	<h1 class="mb-8 text-center font-nikkyou text-3xl">ROLES</h1>
 	<form action="?/updateRoles" method="POST">
 		<input type="hidden" name="userId" value={activeUserId} />
 		<select
 			multiple
 			name="userRoles"
-			class="mb-2 w-full rounded-md bg-primary p-4 text-center font-gothic font-bold text-accent ring-primary focus:ring-2 focus:outline-none"
+			class="mb-2 w-full rounded-md bg-primary p-4 text-center font-gothic font-bold text-text ring-primary focus:ring-2 focus:outline-none"
 		>
 			<option value="ORGANIZER" selected={activeUserRoles.includes('ORGANIZER')}>
 				Organizer
@@ -35,7 +32,7 @@
 		<sub class="mb-4 block text-center font-zcool text-text">Ctrl+Click to select multiple</sub>
 		<button
 			type="submit"
-			class="mb-2 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-white"
+			class="mb-2 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-text"
 			>Confirm</button
 		>
 		<button
@@ -48,7 +45,7 @@
 
 <div class="pt-10 pr-10 pl-40">
 	<table class="w-full">
-		<thead class="font-gothic text-primary">
+		<thead class="font-gothic text-text">
 			<tr>
 				<th>ID</th>
 				<th>User</th>
@@ -84,7 +81,7 @@
 					</td>
 					<td>
 						<button
-							class="cursor-pointer bg-primary px-4 text-accent"
+							class="cursor-pointer bg-primary px-4 font-nikkyou text-text"
 							onclick={() => {
 								activeUserId = user.id;
 								openRolesMenu();

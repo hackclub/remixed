@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatHours } from '$lib';
+	import { stylePopover } from '$lib/styles.js';
 	import Sidebar from '$lib/Sidebar.svelte';
 
 	let { data } = $props();
@@ -17,11 +18,7 @@
 </script>
 
 <Sidebar />
-<div
-	class="fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-md bg-accent p-8 text-text shadow-md"
-	popover
-	id="confirm-approve"
->
+<div class={stylePopover} popover id="confirm-approve">
 	<h1 class="mb-8 text-center font-nikkyou text-3xl">APPROVE</h1>
 	<form action="?/approve" method="POST">
 		<input type="hidden" name="shipId" value={activeShipId} />
@@ -51,7 +48,7 @@
 		{/if}
 		<button
 			type="submit"
-			class="mb-2 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-white"
+			class="mb-2 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-text"
 			popovertarget="confirm-approve">Approve</button
 		>
 		<button
@@ -62,17 +59,13 @@
 	</form>
 </div>
 
-<div
-	class="fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-md bg-accent p-8 text-text shadow-md"
-	popover
-	id="confirm-reject"
->
+<div class={stylePopover} popover id="confirm-reject">
 	<h1 class="mb-8 text-center font-nikkyou text-3xl">REJECT</h1>
 	<form action="?/reject" method="POST">
 		<input type="hidden" name="shipId" value={activeShipId} />
 		<button
 			type="submit"
-			class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-white"
+			class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-text"
 			>Reject</button
 		>
 		<button
@@ -85,7 +78,7 @@
 
 <div class="pt-10 pr-10 pl-40">
 	<table class="w-full">
-		<thead class="font-gothic text-primary">
+		<thead class="font-gothic text-text">
 			<tr>
 				<th>ID</th>
 				<th>User</th>
@@ -122,7 +115,7 @@
 					</td>
 					<td>
 						<button
-							class="cursor-pointer bg-green-500 px-4 text-white"
+							class="cursor-pointer bg-primary px-4 font-nikkyou text-text"
 							onclick={() => {
 								activeUserId = String(shipInfo.user.id);
 								activeShipId = String(shipInfo.ship.id);
@@ -131,7 +124,7 @@
 							popovertarget="confirm-approve">Approve</button
 						>
 						<button
-							class="cursor-pointer bg-primary px-4 text-white"
+							class="cursor-pointer bg-accent-red px-4 font-nikkyou text-text"
 							popovertarget="confirm-reject"
 							onclick={() => (activeShipId = String(shipInfo.ship.id))}>Reject</button
 						>
