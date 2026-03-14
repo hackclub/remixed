@@ -8,7 +8,7 @@ import type { ShipStatusPub } from '$lib';
 
 const payoutMults = {
 	reviewer: [10.0, 15.0],
-	organizer: [10.0, 25.0]
+	organizer: [10.0, 25.0],
 };
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	return {
 		ships: projectShips,
 		roles: user.roles,
-		payoutMults
+		payoutMults,
 	};
 };
 
@@ -64,7 +64,7 @@ export const actions: Actions = {
 			db
 				.update(users)
 				.set({ notesBalance: sql`${users.notesBalance} + ${payout}` })
-				.where(eq(users.id, userId))
+				.where(eq(users.id, userId)),
 		]);
-	}
+	},
 };

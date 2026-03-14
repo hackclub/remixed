@@ -15,16 +15,16 @@ export async function getProjects(userId: number, accessToken: string) {
 			method: 'GET',
 			headers: {
 				Authorization: `Bearer ${accessToken}`,
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
-		}
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		},
 	).then((r) => r.json());
 
 	return allHackatimeProjects.projects.map((p: any) => {
 		const claimedBy = userProjects.find((up) => up.hackatimeProjects.includes(p.name));
 		return {
 			name: p.name,
-			claimedBy: claimedBy != undefined ? claimedBy.id : null
+			claimedBy: claimedBy != undefined ? claimedBy.id : null,
 		};
 	});
 }

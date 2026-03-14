@@ -13,7 +13,7 @@ export const users = pgTable('users', {
 	accessToken: text('access_token').notNull(), // encrypted
 	notesBalance: integer('notes_balance').notNull().default(0),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
-	roles: roleEnum('roles').array().notNull().default(['USER'])
+	roles: roleEnum('roles').array().notNull().default(['USER']),
 });
 
 export const projects = pgTable('projects', {
@@ -29,7 +29,7 @@ export const projects = pgTable('projects', {
 	hackatimeSeconds: integer('hackatime_seconds'),
 	githubUrl: text('github_url'),
 	demoUrl: text('demo_url'),
-	createdAt: timestamp('created_at').notNull().defaultNow()
+	createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export const ships = pgTable('ships', {
@@ -39,7 +39,8 @@ export const ships = pgTable('ships', {
 		.references(() => projects.id),
 	seconds: integer('seconds').notNull(),
 	status: shipStatusEnum('status').notNull().default('PENDING'),
-	submittedAt: timestamp('submitted_at').notNull().defaultNow()
+	submittedAt: timestamp('submitted_at').notNull().defaultNow(),
+	feedback: text('feedback'),
 });
 
 export const notesLedger = pgTable('notes_ledger', {
@@ -50,7 +51,7 @@ export const notesLedger = pgTable('notes_ledger', {
 	delta: integer('delta').notNull(),
 	reason: text('reason').notNull(),
 	refId: integer('ref_id'),
-	createdAt: timestamp('created_at').notNull().defaultNow()
+	createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export const shopItems = pgTable('shop_items', {
@@ -58,7 +59,7 @@ export const shopItems = pgTable('shop_items', {
 	name: text('name').notNull(),
 	description: text('description'),
 	cost: integer('cost').notNull(),
-	stock: integer('stock')
+	stock: integer('stock'),
 });
 
 export const orders = pgTable('orders', {
@@ -70,5 +71,5 @@ export const orders = pgTable('orders', {
 		.notNull()
 		.references(() => shopItems.id),
 	status: orderStatusEnum('status').notNull().default('PENDING'),
-	createdAt: timestamp('created_at').notNull().defaultNow()
+	createdAt: timestamp('created_at').notNull().defaultNow(),
 });

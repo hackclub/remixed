@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const allUsers = await db.select().from(users);
 	console.log(allUsers);
 	return {
-		users: allUsers
+		users: allUsers,
 	};
 };
 
@@ -22,5 +22,5 @@ export const actions: Actions = {
 			.update(users)
 			.set({ roles: ['USER', ...userRoles] })
 			.where(eq(users.id, userId));
-	}
+	},
 };

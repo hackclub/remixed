@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			.from(projects)
 			.innerJoin(users, eq(users.id, projects.userId))
 			.where(eq(projects.id, projectId)),
-		db.select().from(ships).where(eq(ships.projectId, projectId))
+		db.select().from(ships).where(eq(ships.projectId, projectId)),
 	]);
 	const project = projectInfo.projects;
 	const user = projectInfo.users;
@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		project,
 		user,
 		hasPendingShip,
-		currentUserId: locals.user.id
+		currentUserId: locals.user.id,
 	};
 };
 
@@ -71,5 +71,5 @@ export const actions: Actions = {
 
 		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
 		await db.insert(ships).values({ projectId, seconds: newSeconds });
-	}
+	},
 };

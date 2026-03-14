@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		projects: projects.map((proj: any) => {
 			return { name: proj.name, claimed: proj.claimedBy != null };
-		})
+		}),
 	};
 };
 
@@ -38,9 +38,9 @@ export const actions = {
 			title,
 			description,
 			category,
-			hackatimeProjects
+			hackatimeProjects,
 		});
 
 		redirect(303, '/projects');
-	}
+	},
 } satisfies Actions;

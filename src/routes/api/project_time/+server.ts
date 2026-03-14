@@ -20,14 +20,14 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			method: 'GET',
 			headers: {
 				Authorization: `Bearer ${accessToken}`,
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
 		})
 			.then((r) => r.json())
 			.then((resp) =>
 				resp.projects
 					.map((proj: any) => proj.total_seconds)
-					.reduce((a: number, b: number) => a + b, 0)
+					.reduce((a: number, b: number) => a + b, 0),
 			);
 	}
 

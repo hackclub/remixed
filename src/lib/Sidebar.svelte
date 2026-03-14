@@ -8,11 +8,11 @@
 		{ name: 'Discover', route: '/discover' },
 		{ name: 'Shop', route: '/shop' },
 		{ name: 'Profile', route: '/user' },
-		{ name: 'Log Out', route: 'LOGOUT' }
+		{ name: 'Log Out', route: 'LOGOUT' },
 	];
 
 	let currentPageIndex: number = $state(
-		records.findIndex((rec) => page.url.pathname.startsWith(rec.route))
+		records.findIndex((rec) => page.url.pathname.startsWith(rec.route)),
 	);
 	let hoveredIndex: number = $state(currentPageIndex);
 

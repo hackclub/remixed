@@ -9,8 +9,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 		body: new URLSearchParams({
 			token: env.SLACK_BOT_USER_OAUTH_TOKEN,
-			user: locals.user.slackId!
-		})
+			user: locals.user.slackId!,
+		}),
 	}).then((r) => r.json());
 
 	return new Response(JSON.stringify(slackProfile.profile));

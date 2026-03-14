@@ -7,7 +7,7 @@
 		new URLSearchParams({
 			client_id: env.PUBLIC_HACKATIME_OAUTH_UID!,
 			redirect_uri: env.PUBLIC_CALLBACK_URL!,
-			response_type: 'code'
+			response_type: 'code',
 		}).toString();
 	let selectedIndex: number | null = $state(null);
 	const expandAmount = 300;

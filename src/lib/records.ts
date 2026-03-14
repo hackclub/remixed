@@ -17,8 +17,8 @@ export const records: Record[] = [
 			bg: '#dc2626',
 			border: '#fb923c',
 			titleColor: '#fff7ed',
-			descColor: '#fecaca'
-		}
+			descColor: '#fecaca',
+		},
 	},
 	{
 		title: 'WEBSITE',
@@ -27,8 +27,8 @@ export const records: Record[] = [
 			bg: '#1e3a8a',
 			border: '#93c5fd',
 			titleColor: '#eff6ff',
-			descColor: '#bfdbfe'
-		}
+			descColor: '#bfdbfe',
+		},
 	},
 	{
 		title: 'MUSIC',
@@ -37,8 +37,8 @@ export const records: Record[] = [
 			bg: '#6b21a8',
 			border: '#e879f9',
 			titleColor: '#fdf4ff',
-			descColor: '#e9d5ff'
-		}
+			descColor: '#e9d5ff',
+		},
 	},
 	{
 		title: 'OTHER',
@@ -47,7 +47,7 @@ export const records: Record[] = [
 			bg: '#1c1917',
 			border: '#a8a29e',
 			titleColor: '#fafaf9',
-			descColor: '#d6d3d1'
-		}
-	}
+			descColor: '#d6d3d1',
+		},
+	},
 ];
