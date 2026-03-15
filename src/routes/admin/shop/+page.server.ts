@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { shopItems } from '$lib/server/db/schema';
+import { auditLogs, shopItems } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -14,19 +14,31 @@ export const actions: Actions = {
 		const data = await request.formData();
 		console.log(data);
 
-		const id = Number(data.get('itemId'));
+		let id = Number(data.get('itemId'));
 		const name = (data.get('name') as string).trim();
 		const description = (data.get('description') as string).trim();
 		const cost = Number(data.get('cost'));
 		const imageUrl = (data.get('imageUrl') as string).trim();
+		let newItem = {};
 
 		if (id == -1) {
-			await db.insert(shopItems).values({ name, description, cost, imageUrl });
+			[newItem] = await db
+				.insert(shopItems)
+				.values({ name, description, cost, imageUrl })
+				.returning();
 		} else {
-			await db
+			[newItem] = await db
 				.update(shopItems)
 				.set({ name, description, cost, imageUrl })
-				.where(eq(shopItems.id, id));
+				.where(eq(shopItems.id, id))
+				.returning();
 		}
+		await db
+			.insert(auditLogs)
+			.values({
+				category: 'SHOP_ITEM',
+				userId: locals.user!.id,
+				data: { item: newItem, update: id != -1 },
+			});
 	},
 };
