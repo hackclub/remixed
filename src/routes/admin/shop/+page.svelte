@@ -89,11 +89,11 @@
 					<td>
 						{item.cost}
 					</td>
-					<td class="max-w-80">
+					<td class="h-20">
 						{item.description}
 					</td>
 					<td>
-						<img src={item.imageUrl} alt="shop item" class="h-10 transition-all hover:h-80" />
+						<img src={item.imageUrl} alt="shop item" class="w-30" />
 					</td>
 					<td>
 						<button
