@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { stylePopover } from './styles';
+	import { styleButton, stylePopover } from './styles';
 
 	const records = [
 		{ name: 'Dashboard', route: '/dashboard' },
@@ -44,7 +44,7 @@
 	<a
 		href="/auth/logout"
 		data-sveltekit-preload-data="off"
-		class="block w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-text"
+		class="{styleButton} block w-full bg-primary"
 	>
 		Log Out
 	</a>
