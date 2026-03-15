@@ -10,6 +10,7 @@
 <div class="mt-10 mr-10 ml-40">
 	<h1 class="{styleH1} mb-4 text-text">SHOP</h1>
 	<h2 class="{styleH2} mb-4 text-text">BALANCE: {data.balance}<Note /></h2>
+	<a href="/shop/orders" class="{styleButton} mx-auto mb-8 block w-max bg-primary">Your Orders</a>
 	<div class="flex flex-wrap justify-center gap-8">
 		{#each data.items as item}
 			<div class="h-min w-60 rounded-md bg-accent-purple p-4 shadow-md">
