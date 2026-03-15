@@ -1,6 +1,28 @@
 <script lang="ts">
 	import Sidebar from '$lib/Sidebar.svelte';
+	import Note from '$lib/Note.svelte';
+	import { styleButton, styleH1, styleH2 } from '$lib/styles';
+
+	let { data } = $props();
 </script>
 
 <Sidebar />
-<div class="ml-40"><h1>shop</h1></div>
+<div class="mt-10 mr-10 ml-40">
+	<h1 class="{styleH1} mb-4 text-text">SHOP</h1>
+	<h2 class="{styleH2} mb-4 text-text">BALANCE: {data.balance}<Note /></h2>
+	<div class="flex flex-wrap justify-center gap-8">
+		{#each data.items as item}
+			<div class="h-min w-60 rounded-md bg-accent-purple p-4 shadow-md">
+				<h2 class="{styleH2} mb-4 text-text">{item.name}</h2>
+				<img src={item.imageUrl} alt="item" />
+				<p class="my-4 text-center font-zcool text-sm text-text">{item.description}</p>
+				<a
+					href="/shop/{item.id}"
+					class="{styleButton} {data.balance >= item.cost
+						? 'bg-primary'
+						: 'bg-accent-red'} block w-full">{item.cost}<Note /></a
+				>
+			</div>
+		{/each}
+	</div>
+</div>
