@@ -10,7 +10,9 @@
 	<h1 class="{styleH1} mb-4 text-text">ORDERS</h1>
 	<div class="flex flex-row flex-wrap justify-center gap-4">
 		{#each data.orders as orderInfo}
-			<div class="flex h-32 gap-4 rounded-md bg-accent-purple p-4">
+			<div
+				class="relative top-0 flex h-32 gap-4 bg-accent-purple p-4 shadow-button transition-all hover:-top-1 hover:shadow-button-hover"
+			>
 				<img src={orderInfo.item.imageUrl} alt="item" />
 				<div class="flex h-full flex-col justify-between">
 					<div>
@@ -18,7 +20,7 @@
 						<p
 							class="{orderInfo.order.status == 'PENDING'
 								? 'bg-accent-red'
-								: 'bg-primary'} text-center font-gothic text-sm text-text"
+								: 'bg-primary'} mt-2 box-content border-4 border-b-8 border-text text-center font-gothic text-sm text-text"
 						>
 							{orderInfo.order.status}
 						</p>

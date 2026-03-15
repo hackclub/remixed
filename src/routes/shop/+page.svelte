@@ -11,9 +11,9 @@
 	<h1 class="{styleH1} mb-4 text-text">SHOP</h1>
 	<h2 class="{styleH2} mb-4 text-text">BALANCE: {data.balance}<Note /></h2>
 	<a href="/shop/orders" class="{styleButton} mx-auto mb-8 block w-max bg-primary">Your Orders</a>
-	<div class="flex flex-wrap justify-center gap-8">
+	<div class="mb-8 flex flex-wrap justify-center gap-8">
 		{#each data.items as item}
-			<div class="h-min w-60 rounded-md bg-accent-purple p-4 shadow-md">
+			<div class="relative top-0 h-min w-60 bg-accent-purple p-4 shadow-button">
 				<h2 class="{styleH2} mb-4 text-text">{item.name}</h2>
 				<img src={item.imageUrl} alt="item" />
 				<p class="my-4 text-center font-zcool text-sm text-text">{item.description}</p>
