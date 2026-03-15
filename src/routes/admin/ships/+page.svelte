@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatHours } from '$lib';
-	import { stylePopover } from '$lib/styles.js';
+	import { styleH1, stylePopover } from '$lib/styles.js';
 	import Sidebar from '$lib/Sidebar.svelte';
 
 	let { data } = $props();
@@ -77,6 +77,7 @@
 </div>
 
 <div class="pt-10 pr-10 pl-40">
+	<h1 class="{styleH1} mb-4 text-text">SHIPS</h1>
 	<table class="w-full">
 		<thead class="font-gothic text-text">
 			<tr>

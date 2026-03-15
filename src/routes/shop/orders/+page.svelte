@@ -6,7 +6,7 @@
 </script>
 
 <Sidebar />
-<div class="mt-10 mr-10 ml-40">
+<div class="pt-10 pr-10 pl-40">
 	<h1 class="{styleH1} mb-4 text-text">ORDERS</h1>
 	<div class="flex flex-row flex-wrap justify-center gap-4">
 		{#each data.orders as orderInfo}

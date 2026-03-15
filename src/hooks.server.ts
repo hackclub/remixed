@@ -6,7 +6,7 @@ import type { Handle } from '@sveltejs/kit';
 
 const PROTECTED = ['/dashboard', '/projects', '/api/me', '/api/projects', '/api/ship'];
 
-const ORG_ONLY = ['/admin/users', '/admin/shop'];
+const ORG_ONLY = ['/admin/users', '/admin/shop', '/admin/orders', '/api/admin/order_info'];
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const userId = event.cookies.get('session_user_id');
