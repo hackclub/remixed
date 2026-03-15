@@ -3,7 +3,7 @@
 	import CDProject from '$lib/CDProject.svelte';
 	import CassetteProject from '$lib/CassetteProject.svelte';
 	import { onMount } from 'svelte';
-	import { styleButton } from '$lib/styles';
+	import { styleButton, styleH1 } from '$lib/styles';
 
 	let userProjects = $state([]);
 
@@ -25,9 +25,9 @@
 </script>
 
 <Sidebar />
-<div class="ml-32 p-8">
+<div class="p-10 pl-40">
 	<div class="mb-6 flex items-center justify-center gap-8">
-		<h1 class="font-nikkyou text-3xl font-bold text-text">Projects</h1>
+		<h1 class="{styleH1} text-text">Projects</h1>
 		<a href="/projects/new" class="{styleButton}  bg-primary">+ New</a>
 	</div>
 

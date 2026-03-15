@@ -5,7 +5,7 @@
 	import type { PageProps } from './$types';
 	import { formatHours, validUrl } from '$lib';
 	import { scale } from 'svelte/transition';
-	import { styleButton, styleH1, styleInput } from '$lib/styles';
+	import { styleButton, styleH1, styleInput, stylePopover } from '$lib/styles';
 
 	let { data }: PageProps = $props();
 
@@ -51,11 +51,7 @@
 	<div class="h-screen pt-8 pr-8 pl-40">
 		<main class="mx-auto flex h-full w-full items-center">
 			<form method="POST" action="?/update">
-				<div
-					popover
-					id="hackatime-project-select"
-					class="popover fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-md bg-secondary p-4 shadow-xl"
-				>
+				<div popover id="hackatime-project-select" class={stylePopover}>
 					<h1 class="text-center font-nikkyou text-2xl text-text">Hackatime Projects</h1>
 					<select
 						multiple
@@ -76,7 +72,7 @@
 						>Ctrl+Click to select multiple</sub
 					>
 				</div>
-				<div class="relative grid w-full grid-cols-2 gap-8 rounded-lg bg-text">
+				<div class="relative grid w-full grid-cols-2 gap-8 rounded-sm bg-text shadow-lg">
 					<div
 						transition:scale={{ duration: 600 }}
 						class="absolute top-1/2 left-1/2 h-9/10 -translate-1/2 rounded-xl border-2 border-secondary"
@@ -102,7 +98,7 @@
 								<button
 									type="button"
 									popovertarget="hackatime-project-select"
-									class="{styleButton} mb-2 bg-accent-purple"
+									class="mb-2 cursor-pointer rounded-md bg-accent-purple px-4 py-2 font-nikkyou text-2xl text-text"
 								>
 									Hackatime
 								</button>

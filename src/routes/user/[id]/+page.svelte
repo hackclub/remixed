@@ -7,17 +7,17 @@
 </script>
 
 <Sidebar />
-<div class=" pt-10 pr-10 pl-40">
+<div class="p-10 pl-40">
 	<h1 class="{styleH1} mb-4 text-text">{data.user.username}</h1>
 
 	{#if data.user.roles.includes('STAFF')}
-		<div class="mx-auto max-w-80 rounded-md bg-accent-red p-2 shadow-md">
-			<img src={data.user.avatarUrl} alt="profile" class="rounded-md" />
+		<div class="mx-auto max-w-80 bg-accent-red p-2">
+			<img src={data.user.avatarUrl} alt="profile" class="" />
 			<p class="text-center font-gothic tracking-wider text-text">Remixed Staff</p>
 		</div>
 	{:else}
 		<div class="mx-auto max-w-80">
-			<img src={data.user.avatarUrl} alt="profile" class="rounded-md" />
+			<img src={data.user.avatarUrl} alt="profile" class="rounded-md shadow-button" />
 		</div>
 	{/if}
 

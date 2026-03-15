@@ -20,8 +20,8 @@
 	<div class="flex h-full w-full flex-col justify-center">
 		<h1 class="{styleH1} mb-4 text-text">PURCHASE</h1>
 		<h2 class="{styleH2} mb-4 text-text">BALANCE: {data.balance}<Note /></h2>
-		<div class="grid grid-cols-2 gap-2 rounded-lg bg-accent-purple shadow-md">
-			<div class="m-4 rounded-lg bg-text p-8">
+		<div class="grid grid-cols-2 gap-2 bg-accent-purple shadow-button">
+			<div class="{styleButton} m-12 bg-accent-red">
 				<img src={data.item.imageUrl} alt="item" />
 			</div>
 			<div class="flex flex-col justify-between p-4">

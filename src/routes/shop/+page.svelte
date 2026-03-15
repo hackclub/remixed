@@ -7,7 +7,7 @@
 </script>
 
 <Sidebar />
-<div class="pt-10 pr-10 pl-40">
+<div class="p-10 pl-40">
 	<h1 class="{styleH1} mb-4 text-text">SHOP</h1>
 	<h2 class="{styleH2} mb-4 text-text">BALANCE: {data.balance}<Note /></h2>
 	<a href="/shop/orders" class="{styleButton} mx-auto mb-8 block w-max bg-primary">Your Orders</a>

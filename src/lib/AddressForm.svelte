@@ -80,4 +80,4 @@
 	required
 	class="{styleInput} w-full font-jua"
 />
-<input type="submit" class="{styleButton} mt-4 w-full bg-primary" value="Place Order" />
+<input type="submit" class="{styleButton} mt-8 block w-full bg-primary" value="Place Order" />
