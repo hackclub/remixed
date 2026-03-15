@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { users } from '$lib/server/db/schema';
+import { auditLogs, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
@@ -24,5 +24,8 @@ export const actions: Actions = {
 			.update(users)
 			.set({ roles: ['USER', ...userRoles] })
 			.where(eq(users.id, userId));
+		await db
+			.insert(auditLogs)
+			.values({ category: 'EDIT_USER', userId: locals.user.id, data: { userId, userRoles } });
 	},
 };
