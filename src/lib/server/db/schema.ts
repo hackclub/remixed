@@ -63,6 +63,7 @@ export const shopItems = pgTable('shop_items', {
 	imageUrl: text('imageUrl'),
 });
 
+// important fields will be encrypted
 export const orders = pgTable('orders', {
 	id: serial('id').primaryKey(),
 	userId: integer('user_id')
@@ -72,5 +73,13 @@ export const orders = pgTable('orders', {
 		.notNull()
 		.references(() => shopItems.id),
 	status: orderStatusEnum('status').notNull().default('PENDING'),
+	fullName: text('full_name').notNull(),
+	email: text('email').notNull(),
+	addressLine1: text('address_line_1').notNull(),
+	addressLine2: text('address_line_2'),
+	city: text('city').notNull(),
+	state: text('state').notNull(),
+	country: text('country').notNull(),
+	zipCode: text('zipcode').notNull(),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 });
