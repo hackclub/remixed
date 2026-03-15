@@ -1,9 +1,25 @@
-import { pgTable, serial, text, integer, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import {
+	pgTable,
+	serial,
+	text,
+	integer,
+	timestamp,
+	pgEnum,
+	PgTable,
+	json,
+} from 'drizzle-orm/pg-core';
 
 export const roleEnum = pgEnum('role', ['USER', 'STAFF', 'REVIEWER', 'ORGANIZER']);
 export const categoryEnum = pgEnum('category', ['GAME', 'WEBSITE', 'DESKTOP_APP', 'CLI', 'OTHER']);
 export const shipStatusEnum = pgEnum('ship_status', ['PENDING', 'APPROVED', 'REJECTED']);
 export const orderStatusEnum = pgEnum('order_status', ['PENDING', 'FULFILLED']);
+export const auditCategory = pgEnum('audit_category', [
+	'ORDER_INFO',
+	'FULFILL',
+	'EDIT_USER',
+	'SHIP_REVIEW',
+	'SHOP_ITEM',
+]);
 
 export const users = pgTable('users', {
 	id: serial('id').primaryKey(),
@@ -81,5 +97,15 @@ export const orders = pgTable('orders', {
 	state: text('state').notNull(),
 	country: text('country').notNull(),
 	zipCode: text('zipcode').notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const auditLogs = pgTable('audit_logs', {
+	id: serial('id').primaryKey(),
+	userId: integer('user_id')
+		.notNull()
+		.references(() => users.id),
+	category: auditCategory('category').notNull(),
+	data: json('data'),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 });
