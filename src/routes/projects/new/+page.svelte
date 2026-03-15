@@ -42,13 +42,17 @@
 		id="hackatime"
 		class="rounded-md bg-accent-purple p-4 text-center font-gothic font-bold text-text ring-secondary focus:ring-2 focus:outline-none"
 	>
-		{#each data.projects as proj}
-			{#if proj.claimed}
-				<option disabled value={proj.name}>{proj.name}</option>
-			{:else}
-				<option value={proj.name}>{proj.name}</option>
-			{/if}
-		{/each}
+		{#if data.projects.length > 0}
+			{#each data.projects as proj}
+				{#if proj.claimed}
+					<option disabled value={proj.name}>{proj.name}</option>
+				{:else}
+					<option value={proj.name}>{proj.name}</option>
+				{/if}
+			{/each}
+		{:else}
+			<option disabled value="none"><i>No Projects Found</i></option>
+		{/if}
 	</select>
 	<sub class="mt-2 text-center font-zcool text-text">Ctrl+Click to select multiple</sub>
 

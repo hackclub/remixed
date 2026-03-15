@@ -31,9 +31,13 @@
 		<a href="/projects/new" class="{styleButton}  bg-primary">+ New</a>
 	</div>
 
-	<div class="flex w-full flex-wrap justify-center gap-6">
-		{#each userProjects as project}
-			<CDProject {project} />
-		{/each}
-	</div>
+	{#if userProjects.length > 0}
+		<div class="flex w-full flex-wrap justify-center gap-6">
+			{#each userProjects as project}
+				<CDProject {project} />
+			{/each}
+		</div>
+	{:else}
+		<p class="text-center font-gothic text-xl text-text">Get started by creating a project!</p>
+	{/if}
 </div>

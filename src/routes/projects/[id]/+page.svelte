@@ -56,17 +56,21 @@
 					<select
 						multiple
 						name="hackatimeProjects"
-						class="w-full rounded-md bg-primary p-4 text-center font-gothic font-bold text-text ring-primary focus:ring-2 focus:outline-none"
+						class="{styleInput}  w-full text-center font-jua text-xl font-bold"
 					>
-						{#each hackatimeProjects as proj}
-							{#if proj.claimedBy == null}
-								<option selected={proj.claimedBy == data.project!.id} value={proj.name}>
-									{proj.name}
-								</option>
-							{:else}
-								<option disabled value={proj.name}>{proj.name}</option>
-							{/if}
-						{/each}
+						{#if hackatimeProjects && hackatimeProjects.length > 0}
+							{#each hackatimeProjects as proj}
+								{#if proj.claimedBy == null}
+									<option selected={proj.claimedBy == data.project!.id} value={proj.name}>
+										{proj.name}
+									</option>
+								{:else}
+									<option disabled value={proj.name}>{proj.name}</option>
+								{/if}
+							{/each}
+						{:else}
+							<option disabled value="none"><i>No Projects Found</i></option>
+						{/if}
 					</select>
 					<sub class="mt-2 block text-center font-zcool text-text"
 						>Ctrl+Click to select multiple</sub

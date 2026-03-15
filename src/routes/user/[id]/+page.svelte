@@ -22,9 +22,15 @@
 	{/if}
 
 	<h2 class="{styleH2} mt-12 mb-4 text-text">Projects</h2>
-	<div class="flex h-full flex-row flex-wrap justify-center gap-8">
-		{#each data.userProjects as project}
-			<CDProject {project} />
-		{/each}
-	</div>
+	{#if data.userProjects.length > 0}
+		<div class="flex h-full flex-row flex-wrap justify-center gap-8">
+			{#each data.userProjects as project}
+				<CDProject {project} />
+			{/each}
+		</div>
+	{:else}
+		<p class="text-center font-gothic text-xl text-text">
+			{data.user?.username} doesn't have any projects!
+		</p>
+	{/if}
 </div>
