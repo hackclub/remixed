@@ -14,7 +14,7 @@
 			name: '',
 			cost: 0,
 			description: '',
-			imageUrl: ''
+			imageUrl: '',
 		};
 	}
 </script>
@@ -58,7 +58,7 @@
 				class="{styleInput} w-full font-mono text-xs"
 				bind:value={activeItem.imageUrl}
 			/>
-			<input type="submit" value={actionText} class="{styleButton} mt-4 w-full bg-primary" />
+			<input type="submit" value={actionText} class="{styleButton} mt-8 w-full bg-primary" />
 		</form>
 	{/if}
 </div>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatHours } from '$lib';
-	import { styleH1, stylePopover } from '$lib/styles.js';
+	import { styleButton, styleH1, stylePopover } from '$lib/styles.js';
 	import Sidebar from '$lib/Sidebar.svelte';
 
 	let { data } = $props();
@@ -46,16 +46,7 @@
 				Organizer Payout
 			</label>
 		{/if}
-		<button
-			type="submit"
-			class="mb-2 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-text"
-			popovertarget="confirm-approve">Approve</button
-		>
-		<button
-			type="button"
-			class="w-full cursor-pointer rounded-md bg-text px-4 py-4 text-center font-gothic text-xl text-secondary"
-			popovertarget="confirm-approve">Cancel</button
-		>
+		<input type="submit" class="{styleButton} mt-4 w-full bg-primary" value="Confirm" />
 	</form>
 </div>
 
@@ -63,16 +54,7 @@
 	<h1 class="mb-8 text-center font-nikkyou text-3xl">REJECT</h1>
 	<form action="?/reject" method="POST">
 		<input type="hidden" name="shipId" value={activeShipId} />
-		<button
-			type="submit"
-			class="mb-4 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-text"
-			>Reject</button
-		>
-		<button
-			type="button"
-			class="w-full cursor-pointer rounded-md bg-text px-4 py-4 text-center font-gothic text-xl text-secondary"
-			popovertarget="confirm-reject">Cancel</button
-		>
+		<input type="submit" class="{styleButton} w-full bg-accent-red" value="Confirm" />
 	</form>
 </div>
 

@@ -66,7 +66,7 @@
 					</span>
 				</li>
 			</ul>
-			<input type="submit" value="Complete" class="{styleButton} mt-4 w-full bg-primary" />
+			<input type="submit" value="Complete" class="{styleButton} mt-8 w-full bg-primary" />
 		{/if}
 	</form>
 </div>

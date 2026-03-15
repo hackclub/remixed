@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Sidebar from '$lib/Sidebar.svelte';
-	import { stylePopover } from '$lib/styles.js';
+	import { styleButton, styleInput, stylePopover } from '$lib/styles.js';
 	let { data } = $props();
 
 	let activeUserId = $state(null);
@@ -18,28 +18,16 @@
 	<h1 class="mb-8 text-center font-nikkyou text-3xl">ROLES</h1>
 	<form action="?/updateRoles" method="POST">
 		<input type="hidden" name="userId" value={activeUserId} />
-		<select
-			multiple
-			name="userRoles"
-			class="mb-2 w-full rounded-md bg-primary p-4 text-center font-gothic font-bold text-text ring-primary focus:ring-2 focus:outline-none"
-		>
+		<select multiple name="userRoles" class="{styleInput} w-full text-center font-gothic text-lg">
 			<option value="ORGANIZER" selected={activeUserRoles.includes('ORGANIZER')}>
 				Organizer
 			</option>
 			<option value="REVIEWER" selected={activeUserRoles.includes('REVIEWER')}> Reviewer </option>
 			<option value="STAFF" selected={activeUserRoles.includes('STAFF')}> Staff </option>
 		</select>
-		<sub class="mb-4 block text-center font-zcool text-text">Ctrl+Click to select multiple</sub>
-		<button
-			type="submit"
-			class="mb-2 w-full cursor-pointer rounded-md bg-primary px-4 py-4 text-center font-gothic text-xl text-text"
-			>Confirm</button
+		<sub class="mt-2 mb-4 block text-center font-zcool text-text">Ctrl+Click to select multiple</sub
 		>
-		<button
-			type="button"
-			class="w-full cursor-pointer rounded-md bg-text px-4 py-4 text-center font-gothic text-xl text-secondary"
-			popovertarget="manage-roles">Cancel</button
-		>
+		<input type="submit" class="{styleButton} mt-8 block w-full bg-primary" value="Confirm" />
 	</form>
 </div>
 
