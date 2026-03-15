@@ -5,6 +5,7 @@
 	import type { PageProps } from './$types';
 	import { formatHours, validUrl } from '$lib';
 	import { scale } from 'svelte/transition';
+	import { styleButton, styleH1, styleInput } from '$lib/styles';
 
 	let { data }: PageProps = $props();
 
@@ -86,10 +87,10 @@
 								type="text"
 								name="title"
 								bind:value={draft.title}
-								class="mb-4 rounded-md bg-accent-purple px-4 py-2 text-center font-nikkyou text-5xl text-primary ring-secondary outline-none focus:ring-2"
+								class="{styleInput} mb-4 text-center font-nikkyou text-5xl text-primary"
 							/>
 						{:else}
-							<h1 class="text-center font-nikkyou text-5xl text-primary">{draft.title}</h1>
+							<h1 class="{styleH1} text-primary">{draft.title}</h1>
 							<a
 								href="/user/{data.user.id}"
 								class="mb-4 text-center font-nikkyou text-xl text-primary underline"
@@ -101,7 +102,7 @@
 								<button
 									type="button"
 									popovertarget="hackatime-project-select"
-									class="mb-2 cursor-pointer rounded-md bg-accent-purple p-2 font-gothic text-text"
+									class="{styleButton} mb-2 bg-accent-purple"
 								>
 									Hackatime
 								</button>
@@ -109,7 +110,7 @@
 									name="category"
 									id="category"
 									bind:value={draft.category}
-									class="mb-2 cursor-pointer rounded-md bg-accent-purple p-2 text-center font-gothic text-sm font-bold text-text ring-secondary focus:ring-2 focus:outline-none"
+									class="{styleInput} mb-2 cursor-pointer text-center font-gothic text-sm font-bold text-text"
 								>
 									<option value="GAME">Game</option>
 									<option value="WEBSITE">Website</option>
@@ -137,7 +138,7 @@
 							<textarea
 								name="description"
 								bind:value={draft.description}
-								class="h-0 grow overflow-auto rounded-md bg-accent-purple p-2 font-jua text-text ring-secondary outline-none focus:ring-2"
+								class="{styleInput} h-0 grow overflow-auto font-jua text-text"
 							>
 							</textarea>
 							<p class="mt-2 text-center font-gothic text-xs text-accent-red">
@@ -170,7 +171,7 @@
 									name="coverArt"
 									placeholder="Image URL"
 									bind:value={draft.coverArt}
-									class="w-full rounded-md bg-accent-purple px-4 py-2 font-mono text-xs text-text ring-secondary outline-none focus:ring-2"
+									class="{styleInput} w-full font-mono text-xs text-text"
 								/>
 								<p class="mt-2 rounded-md bg-accent-purple p-2 text-center font-zcool text-sm">
 									Upload images to <a
@@ -185,20 +186,16 @@
 				</div>
 
 				<div class="mt-8 flex gap-4">
-					<!-- TODO: add like a play icon like its a play button on a boombox or smth -->
 					{#if editing}
 						<input
 							placeholder="Github URL"
 							type="text"
 							name="githubUrl"
 							bind:value={draft.githubUrl}
-							class="w-full rounded-md bg-accent-purple px-4 py-2 font-mono text-xs text-text ring-secondary outline-none focus:ring-2"
+							class="{styleInput} w-full font-mono text-xs text-text"
 						/>
 					{:else if validUrl(data.project?.githubUrl ?? null)}
-						<a
-							href={data.project?.githubUrl}
-							class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-text"
-						>
+						<a href={data.project?.githubUrl} class="{styleButton} w-full bg-primary">
 							Repository
 						</a>
 					{/if}
@@ -209,49 +206,27 @@
 							type="text"
 							name="demoUrl"
 							bind:value={draft.demoUrl}
-							class="w-full rounded-md bg-accent-purple px-4 py-2 font-mono text-xs text-text ring-secondary outline-none focus:ring-2"
+							class="{styleInput} w-full font-mono text-xs text-text"
 						/>
 					{:else if validUrl(data.project?.demoUrl ?? null)}
-						<a
-							href={data.project?.demoUrl}
-							class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-text"
-						>
-							Demo
-						</a>
+						<a href={data.project?.demoUrl} class="{styleButton} w-full bg-primary"> Demo </a>
 					{/if}
 
 					{#if !editing}
 						{#if !data.hasPendingShip && validUrl(data.project?.demoUrl ?? null) && validUrl(data.project?.githubUrl ?? null) && data.project?.hackatimeProjects.length != 0}
-							<button
-								type="submit"
-								form="ship-form"
-								class="w-full cursor-pointer rounded-md bg-primary px-4 py-2 text-center font-gothic text-xl text-text"
-							>
+							<button type="submit" form="ship-form" class="{styleButton} w-full bg-primary">
 								Ship
 							</button>
 						{/if}
 					{/if}
 
 					{#if !editing}
-						<button
-							class="w-full cursor-pointer rounded-md bg-secondary px-4 py-2 text-center font-gothic text-xl text-text"
-							onclick={startEdit}
-						>
-							Edit
-						</button>
+						<button class="{styleButton} w-full bg-secondary" onclick={startEdit}> Edit </button>
 					{:else}
-						<button
-							type="button"
-							class="w-full cursor-pointer rounded-md bg-secondary px-4 py-2 text-center font-gothic text-xl text-text"
-							onclick={cancelEdit}
-						>
+						<button type="button" class="{styleButton} w-full bg-secondary" onclick={cancelEdit}>
 							Cancel
 						</button>
-						<button
-							type="submit"
-							class="w-full cursor-pointer rounded-md bg-secondary px-4 py-2 text-center font-gothic text-xl text-text"
-							formaction="?/update"
-						>
+						<button type="submit" class="{styleButton} w-full bg-secondary" formaction="?/update">
 							Submit
 						</button>
 					{/if}

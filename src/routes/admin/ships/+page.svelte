@@ -83,6 +83,7 @@
 				<th>ID</th>
 				<th>User</th>
 				<th>Title</th>
+				<th>Type</th>
 				<th>GitHub</th>
 				<th>Demo</th>
 				<th>Time</th>
@@ -97,10 +98,13 @@
 							{shipInfo.user.username}
 						</a>
 					</td>
-					<td class="">
+					<td>
 						<a href="/projects/{shipInfo.project.id}">
 							{shipInfo.project.title}
 						</a>
+					</td>
+					<td>
+						{shipInfo.project.category}
 					</td>
 					<td>
 						<a href={shipInfo.project.githubUrl} target="_blank" rel="noopener noreferrer">

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
+	import { stylePopover } from './styles';
 
 	const records = [
 		{ name: 'Dashboard', route: '/dashboard' },
@@ -38,11 +39,7 @@
 	}
 </script>
 
-<div
-	class="fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-xl border-2 border-secondary bg-accent-red p-8 text-text shadow-xl/30"
-	popover
-	id="confirm-signout"
->
+<div class={stylePopover} popover id="confirm-signout">
 	<h1 class="mb-4 text-center font-gothic text-2xl text-text">Are you sure?</h1>
 	<a
 		href="/auth/logout"

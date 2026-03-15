@@ -2,6 +2,7 @@
 	import Sidebar from '$lib/Sidebar.svelte';
 	import { onMount } from 'svelte';
 	import type { PageProps } from './$types';
+	import { styleButton } from '$lib/styles';
 
 	let { data }: PageProps = $props();
 </script>
@@ -51,9 +52,5 @@
 	</select>
 	<sub class="mt-2 text-center font-zcool text-text">Ctrl+Click to select multiple</sub>
 
-	<input
-		type="submit"
-		value="Create Project"
-		class="mt-8 cursor-pointer rounded-md bg-secondary p-4 font-nikkyou text-xl text-text transition hover:scale-105"
-	/>
+	<input type="submit" value="Create Project" class="{styleButton} mt-8 bg-secondary" />
 </form>
