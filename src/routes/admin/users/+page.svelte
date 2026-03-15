@@ -43,7 +43,7 @@
 	</form>
 </div>
 
-<div class="pt-10 pr-10 pl-40">
+<div class="pt-20 pr-10 pl-40">
 	<table class="w-full">
 		<thead class="font-gothic text-text">
 			<tr>

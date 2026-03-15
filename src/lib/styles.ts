@@ -8,3 +8,4 @@ export const styleInput =
 	'rounded-md bg-accent-purple p-2 ring-secondary outline-none focus:ring-2 shadow-md';
 
 export const styleH1 = 'text-center font-nikkyou text-5xl';
+export const styleH2 = 'text-center font-nikkyou text-3xl';
