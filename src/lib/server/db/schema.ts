@@ -60,7 +60,7 @@ export const shopItems = pgTable('shop_items', {
 	name: text('name').notNull(),
 	description: text('description'),
 	cost: integer('cost').notNull(),
-	stock: integer('stock'),
+	imageUrl: text('imageUrl'),
 });
 
 export const orders = pgTable('orders', {
