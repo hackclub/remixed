@@ -50,6 +50,10 @@
 	</a>
 </div>
 
+<a class="fixed top-4 left-4 w-80 origin-top-left transition hover:scale-105" href="/">
+	<img src="/logo.png" alt="logo" />
+</a>
+
 <div class="fixed h-screen py-32">
 	{#each records as record, i}
 		{#if record.route == 'LOGOUT'}
