@@ -87,7 +87,7 @@
 								type="text"
 								name="title"
 								bind:value={draft.title}
-								class="{styleInput} mb-4 text-center font-nikkyou text-5xl text-primary"
+								class="{styleInput} mb-4 text-center font-nikkyou text-5xl text-secondary"
 							/>
 						{:else}
 							<h1 class="{styleH1} text-primary">{draft.title}</h1>
