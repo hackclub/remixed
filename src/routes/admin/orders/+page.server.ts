@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { orders, shopItems, users } from '$lib/server/db/schema';
+import { auditLogs, orders, shopItems, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { decrypt } from '$lib/server/crypto';
@@ -24,9 +24,12 @@ export const load: PageServerLoad = async ({ url }) => {
 };
 
 export const actions: Actions = {
-	completeOrder: async ({ request }) => {
+	completeOrder: async ({ request, locals }) => {
 		const data = await request.formData();
 		const orderId = Number(data.get('orderId'));
 		await db.update(orders).set({ status: 'FULFILLED' }).where(eq(orders.id, orderId));
+		await db
+			.insert(auditLogs)
+			.values({ category: 'FULFILL', userId: locals.user!.id, data: { orderId } });
 	},
 };
