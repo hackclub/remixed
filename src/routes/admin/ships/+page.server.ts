@@ -2,7 +2,7 @@ import { decrypt } from '$lib/server/crypto';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
-import { notesLedger, projects, ships, users } from '$lib/server/db/schema';
+import { auditLogs, notesLedger, projects, ships, users } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import type { ShipStatusPub } from '$lib';
 
@@ -36,7 +36,14 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		const shipId = Number(data.get('shipId'));
-		await db.update(ships).set({ status: 'REJECTED' }).where(eq(ships.id, shipId));
+		await Promise.all([
+			db.update(ships).set({ status: 'REJECTED' }).where(eq(ships.id, shipId)),
+			db.insert(auditLogs).values({
+				category: 'SHIP_REVIEW',
+				userId: locals.user.id,
+				data: { approved: false, shipId, org: locals.user.roles.includes('ORGANIZER') },
+			}),
+		]);
 	},
 	approve: async ({ request, locals }) => {
 		const data = await request.formData();
@@ -67,6 +74,16 @@ export const actions: Actions = {
 				.update(users)
 				.set({ notesBalance: sql`${users.notesBalance} + ${payout}` })
 				.where(eq(users.id, userId)),
+			db.insert(auditLogs).values({
+				category: 'SHIP_REVIEW',
+				userId: locals.user!.id,
+				data: {
+					shipId,
+					approved: true,
+					org: locals.user!.roles.includes('ORGANIZER'),
+					multiplier: payoutMult,
+				},
+			}),
 		]);
 	},
 };
