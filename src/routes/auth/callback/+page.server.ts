@@ -4,8 +4,9 @@ import { env } from '$env/dynamic/public';
 import { env as senv } from '$env/dynamic/private';
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
-import { encrypt } from '$lib/server/crypto';
+import { encrypt, signSession } from '$lib/server/crypto';
 import { eq, sql } from 'drizzle-orm';
+import { createHmac } from 'crypto';
 
 export const load: PageServerLoad = async ({ url, cookies }) => {
 	const tokenReq = await fetch('https://hackatime.hackclub.com/oauth/token', {
@@ -62,6 +63,7 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 	}
 
 	cookies.delete('ref', { path: '/' });
-	cookies.set('session_user_id', String(user.id), { path: '/' });
+	const sessionSignature = signSession(String(user.id));
+	cookies.set('session_token', `${user.id}.${sessionSignature}`, { path: '/' });
 	redirect(307, '/dashboard');
 };

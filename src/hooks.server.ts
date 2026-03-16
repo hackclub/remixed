@@ -1,15 +1,19 @@
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
+import { env as senv } from '$env/dynamic/private';
 import { eq } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
+import { createHmac } from 'crypto';
+import { signSession } from '$lib/server/crypto';
 
 const PROTECTED = ['/dashboard', '/projects', '/api/me', '/api/projects', '/api/ship'];
 
 const ORG_ONLY = ['/admin/users', '/admin/shop', '/admin/orders', '/api/admin/order_info'];
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const userId = event.cookies.get('session_user_id');
+	const sessionToken = event.cookies.get('session_token');
+	const userId = sessionToken ? verifySessionToken(sessionToken) : null;
 
 	if (userId) {
 		const user = await db.query.users.findFirst({ where: eq(users.id, Number(userId)) });
@@ -37,3 +41,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	return resolve(event);
 };
+
+function verifySessionToken(token: string): number | null {
+	const [userId, signature] = token.split('.');
+	if (!userId || !signature) return null;
+
+	const expectedSignature = signSession(userId);
+	if (signature != expectedSignature) return null;
+
+	return Number(userId);
+}
