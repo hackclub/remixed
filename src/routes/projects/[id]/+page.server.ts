@@ -24,7 +24,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const user = projectInfo.users;
 	const hasPendingShip = projectShips.some((s) => s.status == 'PENDING');
 
-	const descriptionHtml = sanitizeHtml(await marked(project.description ?? ''));
+	const dirty = await marked(project.description ?? '');
+	const descriptionHtml = sanitizeHtml(dirty, {
+		allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+	});
 
 	return {
 		project,
