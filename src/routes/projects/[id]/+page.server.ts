@@ -10,8 +10,6 @@ import sanitizeHtml from 'sanitize-html';
 import { marked } from 'marked';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
-	if (!locals.user) return new Response('Unauthorized', { status: 401 });
-	const accessToken = decrypt(locals.user.accessToken);
 	const projectId = Number(params.id);
 
 	const [[projectInfo], projectShips] = await Promise.all([
@@ -33,17 +31,16 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		descriptionHtml,
 		user,
 		hasPendingShip,
-		currentUserId: locals.user.id,
+		currentUserId: locals.user?.id,
 	};
 };
 
 export const actions: Actions = {
 	update: async ({ locals, params, request }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized' });
 		const projectId = Number(params.id);
 
 		const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
-		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
+		if (!project || project.userId != locals.user?.id) return fail(403, { error: 'Forbidden' });
 
 		const takenHackatimeProjects = (
 			await db
