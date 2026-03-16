@@ -212,7 +212,7 @@
 						<a href={data.project?.demoUrl} class="{styleButton} w-full bg-primary"> Demo </a>
 					{/if}
 
-					{#if !editing}
+					{#if !editing && isOwner}
 						{#if !data.hasPendingShip && validUrl(data.project?.demoUrl ?? null) && validUrl(data.project?.githubUrl ?? null) && data.project?.hackatimeProjects.length != 0}
 							<button type="submit" form="ship-form" class="{styleButton} w-full bg-primary">
 								Ship
@@ -220,15 +220,17 @@
 						{/if}
 					{/if}
 
-					{#if !editing}
-						<button class="{styleButton} w-full bg-secondary" onclick={startEdit}> Edit </button>
-					{:else}
-						<button type="button" class="{styleButton} w-full bg-secondary" onclick={cancelEdit}>
-							Cancel
-						</button>
-						<button type="submit" class="{styleButton} w-full bg-secondary" formaction="?/update">
-							Submit
-						</button>
+					{#if isOwner}
+						{#if !editing}
+							<button class="{styleButton} w-full bg-secondary" onclick={startEdit}> Edit </button>
+						{:else}
+							<button type="button" class="{styleButton} w-full bg-secondary" onclick={cancelEdit}>
+								Cancel
+							</button>
+							<button type="submit" class="{styleButton} w-full bg-secondary" formaction="?/update">
+								Submit
+							</button>
+						{/if}
 					{/if}
 				</div>
 			</form>
