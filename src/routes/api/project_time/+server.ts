@@ -6,14 +6,12 @@ import type { RequestHandler } from './$types';
 import { fail } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-	if (!locals.user) return new Response('Unauthorized', { status: 401 });
-	const accessToken = decrypt(locals.user.accessToken);
-
 	const projectId = Number(url.searchParams.get('id'));
 	const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
-	if (!project || project.userId != locals.user.id)
+	if (!project || project.userId != locals.user!.id)
 		return new Response('Forbidden', { status: 403 });
 
+	const accessToken = decrypt(locals.user!.accessToken);
 	let hackatimeSeconds: null | number = null;
 	if (project.hackatimeProjects.length != 0) {
 		const hackatimeUrl =

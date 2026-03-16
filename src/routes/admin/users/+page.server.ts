@@ -13,8 +13,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	updateRoles: async ({ request, locals }) => {
-		if (!locals.user?.roles.includes('REVIEWER')) return fail(403, { error: 'Forbidden' });
-
 		const data = await request.formData();
 		console.log(data);
 		const userId = Number(data.get('userId'));
@@ -26,6 +24,6 @@ export const actions: Actions = {
 			.where(eq(users.id, userId));
 		await db
 			.insert(auditLogs)
-			.values({ category: 'EDIT_USER', userId: locals.user.id, data: { userId, userRoles } });
+			.values({ category: 'EDIT_USER', userId: locals.user!.id, data: { userId, userRoles } });
 	},
 };

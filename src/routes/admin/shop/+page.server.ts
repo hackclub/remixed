@@ -12,7 +12,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	updateItem: async ({ locals, request }) => {
 		const data = await request.formData();
-		console.log(data);
 
 		let id = Number(data.get('itemId'));
 		const name = (data.get('name') as string).trim();
@@ -33,12 +32,10 @@ export const actions: Actions = {
 				.where(eq(shopItems.id, id))
 				.returning();
 		}
-		await db
-			.insert(auditLogs)
-			.values({
-				category: 'SHOP_ITEM',
-				userId: locals.user!.id,
-				data: { item: newItem, update: id != -1 },
-			});
+		await db.insert(auditLogs).values({
+			category: 'SHOP_ITEM',
+			userId: locals.user!.id,
+			data: { item: newItem, update: id != -1 },
+		});
 	},
 };
