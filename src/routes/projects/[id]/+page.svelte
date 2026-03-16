@@ -43,6 +43,8 @@
 
 	if (data.project!.hackatimeSeconds) {
 		hoursText = formatHours(data.project!.hackatimeSeconds);
+	} else {
+		hoursText = '0h 0m';
 	}
 </script>
 
@@ -92,9 +94,9 @@
 						{:else}
 							<h1 class="{styleH1} text-primary">{draft.title}</h1>
 							<a
-								href="/user/{data.user.id}"
+								href="/user/{data.user!.id}"
 								class="mb-4 text-center font-nikkyou text-xl text-primary underline"
-								>{data.user.username}</a
+								>{data.user!.username}</a
 							>
 						{/if}
 						<div class="flex justify-between">
