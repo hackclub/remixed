@@ -2,6 +2,7 @@
 
 export type ProjectCategory = 'GAME' | 'WEBSITE' | 'DESKTOP_APP' | 'CLI' | 'OTHER';
 export type ShipStatusPub = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type RoleEnumPub = 'USER' | 'STAFF' | 'REVIEWER' | 'ORGANIZER';
 
 export function formatHours(seconds: number) {
 	const minutes = seconds / 60.0;

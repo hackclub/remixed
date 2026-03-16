@@ -6,10 +6,14 @@ import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 import { createHmac } from 'crypto';
 import { signSession } from '$lib/server/crypto';
+import type { RoleEnumPub } from '$lib';
 
-const PROTECTED = ['/dashboard', '/projects', '/api/me', '/api/projects', '/api/ship'];
-
-const ORG_ONLY = ['/admin/users', '/admin/shop', '/admin/orders', '/api/admin/order_info'];
+const PROTECTED: { [key in RoleEnumPub]: string[] } = {
+	USER: ['/dashboard', '/projects', '/api/me', '/api/projects', '/api/ship', '/api/project_time'],
+	STAFF: [],
+	REVIEWER: ['/admin/ships'],
+	ORGANIZER: ['/admin/users', '/admin/shop', '/admin/orders', '/api/admin/order_info'],
+};
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const sessionToken = event.cookies.get('session_token');
@@ -17,26 +21,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	if (userId) {
 		const user = await db.query.users.findFirst({ where: eq(users.id, Number(userId)) });
-		event.locals.user = user ?? null;
+		if (!user) redirect(303, '/');
+		event.locals.user = user;
 	} else {
 		event.locals.user = null;
 	}
 
-	const isProtected = PROTECTED.some((path) => event.url.pathname.startsWith(path));
-	if (isProtected && !event.locals.user) redirect(303, '/');
-
-	if (
-		event.url.pathname.startsWith('/admin/ships') &&
-		!event.locals.user?.roles.includes('REVIEWER')
-	) {
-		redirect(303, '/');
-	}
-
-	if (
-		ORG_ONLY.some((p) => event.url.pathname.startsWith(p)) &&
-		!event.locals.user?.roles.includes('ORGANIZER')
-	) {
-		redirect(303, '/');
+	for (const requiredRole in PROTECTED) {
+		if (PROTECTED[requiredRole as RoleEnumPub].some((p) => event.url.pathname.startsWith(p))) {
+			if (!event.locals.user?.roles.includes(requiredRole as RoleEnumPub)) {
+				redirect(303, '/');
+			}
+		}
 	}
 
 	return resolve(event);
