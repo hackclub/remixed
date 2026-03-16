@@ -11,21 +11,14 @@
 <div class="p-10 pl-40">
 	<h1 class="{styleH1} mb-4 text-text">{data.user!.username}</h1>
 
-	{#if data.user!.roles.includes('STAFF')}
-		<div
-			class="relative top-0 mx-auto max-w-80 bg-text text-text shadow-button transition-all hover:-top-1 hover:shadow-button-hover"
-		>
-			<CoverArt src={data.user!.avatarUrl} />
+	<div
+		class="relative top-0 mx-auto max-w-80 bg-text text-text shadow-button transition-all hover:-top-1 hover:shadow-button-hover"
+	>
+		<CoverArt src={data.user!.avatarUrl} />
+		{#if data.user!.roles.includes('STAFF')}
 			<p class="text-center font-gothic text-xl tracking-wider text-light">Remixed Staff</p>
-		</div>
-	{:else}
-		<div class="mx-auto max-w-80">
-			<CoverArt
-				src={data.user!.avatarUrl}
-				class="relative top-0 text-text shadow-button transition-all hover:-top-1 hover:shadow-button-hover"
-			/>
-		</div>
-	{/if}
+		{/if}
+	</div>
 
 	<h2 class="{styleH2} mt-12 mb-4 text-text">Projects</h2>
 	{#if data.userProjects.length > 0}
