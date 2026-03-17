@@ -14,7 +14,7 @@
 <a href={hackatimeOauthUrl} class="fixed">LOGIN</a>
 <div class="fixed h-screen w-screen bg-accent-purple"></div>
 <div
-	class="relative flex h-screen w-screen items-center justify-center overflow-clip bg-accent-purple"
+	class="relative flex h-screen w-screen items-center justify-center overflow-x-clip bg-accent-purple"
 >
 	<!-- <img src="/landing/hueshift.png" alt="hueshift" class="absolute top-0 left-0 z-3 h-full w-full" /> -->
 	<img src="/landing/dots-topleft.png" alt="dots" class="absolute top-0 left-0 z-2 w-1/2" />
@@ -51,7 +51,7 @@
 		</button>
 	</div>
 </div>
-<div class="relative h-300">
+<div class="relative pb-150">
 	<div class="relative z-2 flex flex-col gap-16">
 		<div class="relative flex justify-center text-center font-jua text-3xl">
 			<h1 class="text-stroke bg-light">Choose a pathway and, get music-related goodies!</h1>
@@ -96,14 +96,24 @@
 			/>
 		</div>
 	</div>
-	<div class="absolute -top-40 z-0 w-full">
+	<div class="absolute -top-40 z-0 h-full w-full">
 		<div
-			class="h-200 w-full mask-[url(/landing/dots-mask-main.png)] mask-contain mask-repeat-x"
-			style="background: repeating-linear-gradient(-70deg, #7dd9d9, #7dd9d9 8px, #4ab5d0 8px, #4ab5d0 18px);"
-		></div>
-		<div
-			style="background: repeating-linear-gradient(-70deg, #7dd9d9, #7dd9d9 8px, #4ab5d0 8px, #4ab5d0 18px);"
-			class="h-200 w-full"
+			class="h-full w-full mask-[url(/landing/dots-mask-main.png)] mask-contain mask-repeat-x"
+			style="background: repeating-linear-gradient(-70deg, #7dd9d9, #7dd9d9 8px, #4ab5d0 8px, #4ab5d0 18px), red; mask-size: auto auto;"
 		></div>
 	</div>
 </div>
+
+<div class="relative -top-110 flex justify-center">
+	<div
+		class="absolute z-6 flex w-1000 rotate-12 justify-center gap-8 bg-text p-4 text-3xl text-light"
+	>
+		<h1>MICROPHONES</h1>
+		<h1>HEADPHONES</h1>
+		<h1>INSTRUMENTS</h1>
+	</div>
+	<div
+		class="absolute top-2 z-5 flex h-200 w-1000 rotate-12 justify-center gap-8 bg-accent-red"
+	></div>
+</div>
+<div class="relative z-1 h-200 w-full bg-accent-purple"></div>
