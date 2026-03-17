@@ -165,15 +165,15 @@
 		<img
 			src="/landing/dots-marquee-left.png"
 			alt="dots"
-			class="absolute -top-72 -left-24 z-1 h-full -rotate-12"
+			class="absolute top-0 -left-4 z-1 h-full -rotate-12"
 		/>
 		<img
 			src="/landing/dots-marquee-right.png"
 			alt="dots"
-			class="absolute -right-16 bottom-42 z-1 h-full -rotate-12"
+			class="absolute -right-16 bottom-0 z-1 h-full -rotate-12"
 		/>
 		<div class="absolute top-16 h-full w-1000 bg-accent-purple"></div>
-		<div>
+		<div class="">
 			<div class="relative z-2 flex justify-center font-jua text-4xl">
 				<h1 class="text-stroke bg-light">Ship your project, and get all sorts of cool stuff!</h1>
 				<h1 class="text-dark-gradient absolute top-0 p-1">
@@ -181,7 +181,7 @@
 				</h1>
 			</div>
 			<div class="flex justify-center">
-				<div class="marquee relative z-6 mt-48 flex h-200 w-screen justify-start">
+				<div class="marquee relative z-6 mt-48 flex h-100 w-screen justify-start">
 					{#each marqueeItems as item}
 						<CrunchCard
 							img={item.url}
@@ -197,7 +197,6 @@
 	</div>
 </div>
 
-<div class="relative -top-300 z-5 w-full">
-	shit
-	<img src="/landing/faq-bg.png" alt="bg" class="w-full" />
+<div class="relative -top-160 z-5 w-full">
+	<img src="/landing/faq-bg.png" alt="bg" class="w-full scale-x-[-1]" />
 </div>
