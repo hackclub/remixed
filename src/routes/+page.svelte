@@ -3,7 +3,10 @@
 	import CrunchCard from '$lib/CrunchCard.svelte';
 	import { onMount } from 'svelte';
 
+	const ITEM_WIDTH = 180.0;
+	let currentIndex = 0;
 	let items: any[] = $state([]);
+	let marqueeItems: any = $state([]);
 
 	let hackatimeOauthUrl =
 		'https://hackatime.hackclub.com/oauth/authorize?' +
@@ -16,8 +19,56 @@
 	onMount(() => {
 		fetch('/api/shop')
 			.then((resp) => resp.json())
-			.then((r) => (items = r));
+			.then((r) => {
+				items = r;
+				fillMarquee();
+			});
 	});
+
+	function fillMarquee() {
+		for (let i = 0; i < Math.ceil(window.innerWidth / ITEM_WIDTH) + 1; i++) {
+			marqueeItems.push({
+				url: items[currentIndex].imageUrl,
+				name: items[currentIndex].name,
+				cost: items[currentIndex].cost,
+				rotation: Math.random() * 12.0 - 6.0,
+				vOffset: Math.random() * 16.0 - 8.0,
+				xOffset: i * ITEM_WIDTH - ITEM_WIDTH - 50.0,
+			});
+			currentIndex += 1;
+			currentIndex %= items.length;
+		}
+		console.log(marqueeItems);
+		requestAnimationFrame(update);
+	}
+
+	let lastFrame = 0;
+	function update(currentFrame: number) {
+		let delta = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		for (const item of marqueeItems) {
+			item.xOffset += delta / 10.0;
+
+			if (item.xOffset > window.innerWidth + 50) {
+				item.xOffset -= window.innerWidth + ITEM_WIDTH + 100;
+				// console.log('REMOVING', item.xOffset);
+				// console.log(marqueeItems.pop().xOffset);
+				// marqueeItems.unshift({
+				// 	url: items[currentIndex].imageUrl,
+				// 	name: items[currentIndex].name,
+				// 	cost: items[currentIndex].cost,
+				// 	rotation: Math.random() * 12.0 - 6.0,
+				// 	vOffset: Math.random() * 16.0 - 8.0,
+				// 	xOffset: 0,
+				// });
+				// currentIndex += 1;
+				// currentIndex %= items.length;
+			}
+		}
+
+		requestAnimationFrame(update);
+	}
 </script>
 
 <a href={hackatimeOauthUrl} class="fixed">LOGIN</a>
@@ -73,19 +124,19 @@
 				img="/landing/crunch_pink.png"
 				h2="PATHWAY #1"
 				h1="Rhythm Game"
-				class="top-4 rotate-6"
+				class="relative top-4 rotate-6"
 			/>
 			<CrunchCard
 				img="/landing/crunch_green_spotify.png"
 				h2="PATHWAY #2"
 				h1="Audio Editor"
-				class="-top-4 -rotate-6"
+				class="relative -top-4 -rotate-6"
 			/>
 			<CrunchCard
 				img="/landing/crunch_pink.png"
 				h2="PATHWAY #3"
 				h1="Music Player"
-				class=" rotate-6"
+				class=" relative rotate-6"
 			/>
 		</div>
 		<div class="relative flex justify-center text-center font-jua text-3xl">
@@ -101,7 +152,7 @@
 				img="/landing/crunch_green_spotify.png"
 				h2="WILDCARD"
 				h1="Anything else!"
-				class=""
+				class="relative"
 			/>
 		</div>
 	</div>
@@ -131,10 +182,18 @@
 					Ship your project, and get all sorts of cool stuff!
 				</h1>
 			</div>
-			<div class="mt-36 flex justify-center">
-				{#each items as item}
-					<CrunchCard img={item.imageUrl} h2="{item.cost} notes" h1={item.name} />
-				{/each}
+			<div class="flex justify-center">
+				<div class="marquee absolute mt-36 flex w-screen justify-start">
+					{#each marqueeItems as item}
+						<CrunchCard
+							img={item.url}
+							h2="{item.cost} notes"
+							h1={item.name}
+							class="absolute"
+							style="rotate: {item.rotation}deg; top: {item.yOffset}px; left: {item.xOffset}px"
+						/>
+					{/each}
+				</div>
 			</div>
 		</div>
 	</div>
