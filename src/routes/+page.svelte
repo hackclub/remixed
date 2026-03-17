@@ -181,7 +181,7 @@
 				</h1>
 			</div>
 			<div class="flex justify-center">
-				<div class="marquee relative z-2 mt-48 flex h-200 w-screen justify-start">
+				<div class="marquee relative z-6 mt-48 flex h-200 w-screen justify-start">
 					{#each marqueeItems as item}
 						<CrunchCard
 							img={item.url}
@@ -196,4 +196,8 @@
 		</div>
 	</div>
 </div>
-<div class="relative z-1 h-200 w-full bg-accent-purple"></div>
+
+<div class="relative -top-300 z-5 w-full">
+	shit
+	<img src="/landing/faq-bg.png" alt="bg" class="w-full" />
+</div>
