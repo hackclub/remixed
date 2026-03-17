@@ -7,6 +7,7 @@
 	--font-nikkyou: 'Nikkyou', sans-serif;
 	--font-zcool: 'ZCOOL', sans-serif;
 	--font-jua: 'Jua', sans-serif;
+	--font-daydream: 'Daydream', sans-serif;
 	--color-text: #1B2A42;
 	--color-primary: #AFF23B;
 	--color-secondary: #70FFFF;
@@ -44,12 +45,25 @@
 	font-family: 'Jua';
 }
 
+@font-face {
+	src: url('/fonts/Daydream.otf');
+	font-family: 'Daydream';
+}
+
 html {
 	background-color: var(--color-bg);
 }
 
 .text-stroke {
 	-webkit-text-stroke: 4px transparent;
+	background-clip: text;
+	user-select: none;
+	color: transparent;
+	padding: 4px;
+}
+
+.text-stroke-2 {
+	-webkit-text-stroke: 8px transparent;
 	background-clip: text;
 	user-select: none;
 	color: transparent;

@@ -48,22 +48,10 @@
 		lastFrame = currentFrame;
 
 		for (const item of marqueeItems) {
-			item.xOffset += delta / 10.0;
+			item.xOffset += delta / 20.0;
 
 			if (item.xOffset > window.innerWidth + 50) {
 				item.xOffset -= window.innerWidth + ITEM_WIDTH + 100;
-				// console.log('REMOVING', item.xOffset);
-				// console.log(marqueeItems.pop().xOffset);
-				// marqueeItems.unshift({
-				// 	url: items[currentIndex].imageUrl,
-				// 	name: items[currentIndex].name,
-				// 	cost: items[currentIndex].cost,
-				// 	rotation: Math.random() * 12.0 - 6.0,
-				// 	vOffset: Math.random() * 16.0 - 8.0,
-				// 	xOffset: 0,
-				// });
-				// currentIndex += 1;
-				// currentIndex %= items.length;
 			}
 		}
 
@@ -165,12 +153,13 @@
 </div>
 
 <div class="relative -top-110 flex justify-center overflow-x-clip">
-	<div
-		class="absolute z-6 flex w-1000 rotate-12 justify-center gap-8 bg-text p-4 text-3xl text-light"
-	>
-		<h1>MICROPHONES</h1>
-		<h1>HEADPHONES</h1>
-		<h1>INSTRUMENTS</h1>
+	<div class="absolute z-6 flex w-1000 rotate-12 justify-center bg-text p-4">
+		<div class=" relative font-daydream text-4xl text-light">
+			<h1 class="text-stroke-2 bg-light">/// MICROPHONES /// HEADPHONES /// INSTRUMENTS ///</h1>
+			<h1 class="text-dark-gradient absolute top-0 p-1">
+				/// MICROPHONES /// HEADPHONES /// INSTRUMENTS ///
+			</h1>
+		</div>
 	</div>
 	<div
 		class="absolute top-2 z-5 flex h-200 w-1000 rotate-12 justify-center gap-8 bg-accent-red pt-32"
