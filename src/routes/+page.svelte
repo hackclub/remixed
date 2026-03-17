@@ -14,8 +14,10 @@
 <div
 	class="relative flex h-screen w-screen items-center justify-center overflow-clip bg-accent-purple"
 >
-	<img src="/landing/concentric.png" alt="ellipse" class="absolute top-0 h-full object-cover" />
-	<div class="relative -top-8 flex -rotate-6 flex-col justify-center">
+	<img src="/landing/dots-topleft.png" alt="dots" class="absolute top-0 left-0 z-2 w-1/2" />
+	<img src="/landing/dots-right.png" alt="dots" class="absolute right-0 -bottom-64 z-2 w-1/2" />
+	<img src="/landing/concentric.png" alt="ellipse" class="absolute top-0 z-1 h-full object-cover" />
+	<div class="relative -top-8 z-3 flex -rotate-6 flex-col justify-center">
 		<div class="relative flex min-w-500 justify-center bg-text">
 			<img src="/logo.png" alt="logo" class="h-30" />
 		</div>
@@ -29,7 +31,9 @@
 				ship a rhythm game, get headphones!
 			</h2>
 		</div>
-		<div class="mx-auto mt-4 w-max rounded-2xl bg-linear-to-r from-[#70FFFF] to-[#54C1D7] p-1">
+		<button
+			class="relative top-0 mx-auto mt-4 w-max cursor-pointer rounded-2xl bg-linear-to-r from-secondary to-[#54C1D7] p-1 shadow-none transition-all hover:-top-1 hover:shadow-lg/30 active:top-1 active:shadow-none"
+		>
 			<div class="rounded-2xl bg-text px-24 py-2">
 				<div class="relative font-jua text-3xl">
 					<span
@@ -44,7 +48,7 @@
 					>
 				</div>
 			</div>
-		</div>
+		</button>
 	</div>
 </div>
 <div class="h-40"></div>
