@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 	import CrunchCard from '$lib/CrunchCard.svelte';
+	import { onMount } from 'svelte';
+
+	let items: any[] = $state([]);
 
 	let hackatimeOauthUrl =
 		'https://hackatime.hackclub.com/oauth/authorize?' +
@@ -9,6 +12,12 @@
 			redirect_uri: env.PUBLIC_CALLBACK_URL!,
 			response_type: 'code',
 		}).toString();
+
+	onMount(() => {
+		fetch('/api/shop')
+			.then((resp) => resp.json())
+			.then((r) => (items = r));
+	});
 </script>
 
 <a href={hackatimeOauthUrl} class="fixed">LOGIN</a>
@@ -123,11 +132,9 @@
 				</h1>
 			</div>
 			<div class="mt-36 flex justify-center">
-				<CrunchCard
-					img="https://cdn.hackclub.com/019cda45-c8fa-7e6c-b1fb-a83fec4d351b/quaver.png"
-					h2="4 notes"
-					h1="Quaver"
-				/>
+				{#each items as item}
+					<CrunchCard img={item.imageUrl} h2="{item.cost} notes" h1={item.name} />
+				{/each}
 			</div>
 		</div>
 	</div>
