@@ -52,14 +52,14 @@
 	</div>
 </div>
 <div class="relative pb-150">
-	<div class="relative z-2 flex flex-col gap-16">
+	<div class="relative z-2">
 		<div class="relative flex justify-center text-center font-jua text-3xl">
 			<h1 class="text-stroke bg-light">Choose a pathway and, get music-related goodies!</h1>
 			<h1 class="text-dark-gradient absolute top-0 p-1">
 				Choose a pathway and, get music-related goodies!
 			</h1>
 		</div>
-		<div class="flex justify-center gap-16 p-16">
+		<div class="mt-24 flex justify-center gap-16 p-16">
 			<CrunchCard
 				img="/landing/crunch_pink.png"
 				h2="PATHWAY #1"
@@ -87,7 +87,7 @@
 				...or make something completely different, as long as it’s about music!
 			</h1>
 		</div>
-		<div class="mt-8 flex justify-center">
+		<div class="mt-36 flex justify-center">
 			<CrunchCard
 				img="/landing/crunch_green_spotify.png"
 				h2="WILDCARD"
@@ -104,7 +104,7 @@
 	</div>
 </div>
 
-<div class="relative -top-110 flex justify-center">
+<div class="relative -top-110 flex justify-center overflow-x-clip">
 	<div
 		class="absolute z-6 flex w-1000 rotate-12 justify-center gap-8 bg-text p-4 text-3xl text-light"
 	>
@@ -113,7 +113,23 @@
 		<h1>INSTRUMENTS</h1>
 	</div>
 	<div
-		class="absolute top-2 z-5 flex h-200 w-1000 rotate-12 justify-center gap-8 bg-accent-red"
-	></div>
+		class="absolute top-2 z-5 flex h-200 w-1000 rotate-12 justify-center gap-8 bg-accent-red pt-32"
+	>
+		<div class="">
+			<div class="relative flex justify-center font-jua text-3xl">
+				<h1 class="text-stroke bg-light">Ship your project, and get all sorts of cool stuff!</h1>
+				<h1 class="text-dark-gradient absolute top-0 p-1">
+					Ship your project, and get all sorts of cool stuff!
+				</h1>
+			</div>
+			<div class="mt-36 flex justify-center">
+				<CrunchCard
+					img="https://cdn.hackclub.com/019cda45-c8fa-7e6c-b1fb-a83fec4d351b/quaver.png"
+					h2="4 notes"
+					h1="Quaver"
+				/>
+			</div>
+		</div>
+	</div>
 </div>
 <div class="relative z-1 h-200 w-full bg-accent-purple"></div>
