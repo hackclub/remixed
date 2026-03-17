@@ -11,13 +11,15 @@
 </script>
 
 <a href={hackatimeOauthUrl} class="fixed">LOGIN</a>
+<div class="fixed h-screen w-screen bg-accent-purple"></div>
 <div
 	class="relative flex h-screen w-screen items-center justify-center overflow-clip bg-accent-purple"
 >
+	<!-- <img src="/landing/hueshift.png" alt="hueshift" class="absolute top-0 left-0 z-3 h-full w-full" /> -->
 	<img src="/landing/dots-topleft.png" alt="dots" class="absolute top-0 left-0 z-2 w-1/2" />
 	<img src="/landing/dots-right.png" alt="dots" class="absolute right-0 -bottom-64 z-2 w-1/2" />
 	<img src="/landing/concentric.png" alt="ellipse" class="absolute top-0 z-1 h-full object-cover" />
-	<div class="relative -top-8 z-3 flex -rotate-6 flex-col justify-center">
+	<div class="relative -top-8 z-5 flex -rotate-6 flex-col justify-center">
 		<div class="relative flex min-w-500 justify-center bg-text">
 			<img src="/logo.png" alt="logo" class="h-30" />
 		</div>
