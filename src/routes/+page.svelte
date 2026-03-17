@@ -20,7 +20,7 @@
 			<img src="/logo.png" alt="logo" class="h-30" />
 		</div>
 		<div class="relative mx-auto mt-2 w-max text-center font-jua text-3xl">
-			<h2 style="-webkit-text-stroke: 6px var(--color-light)" class="select-none">
+			<h2 style="-webkit-text-stroke: 4px var(--color-light)" class="select-none">
 				ship a rhythm game, get headphones!
 			</h2>
 			<h2
@@ -28,6 +28,22 @@
 			>
 				ship a rhythm game, get headphones!
 			</h2>
+		</div>
+		<div class="mx-auto mt-4 w-max rounded-2xl bg-linear-to-r from-[#70FFFF] to-[#54C1D7] p-1">
+			<div class="rounded-2xl bg-text px-24 py-2">
+				<div class="relative font-jua text-3xl">
+					<span
+						style="-webkit-text-stroke: 4px transparent;"
+						class=" bg-linear-to-r from-[#6EF5FB] to-[#938BEC] bg-clip-text p-1 text-transparent select-none"
+					>
+						join now!
+					</span>
+					<span
+						class="absolute top-0 left-0 bg-linear-to-b from-[#3E236D] to-[#42518E] bg-clip-text p-1 pt-0 text-transparent"
+						>join now!</span
+					>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
