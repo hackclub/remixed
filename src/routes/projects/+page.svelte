@@ -3,6 +3,7 @@
 	import CDProject from '$lib/CDProject.svelte';
 	import CassetteProject from '$lib/CassetteProject.svelte';
 	import ProfileCard from '$lib/ProfileCard.svelte';
+	import PageHeader from '$lib/PageHeader.svelte';
 	import { onMount } from 'svelte';
 	import { styleButton, styleH1 } from '$lib/styles';
 	import CoverArt from '$lib/CoverArt.svelte';
@@ -42,6 +43,10 @@
 <img src="/dashboard/dots-br.png" alt="dots" class="fixed right-0 bottom-0 w-3/5" />
 <Sidebar />
 <ProfileCard user={data.user} />
+<PageHeader
+	title="Projects"
+	desc="Describe your idea for a project, build it, then ship and get prizes!"
+/>
 
 <div class="relative z-2 flex h-screen w-screen items-center justify-center">
 	<button class="hover-effect mr-8 cursor-pointer" onclick={() => scroll(false)}>
