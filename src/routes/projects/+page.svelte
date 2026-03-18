@@ -39,18 +39,14 @@
 	}
 </script>
 
-<img src="/dashboard/dots-tl.png" alt="dots" class="fixed top-0 left-0 w-2/3" />
-<img src="/dashboard/dots-br.png" alt="dots" class="fixed right-0 bottom-0 w-3/5" />
-<Sidebar />
-<ProfileCard user={data.user} />
 <PageHeader
 	title="Projects"
 	desc="Describe your idea for a project, build it, then ship and get prizes!"
 />
 
 <div class="relative z-2 flex h-screen w-screen flex-col items-center justify-center pt-16">
-	<div class="flex">
-		<button class="hover-effect mr-8 cursor-pointer" onclick={() => scroll(false)}>
+	<div class="flex items-center">
+		<button class="hover-effect mr-8 h-min cursor-pointer" onclick={() => scroll(false)}>
 			<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16" />
 		</button>
 		<div
@@ -84,7 +80,7 @@
 				</a>
 			{/each}
 		</div>
-		<button class="hover-effect ml-8 cursor-pointer" onclick={() => scroll(true)}>
+		<button class="hover-effect ml-8 h-min cursor-pointer" onclick={() => scroll(true)}>
 			<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16 rotate-180" />
 		</button>
 	</div>
