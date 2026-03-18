@@ -26,3 +26,4 @@
 
 <img src="/dashboard/dots-tl.png" alt="dots" class="fixed top-0 left-0 w-2/3" />
 <img src="/dashboard/dots-br.png" alt="dots" class="fixed right-0 bottom-0 w-3/5" />
+<Sidebar />
