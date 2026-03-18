@@ -9,7 +9,7 @@ import { signSession } from '$lib/server/crypto';
 import type { RoleEnumPub } from '$lib';
 
 const PROTECTED: { [key in RoleEnumPub]: string[] } = {
-	USER: ['/dashboard', '/projects', '/api/me', '/api/projects', '/api/ship', '/api/project_time'],
+	USER: ['/dashboard', '/projects', '/api/me', '/api/ship', '/api/project_time'],
 	STAFF: [],
 	REVIEWER: ['/admin/ships'],
 	ORGANIZER: ['/admin/users', '/admin/shop', '/admin/orders', '/api/admin/order_info'],
