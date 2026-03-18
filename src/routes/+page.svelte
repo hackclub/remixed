@@ -280,12 +280,11 @@
 	</span>
 {/snippet}
 
-<div class="relative -top-120 z-8 overflow-x-clip">
+<div class="relative z-8 -mt-120 w-full overflow-x-clip bg-text">
 	<div class="flex justify-center">
-		<div class="absolute h-full w-1000 -rotate-6 bg-text p-16 pb-100"></div>
+		<div class="absolute -top-15 h-40 w-1000 -rotate-6 bg-text"></div>
 	</div>
-	<div class="absolute -bottom-36 h-56 w-full bg-text"></div>
-	<div class="relative top-20 mx-auto max-w-5xl p-16">
+	<div class="relative mx-auto max-w-5xl p-16">
 		<h1 class="mb-8 font-jua text-4xl text-light">
 			A project by
 			{@render boldText('Hack Club')}, built by
