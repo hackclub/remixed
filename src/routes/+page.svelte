@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 	import CrunchCard from '$lib/CrunchCard.svelte';
+	import FAQCard from '$lib/FAQCard.svelte';
 	import { onMount } from 'svelte';
 
 	const ITEM_WIDTH = 180.0;
@@ -87,7 +88,7 @@
 		>
 			<div class="rounded-xl bg-text px-24 py-2">
 				<div class="relative font-jua text-3xl">
-					<span class="text-stroke bg-linear-to-r from-[#6EF5FB] to-[#938BEC] p-1">
+					<span class="text-stroke text-stroke-1 bg-linear-to-r from-[#6EF5FB] to-[#938BEC] p-1">
 						join now!
 					</span>
 					<span
@@ -102,7 +103,9 @@
 <div class="relative pb-150">
 	<div class="relative z-2">
 		<div class="relative flex justify-center text-center font-jua text-3xl">
-			<h1 class="text-stroke bg-light">Choose a pathway and, get music-related goodies!</h1>
+			<h1 class="text-stroke text-stroke-1 bg-light">
+				Choose a pathway and, get music-related goodies!
+			</h1>
 			<h1 class="text-dark-gradient absolute top-0 p-1">
 				Choose a pathway and, get music-related goodies!
 			</h1>
@@ -128,7 +131,7 @@
 			/>
 		</div>
 		<div class="relative flex justify-center text-center font-jua text-3xl">
-			<h1 class="text-stroke bg-light">
+			<h1 class="text-stroke text-stroke-1 bg-light">
 				...or make something completely different, as long as it’s about music!
 			</h1>
 			<h1 class="text-dark-gradient absolute top-0 p-1">
@@ -155,7 +158,9 @@
 <div class="relative -top-110 flex justify-center overflow-x-clip">
 	<div class="absolute z-6 flex w-1000 rotate-12 justify-center bg-text p-4">
 		<div class=" relative font-daydream text-4xl text-light">
-			<h1 class="text-stroke-2 bg-light">/// MICROPHONES /// HEADPHONES /// INSTRUMENTS ///</h1>
+			<h1 class="text-stroke-2 text-stroke bg-light">
+				/// MICROPHONES /// HEADPHONES /// INSTRUMENTS ///
+			</h1>
 			<h1 class="text-dark-gradient absolute top-0 p-1">
 				/// MICROPHONES /// HEADPHONES /// INSTRUMENTS ///
 			</h1>
@@ -175,7 +180,9 @@
 		<div class="absolute top-16 h-full w-1000 bg-accent-purple"></div>
 		<div class="">
 			<div class="relative z-2 flex justify-center font-jua text-4xl">
-				<h1 class="text-stroke bg-light">Ship your project, and get all sorts of cool stuff!</h1>
+				<h1 class="text-stroke text-stroke-2 bg-light">
+					Ship your project, and get all sorts of cool stuff!
+				</h1>
 				<h1 class="text-dark-gradient absolute top-0 p-1">
 					Ship your project, and get all sorts of cool stuff!
 				</h1>
@@ -198,5 +205,70 @@
 </div>
 
 <div class="relative -top-160 z-5 w-full">
-	<img src="/landing/faq-bg.png" alt="bg" class="w-full scale-x-[-1]" />
+	<img src="/landing/faq-bg.png" alt="bg" class="absolute w-full scale-x-[-1]" />
+	<div class="relative z-8 mx-auto max-w-5xl p-8 pt-64">
+		<div class="relative font-jua text-9xl">
+			<h1 class="text-stroke-4 text-stroke bg-light">FAQ</h1>
+			<h1 class="text-dark-gradient absolute top-0 p-1">FAQ</h1>
+		</div>
+		<div class="relative mb-8 font-jua text-4xl">
+			<h1 class="text-stroke-2 text-stroke bg-light">(Frequently Asked Questions)</h1>
+			<h1 class="text-dark-gradient absolute top-0 p-1">(Frequently Asked Questions)</h1>
+		</div>
+		<div class="flex flex-row flex-wrap gap-8">
+			<FAQCard title="Who is eligible?">
+				<p class="font-jua text-xl text-light">
+					Remixed is eligible for highschoolers! You need to be 13-18 years old to participate.
+				</p>
+			</FAQCard>
+			<FAQCard title="How do I track my time?">
+				<p class="font-jua text-xl text-light">
+					We use our very own <a
+						href="https://hackatime.hackclub.com/"
+						class="text-[#81E2E1] underline decoration-wavy decoration-2">Hackatime</a
+					>
+					and
+					<a
+						href="https://lapse.hackclub.com/"
+						class="text-[#81E2E1] underline decoration-wavy decoration-2">Lapse</a
+					> to track your time! The more time you spend, the more notes you get.
+				</p>
+			</FAQCard>
+			<FAQCard title="Is this legit?">
+				<p class="font-jua text-xl text-light">
+					Yep! Hack Club has ran many different programs before, partnering with
+					<a
+						href="https://www.amd.com/en.html"
+						class="text-[#81E2E1] underline decoration-wavy decoration-2"
+					>
+						AMD
+					</a>,
+					<a
+						href="https://opensauce.com/"
+						class="text-[#81E2E1] underline decoration-wavy decoration-2"
+					>
+						Open Sauce
+					</a>,
+					<a
+						href="https://github.com/"
+						class="text-[#81E2E1] underline decoration-wavy decoration-2"
+					>
+						GitHub
+					</a>, and
+					<a
+						href="https://hackclub.com/philanthropy/"
+						class="text-[#81E2E1] underline decoration-wavy decoration-2"
+					>
+						many more
+					</a>.
+				</p>
+			</FAQCard>
+			<FAQCard title="When does this end?">
+				<p class="font-jua text-xl text-light">
+					(INSERT DATE HERE)! You will have a couple of weeks to redeem your prizes after it ends,
+					though.
+				</p>
+			</FAQCard>
+		</div>
+	</div>
 </div>
