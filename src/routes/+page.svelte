@@ -83,7 +83,8 @@
 				ship a rhythm game, get headphones!
 			</h2>
 		</div>
-		<button
+		<a
+			href={hackatimeOauthUrl}
 			class="relative top-0 mx-auto mt-4 w-max cursor-pointer rounded-2xl bg-linear-to-r from-secondary to-[#54C1D7] p-1 shadow-none transition-all hover:-top-1 hover:shadow-lg/30 active:top-1 active:shadow-none"
 		>
 			<div class="rounded-xl bg-text px-24 py-2">
@@ -97,7 +98,7 @@
 					>
 				</div>
 			</div>
-		</button>
+		</a>
 	</div>
 </div>
 <div class="relative pb-150">
