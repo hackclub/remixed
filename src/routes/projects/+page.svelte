@@ -30,10 +30,13 @@
 <Sidebar />
 
 <div class="relative z-2 flex h-screen w-screen items-center justify-center">
-	<div class="grid grid-cols-3 gap-16">
+	<button class="mr-8"> <img src="/dashboard/arrow-left.png" alt="arrow" class="w-16" /> </button>
+	<div
+		class="no-scrollbar grid max-w-[calc(18rem*3+4rem*2)] snap-x snap-mandatory auto-cols-max grid-flow-col gap-16 overflow-x-auto py-4"
+	>
 		<a
 			href="/projects/new"
-			class="hover-effect flex w-70 flex-col items-center gap-8 rounded-3xl border-4 border-[#8B81FF] bg-text p-8"
+			class="hover-effect flex w-72 snap-start flex-col items-center gap-8 rounded-3xl border-4 border-[#8B81FF] bg-text p-8"
 		>
 			<img src="/dashboard/plus_fill.png" alt="plus" class="m-4 w-16" />
 			<h2 class="text-center font-jua text-4xl text-[#E2BEFF] text-shadow-lg/30">
@@ -43,7 +46,7 @@
 		{#each userProjects as proj}
 			<a
 				href="/projects/{proj.id}"
-				class="hover-effect w-70 rounded-3xl border-4 border-[#8B81FF] bg-text p-4"
+				class="hover-effect w-72 snap-start rounded-3xl border-4 border-[#8B81FF] bg-text p-4"
 			>
 				<CoverArt
 					src={proj.coverArt}
@@ -58,4 +61,7 @@
 			</a>
 		{/each}
 	</div>
+	<button class="ml-8">
+		<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16 rotate-180" />
+	</button>
 </div>
