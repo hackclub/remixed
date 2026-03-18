@@ -6,6 +6,7 @@
 	import { styleButton, styleH1 } from '$lib/styles';
 	import CoverArt from '$lib/CoverArt.svelte';
 
+	let projectView: HTMLElement | null = $state(null);
 	let userProjects: any[] = $state([]);
 
 	onMount(() => {
@@ -23,6 +24,16 @@
 				localStorage.setItem('userProjects', JSON.stringify(data));
 			});
 	});
+
+	function scroll(right: boolean) {
+		if (!projectView) return;
+
+		if (right) {
+			projectView.scrollBy({ left: 300, behavior: 'smooth' });
+		} else {
+			projectView.scrollBy({ left: -300, behavior: 'smooth' });
+		}
+	}
 </script>
 
 <img src="/dashboard/dots-tl.png" alt="dots" class="fixed top-0 left-0 w-2/3" />
@@ -30,13 +41,16 @@
 <Sidebar />
 
 <div class="relative z-2 flex h-screen w-screen items-center justify-center">
-	<button class="mr-8"> <img src="/dashboard/arrow-left.png" alt="arrow" class="w-16" /> </button>
+	<button class="hover-effect mr-8 cursor-pointer" onclick={() => scroll(false)}>
+		<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16" />
+	</button>
 	<div
+		bind:this={projectView}
 		class="no-scrollbar grid max-w-[calc(18rem*3+4rem*2)] snap-x snap-mandatory auto-cols-max grid-flow-col gap-16 overflow-x-auto py-4"
 	>
 		<a
 			href="/projects/new"
-			class="hover-effect flex w-72 snap-start flex-col items-center gap-8 rounded-3xl border-4 border-[#8B81FF] bg-text p-8"
+			class="hover-effect-shadow flex w-72 snap-start flex-col items-center gap-8 rounded-3xl border-4 border-[#8B81FF] bg-text p-8"
 		>
 			<img src="/dashboard/plus_fill.png" alt="plus" class="m-4 w-16" />
 			<h2 class="text-center font-jua text-4xl text-[#E2BEFF] text-shadow-lg/30">
@@ -46,7 +60,7 @@
 		{#each userProjects as proj}
 			<a
 				href="/projects/{proj.id}"
-				class="hover-effect w-72 snap-start rounded-3xl border-4 border-[#8B81FF] bg-text p-4"
+				class="hover-effect-shadow w-72 snap-start rounded-3xl border-4 border-[#8B81FF] bg-text p-4"
 			>
 				<CoverArt
 					src={proj.coverArt}
@@ -61,7 +75,7 @@
 			</a>
 		{/each}
 	</div>
-	<button class="ml-8">
+	<button class="hover-effect ml-8 cursor-pointer" onclick={() => scroll(true)}>
 		<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16 rotate-180" />
 	</button>
 </div>
