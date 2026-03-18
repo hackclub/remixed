@@ -5,7 +5,7 @@
 
 	const records = [
 		{ name: 'Projects', route: '/projects', img: '/dashboard/crunch-projects.png' },
-		{ name: 'Gallery', route: '/discover', img: '/dashboard/crunch-gallery.png' },
+		{ name: 'Gallery', route: '/gallery', img: '/dashboard/crunch-gallery.png' },
 		{ name: 'Shop', route: '/shop', img: '/dashboard/crunch-shop.png' },
 	];
 
