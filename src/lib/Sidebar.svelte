@@ -4,22 +4,15 @@
 	import { styleButton, stylePopover } from './styles';
 
 	const records = [
-		{ name: 'Dashboard', route: '/dashboard' },
-		{ name: 'Projects', route: '/projects' },
-		{ name: 'Discover', route: '/discover' },
-		{ name: 'Shop', route: '/shop' },
-		{ name: 'Profile', route: '/user' },
-		{ name: 'Log Out', route: 'LOGOUT' },
+		{ name: 'Projects', route: '/projects', img: '/dashboard/crunch-projects.png' },
+		{ name: 'Gallery', route: '/discover', img: '/dashboard/crunch-gallery.png' },
+		{ name: 'Shop', route: '/shop', img: '/dashboard/crunch-shop.png' },
 	];
 
 	let currentPageIndex: number = $state(
 		records.findIndex((rec) => page.url.pathname.startsWith(rec.route)),
 	);
 	let hoveredIndex: number = $state(currentPageIndex);
-
-	function getRecordTop(i: number): number {
-		return 100 + i * 80;
-	}
 
 	function getBgColor(i: number): string {
 		return i == currentPageIndex ? 'var(--color-primary)' : 'var(--color-text)';
@@ -29,12 +22,8 @@
 	}
 
 	function getStyles(i: number): string {
-		return `top: ${getRecordTop(i)}px;
-			z-index: ${i};
-			background-color: ${getBgColor(i)};
-			color: ${getTextColor(i)};
-			left: ${i == hoveredIndex ? 0 : -64}px;
-			rotate: ${i == hoveredIndex ? 45 : -90}deg;
+		return `bottom: ${i == hoveredIndex ? 0 : -70}px;
+		left: ${i * 100 + (i > hoveredIndex ? 40 : 0)}px;
 		`;
 	}
 </script>
@@ -50,32 +39,16 @@
 	</a>
 </div>
 
-<a class="fixed top-4 left-4 w-80 origin-top-left transition hover:scale-105" href="/">
-	<img src="/logo.png" alt="logo" />
-</a>
-
-<div class="fixed h-screen py-32">
+<div class="fixed bottom-0 left-0 z-20 flex">
 	{#each records as record, i}
-		{#if record.route == 'LOGOUT'}
-			<button
-				popovertarget="confirm-signout"
-				style={getStyles(i)}
-				class="absolute flex size-36 -rotate-90 cursor-pointer rounded-full border-2 border-secondary bg-red-500 transition-all duration-200 hover:rotate-45"
-				onmouseenter={() => (hoveredIndex = i)}
-				onmouseleave={() => (hoveredIndex = currentPageIndex)}
-			>
-				<h1 class="mt-6 w-full text-center font-gothic">{record.name}</h1>
-			</button>
-		{:else}
-			<a
-				style={getStyles(i)}
-				href={record.route}
-				class="absolute flex size-36 -rotate-90 rounded-full border-2 border-secondary bg-red-500 transition-all duration-200 hover:rotate-45"
-				onmouseenter={() => (hoveredIndex = i)}
-				onmouseleave={() => (hoveredIndex = currentPageIndex)}
-			>
-				<h1 class="mt-6 w-full text-center font-gothic">{record.name}</h1>
-			</a>
-		{/if}
+		<a
+			style={getStyles(i)}
+			href={record.route}
+			class="absolute bottom-0 inline h-min w-48 align-bottom transition-all duration-200 hover:bottom-18"
+			onmouseenter={() => (hoveredIndex = i)}
+			onmouseleave={() => (hoveredIndex = currentPageIndex)}
+		>
+			<img src={record.img} alt="" class="align-bottom" />
+		</a>
 	{/each}
 </div>

@@ -2,10 +2,15 @@
 	import Sidebar from '$lib/Sidebar.svelte';
 	import CDProject from '$lib/CDProject.svelte';
 	import CassetteProject from '$lib/CassetteProject.svelte';
+	import ProfileCard from '$lib/ProfileCard.svelte';
+	import PageHeader from '$lib/PageHeader.svelte';
 	import { onMount } from 'svelte';
 	import { styleButton, styleH1 } from '$lib/styles';
+	import CoverArt from '$lib/CoverArt.svelte';
 
-	let userProjects = $state([]);
+	let { data } = $props();
+	let projectView: HTMLElement | null = $state(null);
+	let userProjects: any[] = $state([]);
 
 	onMount(() => {
 		try {
@@ -22,22 +27,69 @@
 				localStorage.setItem('userProjects', JSON.stringify(data));
 			});
 	});
+
+	function scroll(right: boolean) {
+		if (!projectView) return;
+
+		if (right) {
+			projectView.scrollBy({ left: 300, behavior: 'smooth' });
+		} else {
+			projectView.scrollBy({ left: -300, behavior: 'smooth' });
+		}
+	}
 </script>
 
+<img src="/dashboard/dots-tl.png" alt="dots" class="fixed top-0 left-0 w-2/3" />
+<img src="/dashboard/dots-br.png" alt="dots" class="fixed right-0 bottom-0 w-3/5" />
 <Sidebar />
-<div class="p-10 pl-40">
-	<div class="mb-6 flex items-center justify-center gap-8">
-		<h1 class="{styleH1} text-text">Projects</h1>
-		<a href="/projects/new" class="{styleButton}  bg-primary">+ New</a>
-	</div>
+<ProfileCard user={data.user} />
+<PageHeader
+	title="Projects"
+	desc="Describe your idea for a project, build it, then ship and get prizes!"
+/>
 
-	{#if userProjects.length > 0}
-		<div class="flex w-full flex-wrap justify-center gap-6">
-			{#each userProjects as project}
-				<CDProject {project} />
+<div class="relative z-2 flex h-screen w-screen flex-col items-center justify-center pt-16">
+	<div class="flex">
+		<button class="hover-effect mr-8 cursor-pointer" onclick={() => scroll(false)}>
+			<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16" />
+		</button>
+		<div
+			bind:this={projectView}
+			class="no-scrollbar grid max-w-[calc(18rem*3+4rem*2)] snap-x snap-mandatory auto-cols-max grid-flow-col gap-16 overflow-x-auto py-4"
+		>
+			<a
+				href="/projects/new"
+				class="hover-effect-shadow flex w-72 snap-center flex-col items-center gap-8 rounded-3xl border-4 border-[#8B81FF] bg-text p-8"
+			>
+				<img src="/dashboard/plus_fill.png" alt="plus" class="m-4 w-16" />
+				<h2 class="text-center font-jua text-4xl text-[#E2BEFF] text-shadow-flat">
+					Create new project
+				</h2>
+			</a>
+			{#each userProjects as proj}
+				<a
+					href="/projects/{proj.id}"
+					class="hover-effect-shadow w-72 snap-center rounded-3xl border-4 border-[#8B81FF] bg-text p-4"
+				>
+					<CoverArt
+						src={proj.coverArt}
+						class="mb-4 h-30 w-full rounded-xl border-4 border-[#E2BEFF] object-cover"
+					/>
+					<div class="flex grow flex-col justify-end">
+						<h2 class=" line-clamp-1 font-jua text-3xl text-[#E2BEFF] text-shadow-flat">
+							{proj.title}
+						</h2>
+						<p class="line-clamp-3 font-jua text-[#E2BEFF]">{proj.description}</p>
+					</div>
+				</a>
 			{/each}
 		</div>
-	{:else}
-		<p class="text-center font-gothic text-xl text-text">Get started by creating a project!</p>
-	{/if}
+		<button class="hover-effect ml-8 cursor-pointer" onclick={() => scroll(true)}>
+			<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16 rotate-180" />
+		</button>
+	</div>
+	<p class="mt-8 text-center font-jua text-2xl text-light text-shadow-flat">
+		Click on a project to ship or edit it.<br />
+		Use the arrows to navigate.
+	</p>
 </div>
