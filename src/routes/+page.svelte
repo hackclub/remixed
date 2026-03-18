@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 	import CrunchCard from '$lib/CrunchCard.svelte';
+	import BoldText from '$lib/BoldText.svelte';
 	import FAQCard from '$lib/FAQCard.svelte';
 	import { onMount } from 'svelte';
 
@@ -65,7 +66,6 @@
 <div
 	class="relative flex h-screen w-screen items-center justify-center overflow-x-clip bg-accent-purple"
 >
-	<!-- <img src="/landing/hueshift.png" alt="hueshift" class="absolute top-0 left-0 z-3 h-full w-full" /> -->
 	<img src="/landing/dots-topleft.png" alt="dots" class="absolute top-0 left-0 z-2 w-1/2" />
 	<img src="/landing/dots-right.png" alt="dots" class="absolute right-0 -bottom-64 z-2 w-1/2" />
 	<img src="/landing/concentric.png" alt="ellipse" class="absolute top-0 z-1 h-full object-cover" />
@@ -73,16 +73,9 @@
 		<div class="relative flex min-w-500 justify-center bg-text">
 			<img src="/logo.png" alt="logo" class="h-30" />
 		</div>
-		<div class="relative mx-auto mt-2 w-max text-center font-jua text-3xl">
-			<h2 style="-webkit-text-stroke: 4px var(--color-light)" class="select-none">
-				ship a rhythm game, get headphones!
-			</h2>
-			<h2
-				class="absolute top-0 bg-linear-to-b from-[#3E236D] to-[#4470A4] bg-clip-text text-transparent"
-			>
-				ship a rhythm game, get headphones!
-			</h2>
-		</div>
+		<BoldText class="mx-auto mt-4 text-center font-jua text-3xl" stroke="2">
+			ship a rhythm game, get headphones!
+		</BoldText>
 		<a
 			href={hackatimeOauthUrl}
 			class="relative top-0 mx-auto mt-4 w-max cursor-pointer rounded-2xl bg-linear-to-r from-secondary to-[#54C1D7] p-1 shadow-none transition-all hover:-top-1 hover:shadow-lg/30 active:top-1 active:shadow-none"
@@ -103,14 +96,9 @@
 </div>
 <div class="relative pb-150">
 	<div class="relative z-2">
-		<div class="relative flex justify-center text-center font-jua text-3xl">
-			<h1 class="text-stroke text-stroke-1 bg-light">
-				Choose a pathway and, get music-related goodies!
-			</h1>
-			<h1 class="text-dark-gradient absolute top-0 p-1">
-				Choose a pathway and, get music-related goodies!
-			</h1>
-		</div>
+		<BoldText class="mx-auto flex! w-full font-jua text-3xl" stroke="2">
+			Choose a pathway and, get music-related goodies!
+		</BoldText>
 		<div class="mt-24 flex justify-center gap-16 p-16">
 			<CrunchCard
 				img="/landing/crunch_pink.png"
@@ -131,14 +119,10 @@
 				class=" relative rotate-6"
 			/>
 		</div>
-		<div class="relative flex justify-center text-center font-jua text-3xl">
-			<h1 class="text-stroke text-stroke-1 bg-light">
-				...or make something completely different, as long as it’s about music!
-			</h1>
-			<h1 class="text-dark-gradient absolute top-0 p-1">
-				...or make something completely different, as long as it’s about music!
-			</h1>
-		</div>
+
+		<BoldText class="mx-auto flex! w-full font-jua text-3xl" stroke="2">
+			...or make something completely different, as long as it’s about music!
+		</BoldText>
 		<div class="mt-36 flex justify-center">
 			<CrunchCard
 				img="/landing/crunch_green_spotify.png"
@@ -158,14 +142,9 @@
 
 <div class="relative -top-110 flex justify-center overflow-x-clip">
 	<div class="absolute z-6 flex w-1000 rotate-12 justify-center bg-text p-4">
-		<div class=" relative font-daydream text-4xl text-light">
-			<h1 class="text-stroke-2 text-stroke bg-light">
-				/// MICROPHONES /// HEADPHONES /// INSTRUMENTS ///
-			</h1>
-			<h1 class="text-dark-gradient absolute top-0 p-1">
-				/// MICROPHONES /// HEADPHONES /// INSTRUMENTS ///
-			</h1>
-		</div>
+		<BoldText class="font-daydream text-4xl" stroke="2">
+			/// MICROPHONES /// HEADPHONES /// INSTRUMENTS ///
+		</BoldText>
 	</div>
 	<div class="relative top-2 z-5 flex w-1000 rotate-12 justify-center gap-8 pt-32">
 		<img
@@ -180,14 +159,9 @@
 		/>
 		<div class="absolute top-16 h-full w-1000 bg-accent-purple"></div>
 		<div class="">
-			<div class="relative z-2 flex justify-center font-jua text-4xl">
-				<h1 class="text-stroke text-stroke-2 bg-light">
-					Ship your project, and get all sorts of cool stuff!
-				</h1>
-				<h1 class="text-dark-gradient absolute top-0 p-1">
-					Ship your project, and get all sorts of cool stuff!
-				</h1>
-			</div>
+			<BoldText class="z-3 mx-auto flex! font-jua text-4xl" stroke="2">
+				Ship your project, and get all sorts of cool stuff!
+			</BoldText>
 			<div class="flex justify-center">
 				<div class="marquee relative z-6 mt-48 flex h-100 w-screen justify-start">
 					{#each marqueeItems as item}
@@ -208,14 +182,10 @@
 <div class="relative -top-160 z-5 w-full">
 	<img src="/landing/faq-bg.png" alt="bg" class="absolute w-full scale-x-[-1]" />
 	<div class="relative z-8 mx-auto max-w-5xl p-8 pt-64">
-		<div class="relative font-jua text-9xl">
-			<h1 class="text-stroke-4 text-stroke bg-light">FAQ</h1>
-			<h1 class="text-dark-gradient absolute top-0 p-1">FAQ</h1>
-		</div>
-		<div class="relative mb-8 font-jua text-4xl">
-			<h1 class="text-stroke-2 text-stroke bg-light">(Frequently Asked Questions)</h1>
-			<h1 class="text-dark-gradient absolute top-0 p-1">(Frequently Asked Questions)</h1>
-		</div>
+		<BoldText class="font-jua text-9xl" stroke="4">FAQ</BoldText>
+		<BoldText class="mb-8 flex! font-jua text-4xl" stroke="2">
+			(Frequently Asked Questions)
+		</BoldText>
 		<div class="flex flex-row flex-wrap gap-8">
 			<FAQCard title="Who is eligible?">
 				<p class="font-jua text-xl text-light">
@@ -274,13 +244,6 @@
 	</div>
 </div>
 
-{#snippet boldText(text: string)}
-	<span class="relative inline-flex w-max justify-center">
-		<span class="text-stroke text-stroke-2 bg-light">{text}</span>
-		<span class="text-dark-gradient absolute top-0 p-1">{text}</span>
-	</span>
-{/snippet}
-
 <div class="relative z-8 -mt-120 w-full overflow-x-clip bg-text">
 	<div class="flex justify-center">
 		<div class="absolute -top-20 h-40 w-1000 -rotate-6 bg-text"></div>
@@ -288,12 +251,12 @@
 	<div class="relative mx-auto max-w-5xl p-16">
 		<h1 class="mb-8 font-jua text-4xl text-light">
 			A project by
-			{@render boldText('Hack Club')}, built by
-			{@render boldText('kc')},
-			{@render boldText('fireentity')},
-			{@render boldText('helloonearth311')},
-			{@render boldText('ascpixi')}, and
-			{@render boldText('Shuflduf')}.
+			<BoldText stroke="2">Hack Club</BoldText>, built by
+			<BoldText stroke="2">kc</BoldText>,
+			<BoldText stroke="2">fireentity</BoldText>,
+			<BoldText stroke="2">helloonearth311</BoldText>,
+			<BoldText stroke="2">ascpixi</BoldText>, and
+			<BoldText stroke="2">Shuflduf</BoldText>.
 		</h1>
 		<p class="font-jua text-xl text-light">
 			Hack Club is a 501(c)(3) nonprofit and network of 60k+ technical high schoolers. We believe
