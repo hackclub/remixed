@@ -1,12 +1,9 @@
 <script lang="ts">
 	import Sidebar from '$lib/Sidebar.svelte';
-	import CDProject from '$lib/CDProject.svelte';
-	import CassetteProject from '$lib/CassetteProject.svelte';
-	import ProfileCard from '$lib/ProfileCard.svelte';
 	import PageHeader from '$lib/PageHeader.svelte';
+	import ProjectCard from '$lib/ProjectCard.svelte';
 	import { onMount } from 'svelte';
 	import { styleButton, styleH1 } from '$lib/styles';
-	import CoverArt from '$lib/CoverArt.svelte';
 
 	let { data } = $props();
 	let projectView: HTMLElement | null = $state(null);
@@ -20,7 +17,7 @@
 			localStorage.removeItem('userProjects');
 		}
 
-		fetch('/api/projects')
+		fetch('/api/user_projects')
 			.then((r) => r.json())
 			.then((data) => {
 				userProjects = data;
@@ -63,21 +60,7 @@
 				</h2>
 			</a>
 			{#each userProjects as proj}
-				<a
-					href="/projects/{proj.id}"
-					class="hover-effect-shadow w-72 snap-center rounded-3xl border-4 border-[#8B81FF] bg-text p-4"
-				>
-					<CoverArt
-						src={proj.coverArt}
-						class="mb-4 h-30 w-full rounded-xl border-4 border-[#E2BEFF] object-cover"
-					/>
-					<div class="flex grow flex-col justify-end">
-						<h2 class=" line-clamp-1 font-jua text-3xl text-[#E2BEFF] text-shadow-flat">
-							{proj.title}
-						</h2>
-						<p class="line-clamp-3 font-jua text-[#E2BEFF]">{proj.description}</p>
-					</div>
-				</a>
+				<ProjectCard {proj} />
 			{/each}
 		</div>
 		<button class="hover-effect ml-8 h-min cursor-pointer" onclick={() => scroll(true)}>
