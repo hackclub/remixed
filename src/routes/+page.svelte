@@ -280,17 +280,20 @@
 	</span>
 {/snippet}
 
-<div class="relative -top-120 z-8">
+<div class="relative -top-120 z-8 overflow-x-clip">
 	<div class="flex justify-center">
 		<div class="absolute h-full w-1000 -rotate-6 bg-text p-16 pb-100"></div>
 	</div>
-	<div class="relative top-20 p-16">
+	<div class="absolute -bottom-36 h-56 w-full bg-text"></div>
+	<div class="relative top-20 mx-auto max-w-5xl p-16">
 		<h1 class="mb-8 font-jua text-4xl text-light">
-			A project by {@render boldText('Hack Club')}, built by {@render boldText('kc')}, {@render boldText(
-				'fireentity',
-			)}, {@render boldText('helloonearth311')}, {@render boldText('ascpixi')}, and {@render boldText(
-				'Shuflduf',
-			)}.
+			A project by
+			{@render boldText('Hack Club')}, built by
+			{@render boldText('kc')},
+			{@render boldText('fireentity')},
+			{@render boldText('helloonearth311')},
+			{@render boldText('ascpixi')}, and
+			{@render boldText('Shuflduf')}.
 		</h1>
 		<p class="font-jua text-xl text-light">
 			Hack Club is a 501(c)(3) nonprofit and network of 60k+ technical high schoolers. We believe
