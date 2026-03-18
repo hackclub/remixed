@@ -23,8 +23,7 @@
 
 	function getStyles(i: number): string {
 		return `bottom: ${i == hoveredIndex ? 0 : -70}px;
-		rotate: ${i == hoveredIndex && i < records.length - 1 ? -30 : 0}deg;
-		left: ${i * 100}px;
+		left: ${i * 100 + (i > hoveredIndex ? 40 : 0)}px;
 		`;
 	}
 </script>
@@ -39,10 +38,6 @@
 		Log Out
 	</a>
 </div>
-
-<a class="fixed top-4 left-4 w-80 origin-top-left transition hover:scale-105" href="/">
-	<img src="/logo.png" alt="logo" />
-</a>
 
 <div class="fixed bottom-0 left-0 flex">
 	{#each records as record, i}
