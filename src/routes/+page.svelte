@@ -282,7 +282,7 @@
 
 <div class="relative z-8 -mt-120 w-full overflow-x-clip bg-text">
 	<div class="flex justify-center">
-		<div class="absolute -top-15 h-40 w-1000 -rotate-6 bg-text"></div>
+		<div class="absolute -top-20 h-40 w-1000 -rotate-6 bg-text"></div>
 	</div>
 	<div class="relative mx-auto max-w-5xl p-16">
 		<h1 class="mb-8 font-jua text-4xl text-light">
