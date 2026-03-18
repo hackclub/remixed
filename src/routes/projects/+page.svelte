@@ -48,42 +48,48 @@
 	desc="Describe your idea for a project, build it, then ship and get prizes!"
 />
 
-<div class="relative z-2 flex h-screen w-screen items-center justify-center">
-	<button class="hover-effect mr-8 cursor-pointer" onclick={() => scroll(false)}>
-		<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16" />
-	</button>
-	<div
-		bind:this={projectView}
-		class="no-scrollbar grid max-w-[calc(18rem*3+4rem*2)] snap-x snap-mandatory auto-cols-max grid-flow-col gap-16 overflow-x-auto py-4"
-	>
-		<a
-			href="/projects/new"
-			class="hover-effect-shadow flex w-72 snap-start flex-col items-center gap-8 rounded-3xl border-4 border-[#8B81FF] bg-text p-8"
+<div class="relative z-2 flex h-screen w-screen flex-col items-center justify-center pt-16">
+	<div class="flex">
+		<button class="hover-effect mr-8 cursor-pointer" onclick={() => scroll(false)}>
+			<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16" />
+		</button>
+		<div
+			bind:this={projectView}
+			class="no-scrollbar grid max-w-[calc(18rem*3+4rem*2)] snap-x snap-mandatory auto-cols-max grid-flow-col gap-16 overflow-x-auto py-4"
 		>
-			<img src="/dashboard/plus_fill.png" alt="plus" class="m-4 w-16" />
-			<h2 class="text-center font-jua text-4xl text-[#E2BEFF] text-shadow-flat">
-				Create new project
-			</h2>
-		</a>
-		{#each userProjects as proj}
 			<a
-				href="/projects/{proj.id}"
-				class="hover-effect-shadow w-72 snap-start rounded-3xl border-4 border-[#8B81FF] bg-text p-4"
+				href="/projects/new"
+				class="hover-effect-shadow flex w-72 snap-center flex-col items-center gap-8 rounded-3xl border-4 border-[#8B81FF] bg-text p-8"
 			>
-				<CoverArt
-					src={proj.coverArt}
-					class="mb-4 h-30 w-full rounded-xl border-4 border-[#E2BEFF] object-cover"
-				/>
-				<div class="flex grow flex-col justify-end">
-					<h2 class=" line-clamp-1 font-jua text-3xl text-[#E2BEFF] text-shadow-flat">
-						{proj.title}
-					</h2>
-					<p class="line-clamp-3 font-jua text-[#E2BEFF]">{proj.description}</p>
-				</div>
+				<img src="/dashboard/plus_fill.png" alt="plus" class="m-4 w-16" />
+				<h2 class="text-center font-jua text-4xl text-[#E2BEFF] text-shadow-flat">
+					Create new project
+				</h2>
 			</a>
-		{/each}
+			{#each userProjects as proj}
+				<a
+					href="/projects/{proj.id}"
+					class="hover-effect-shadow w-72 snap-center rounded-3xl border-4 border-[#8B81FF] bg-text p-4"
+				>
+					<CoverArt
+						src={proj.coverArt}
+						class="mb-4 h-30 w-full rounded-xl border-4 border-[#E2BEFF] object-cover"
+					/>
+					<div class="flex grow flex-col justify-end">
+						<h2 class=" line-clamp-1 font-jua text-3xl text-[#E2BEFF] text-shadow-flat">
+							{proj.title}
+						</h2>
+						<p class="line-clamp-3 font-jua text-[#E2BEFF]">{proj.description}</p>
+					</div>
+				</a>
+			{/each}
+		</div>
+		<button class="hover-effect ml-8 cursor-pointer" onclick={() => scroll(true)}>
+			<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16 rotate-180" />
+		</button>
 	</div>
-	<button class="hover-effect ml-8 cursor-pointer" onclick={() => scroll(true)}>
-		<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16 rotate-180" />
-	</button>
+	<p class="mt-8 text-center font-jua text-2xl text-light text-shadow-flat">
+		Click on a project to ship or edit it.<br />
+		Use the arrows to navigate.
+	</p>
 </div>
