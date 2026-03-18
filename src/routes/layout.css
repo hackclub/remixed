@@ -16,6 +16,7 @@
 	--color-light: #ECFCFF;
 	--color-bg: #DBC2FD;
 	--tw-prose-headings: var(--color-text);
+	--shadow-simple: 0 6px 4px 0 #0004;
 	--shadow-button: 0 0 0 4px currentColor, 0 4px 0 4px currentColor;
 	--shadow-button-hover: 0 0 0 4px currentColor, 0 8px 0 4px currentColor;
 }

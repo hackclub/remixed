@@ -39,7 +39,7 @@
 	</a>
 </div>
 
-<div class="fixed bottom-0 left-0 flex">
+<div class="fixed bottom-0 left-0 z-20 flex">
 	{#each records as record, i}
 		<a
 			style={getStyles(i)}
