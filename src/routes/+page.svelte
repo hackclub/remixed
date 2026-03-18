@@ -272,3 +272,32 @@
 		</div>
 	</div>
 </div>
+
+{#snippet boldText(text: string)}
+	<span class="relative inline-flex w-max justify-center">
+		<span class="text-stroke text-stroke-2 bg-light">{text}</span>
+		<span class="text-dark-gradient absolute top-0 p-1">{text}</span>
+	</span>
+{/snippet}
+
+<div class="relative -top-120 z-8">
+	<div class="flex justify-center">
+		<div class="absolute h-full w-1000 -rotate-6 bg-text p-16 pb-100"></div>
+	</div>
+	<div class="relative top-20 p-16">
+		<h1 class="mb-8 font-jua text-4xl text-light">
+			A project by {@render boldText('Hack Club')}, built by {@render boldText('kc')}, {@render boldText(
+				'fireentity',
+			)}, {@render boldText('helloonearth311')}, {@render boldText('ascpixi')}, and {@render boldText(
+				'Shuflduf',
+			)}.
+		</h1>
+		<p class="font-jua text-xl text-light">
+			Hack Club is a 501(c)(3) nonprofit and network of 60k+ technical high schoolers. We believe
+			you learn best by building so we're creating community and providing grants so you can make
+			awesome projects. In the past few years, we've partnered with GitHub to run Summer of
+			Making, hosted the world's longest hackathon on land, and ran Canada's largest high school
+			hackathon. <br /><br /> At Hack Club, students aren't just learning, they're shipping.
+		</p>
+	</div>
+</div>
