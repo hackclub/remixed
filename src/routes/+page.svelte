@@ -26,7 +26,6 @@
 		}).toString();
 
 	onMount(() => {
-		requestAnimationFrame(update);
 		setInterval(changeIdeas, 2000);
 		fetch('/api/shop')
 			.then((resp) => resp.json())
@@ -79,6 +78,8 @@
 				item.xOffset -= window.innerWidth + ITEM_WIDTH + 100;
 			}
 		}
+
+		requestAnimationFrame(update);
 	}
 
 	function typewriter(node: HTMLElement, { speed = 1 }: { speed?: number }) {
