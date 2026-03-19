@@ -5,13 +5,13 @@ export async function sendShopMessage(previousItem: any, newItem: any) {
 	let message = '';
 	console.log(previousItem, newItem);
 	if (previousItem == null) {
-		message += '*New Item Added!*\n';
+		message += '*<https://remixed.hackclub.com/shop/${newItem.id}|New Item> Added!*\n';
 		message += `Name: _${newItem.name}_\n`;
 		message += `Description: _${nullText(newItem.description)}_\n`;
 		message += `Cost: _${newItem.cost}_\n`;
 		message += `Image: ${newItem.imageUrl.trim().length > 0 ? formatImage(newItem.imageUrl, 'Link') : 'None'}\n`;
 	} else {
-		message += '*Item Updated!*\n';
+		message += `*<https://remixed.hackclub.com/shop/${newItem.id}|Item> Updated!*\n`;
 		if (newItem.name != previousItem.name) {
 			message += `Name: _${previousItem.name} -> ${newItem.name}_\n`;
 		} else {
