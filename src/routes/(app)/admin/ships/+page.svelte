@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { formatHours } from '$lib';
-	import { styleButton, styleH1, stylePopover } from '$lib/styles.js';
+	import { styleButton, styleH1, styleInput, stylePopover } from '$lib/styles.js';
 	import Sidebar from '$lib/Sidebar.svelte';
 
 	let { data } = $props();
 	const payoutMults = data.payoutMults;
-	const isOrg = data.roles.includes('ORGANIZER');
+	const isOrg = data.roles!.includes('ORGANIZER');
 
 	const hourMult = 60 * 60;
 
@@ -45,6 +45,8 @@
 				Organizer Payout
 			</label>
 		{/if}
+		<textarea required name="feedback" class="{styleInput} w-full font-jua" placeholder="Feedback"
+		></textarea>
 		<input type="submit" class="{styleButton} mt-4 w-full bg-primary" value="Confirm" />
 	</form>
 </div>
@@ -53,6 +55,12 @@
 	<h1 class="mb-8 text-center font-nikkyou text-3xl">REJECT</h1>
 	<form action="?/reject" method="POST">
 		<input type="hidden" name="shipId" value={activeShipId} />
+		<textarea
+			required
+			name="feedback"
+			class="{styleInput} mb-4 w-full font-jua"
+			placeholder="Feedback"
+		></textarea>
 		<input type="submit" class="{styleButton} w-full bg-accent-red" value="Confirm" />
 	</form>
 </div>

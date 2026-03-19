@@ -6,6 +6,7 @@ import { auditLogs, notesLedger, projects, ships, users } from '$lib/server/db/s
 import { eq, sql } from 'drizzle-orm';
 import type { ShipStatusPub } from '$lib';
 import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
+import { sendCertMessage } from '$lib/server/slack/cert_message';
 
 const payoutMults = {
 	reviewer: [10.0, 15.0],
@@ -32,14 +33,21 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 export const actions: Actions = {
 	reject: async ({ locals, request }) => {
 		const data = await request.formData();
+		const feedback = (data.get('feedback') as string).trim();
 		const shipId = Number(data.get('shipId'));
+		const [user] = await db.select().from(users).where(eq(users.id, locals.user!.id));
 		await Promise.all([
-			db.update(ships).set({ status: 'REJECTED' }).where(eq(ships.id, shipId)),
+			db.update(ships).set({ status: 'REJECTED', feedback }).where(eq(ships.id, shipId)),
 			db.insert(auditLogs).values({
 				category: 'SHIP_REVIEW',
 				userId: locals.user!.id,
 				data: { approved: false, shipId, org: locals.user!.roles.includes('ORGANIZER') },
 			}),
+			db
+				.select({ project: projects })
+				.from(ships)
+				.innerJoin(projects, eq(ships.projectId, projects.id))
+				.then(([proj]) => sendCertMessage(user.slackId, proj.project.title, false, feedback)),
 		]);
 	},
 	approve: async ({ request, locals }) => {
@@ -48,6 +56,7 @@ export const actions: Actions = {
 		const userId = Number(data.get('userId'));
 		const payoutMult = Number(data.get('payoutMult'));
 		const shipSeconds = Number(data.get('shipSeconds'));
+		const feedback = (data.get('feedback') as string).trim();
 
 		const [user] = await db.select().from(users).where(eq(users.id, locals.user!.id));
 		if (user.roles.includes('ORGANIZER')) {
@@ -62,7 +71,14 @@ export const actions: Actions = {
 		const payout = Math.ceil((payoutMult * shipSeconds) / (60.0 * 60.0));
 
 		await Promise.all([
-			sendUpdatedBalance(user.slackId, user.notesBalance, user.notesBalance + payout),
+			db
+				.select({ project: projects })
+				.from(ships)
+				.innerJoin(projects, eq(ships.projectId, projects.id))
+				.then(([proj]) => sendCertMessage(user.slackId, proj.project.title, true, feedback))
+				.then(() =>
+					sendUpdatedBalance(user.slackId, user.notesBalance, user.notesBalance + payout),
+				),
 			db
 				.update(users)
 				.set({ notesBalance: sql`${users.notesBalance} + ${payout}` })

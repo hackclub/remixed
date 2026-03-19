@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private';
+import { sendMessage } from './send_message';
 
 export async function sendUpdatedBalance(slackId: string, oldBal: number, newBal: number) {
 	const delta = newBal - oldBal;
@@ -8,13 +9,5 @@ export async function sendUpdatedBalance(slackId: string, oldBal: number, newBal
 Your new balance is *${newBal}* notes!
 _(${oldBal} + ${delta} = ${newBal})_`;
 	}
-	const resp = await fetch('https://slack.com/api/chat.postMessage', {
-		method: 'POST',
-		body: JSON.stringify({ channel: slackId, text: message }),
-		headers: {
-			'Content-type': 'application/json; charset=utf-8',
-			Authorization: `Bearer ${env.SLACK_BOT_USER_OAUTH_TOKEN}`,
-		},
-	});
-	console.log(await resp.json());
+	sendMessage(slackId, message);
 }
