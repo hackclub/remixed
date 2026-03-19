@@ -4,8 +4,15 @@
 	import BoldText from '$lib/BoldText.svelte';
 	import FAQCard from '$lib/FAQCard.svelte';
 	import { onMount } from 'svelte';
+	import { crossfade, fade, fly } from 'svelte/transition';
+
+	const PROJECT_IDEAS = ['rhythm game', 'daw', 'vst'];
+	const REWARD_IDEAS = ['headphones', 'a microphone', 'a speaker', 'an instrument'];
 
 	const ITEM_WIDTH = 180.0;
+	let currentProjectIdea = $state(0);
+	let currentRewardIdea = $state(0);
+	let projectTurn = true;
 	let currentIndex = 0;
 	let items: any[] = $state([]);
 	let marqueeItems: any = $state([]);
@@ -19,6 +26,8 @@
 		}).toString();
 
 	onMount(() => {
+		requestAnimationFrame(update);
+		setInterval(changeIdeas, 2000);
 		fetch('/api/shop')
 			.then((resp) => resp.json())
 			.then((r) => {
@@ -26,6 +35,21 @@
 				fillMarquee();
 			});
 	});
+
+	function changeIdeas() {
+		if (projectTurn) {
+			let t = currentProjectIdea;
+			while (currentProjectIdea == t) {
+				currentProjectIdea = Math.floor(Math.random() * PROJECT_IDEAS.length);
+			}
+		} else {
+			let t = currentRewardIdea;
+			while (currentRewardIdea == t) {
+				currentRewardIdea = Math.floor(Math.random() * REWARD_IDEAS.length);
+			}
+		}
+		projectTurn = !projectTurn;
+	}
 
 	function fillMarquee() {
 		for (let i = 0; i < Math.ceil(window.innerWidth / ITEM_WIDTH) + 1; i++) {
@@ -55,8 +79,25 @@
 				item.xOffset -= window.innerWidth + ITEM_WIDTH + 100;
 			}
 		}
+	}
 
-		requestAnimationFrame(update);
+	function typewriter(node: HTMLElement, { speed = 1 }: { speed?: number }) {
+		const valid = node.childNodes.length === 1 && node.childNodes[0].nodeType === Node.TEXT_NODE;
+
+		if (!valid) {
+			throw new Error(`This transition only works on elements with a single text node child`);
+		}
+
+		const text = node.textContent;
+		const duration = text.length / (speed * 0.01);
+
+		return {
+			duration,
+			tick: (t: number) => {
+				const i = ~~(text.length * t);
+				node.textContent = text.slice(0, i);
+			},
+		};
 	}
 </script>
 
@@ -81,7 +122,13 @@
 			<img src="/logo.png" alt="logo" class="h-30" />
 		</div>
 		<BoldText class="mx-auto mt-4 text-center font-jua text-3xl" stroke="2">
-			ship a rhythm game, get headphones!
+			ship a
+			{#key currentProjectIdea}
+				<span transition:typewriter> {PROJECT_IDEAS[currentProjectIdea]} </span>
+			{/key}, get
+			{#key currentRewardIdea}
+				<span transition:typewriter>{REWARD_IDEAS[currentRewardIdea]}</span>
+			{/key}!
 		</BoldText>
 		<a
 			href={hackatimeOauthUrl}
