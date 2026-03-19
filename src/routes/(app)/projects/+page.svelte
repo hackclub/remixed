@@ -65,7 +65,7 @@
 				</h2>
 			</a>
 			{#each userProjects as proj, index}
-				<div in:fly={{ x: 100, delay: 40 * index }}>
+				<div in:fly={{ x: -100, delay: 40 * index }}>
 					<ProjectCard {proj} />
 				</div>
 			{/each}
