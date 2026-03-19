@@ -4,6 +4,7 @@
 	import ProjectCard from '$lib/ProjectCard.svelte';
 	import { onMount } from 'svelte';
 	import { styleButton, styleH1 } from '$lib/styles';
+	import { fly } from 'svelte/transition';
 
 	let { data } = $props();
 	let projectView: HTMLElement | null = $state(null);
@@ -63,8 +64,10 @@
 					Create new project
 				</h2>
 			</a>
-			{#each userProjects as proj}
-				<ProjectCard {proj} />
+			{#each userProjects as proj, index}
+				<div in:fly={{ x: 100, delay: 40 * index }}>
+					<ProjectCard {proj} />
+				</div>
 			{/each}
 		</div>
 		<button class="hover-effect ml-8 h-min cursor-pointer" onclick={() => scroll(true)}>
