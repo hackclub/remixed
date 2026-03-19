@@ -9,8 +9,8 @@
 		{ name: 'Shop', route: '/shop', img: '/dashboard/crunch-shop.png' },
 	];
 
-	let currentPageIndex: number = $state(-1);
-	let hoveredIndex: number = $state(-1);
+	let currentPageIndex: number = $state(100);
+	let hoveredIndex: number = $state(100);
 
 	function getBgColor(i: number): string {
 		return i == currentPageIndex ? 'var(--color-primary)' : 'var(--color-text)';
@@ -20,13 +20,15 @@
 	}
 
 	function getStyles(i: number): string {
+		console.log(i, hoveredIndex, currentPageIndex);
 		return `bottom: ${i == hoveredIndex ? 0 : -70}px;
 		left: ${i * 100 + (i > hoveredIndex ? 40 : 0)}px;
 		`;
 	}
 
 	$effect(() => {
-		currentPageIndex = records.findIndex((rec) => page.url.pathname.startsWith(rec.route));
+		const testIndex = records.findIndex((rec) => page.url.pathname.startsWith(rec.route));
+		currentPageIndex = testIndex != -1 ? testIndex : 100;
 		hoveredIndex = currentPageIndex;
 	});
 </script>
