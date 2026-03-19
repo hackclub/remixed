@@ -20,7 +20,6 @@
 	}
 
 	function getStyles(i: number): string {
-		console.log(i, hoveredIndex, currentPageIndex);
 		return `bottom: ${i == hoveredIndex ? 0 : -70}px;
 		left: ${i * 100 + (i > hoveredIndex ? 40 : 0)}px;
 		`;

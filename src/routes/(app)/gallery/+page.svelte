@@ -10,7 +10,6 @@
 	function waterfallScrolled(e: Event) {
 		const elem: HTMLDivElement = e.target as HTMLDivElement;
 		const atBottom = Math.abs(elem.scrollHeight - elem.clientHeight - elem.scrollTop) <= 10;
-		console.log(atBottom);
 	}
 
 	onMount(() => {

@@ -23,6 +23,5 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		country: decrypt(order.country),
 		zipCode: decrypt(order.zipCode),
 	};
-	console.log(decryptedOrder);
 	return new Response(JSON.stringify(decryptedOrder));
 };

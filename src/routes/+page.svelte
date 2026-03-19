@@ -40,7 +40,6 @@
 			currentIndex += 1;
 			currentIndex %= items.length;
 		}
-		console.log(marqueeItems);
 		requestAnimationFrame(update);
 	}
 

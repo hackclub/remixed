@@ -29,7 +29,6 @@ export const actions = {
 		const description = (data.get('desc') as string | null)?.trim();
 		const category = (data.get('category') ?? 'OTHER') as ProjectCategory;
 		const hackatimeProjects = data.getAll('hackatime_projects') as string[];
-		console.log('FUCK', hackatimeProjects);
 
 		if (!title) return fail(400, { error: 'Missing required fields' });
 

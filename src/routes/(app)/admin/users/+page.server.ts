@@ -14,7 +14,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	updateRoles: async ({ request, locals }) => {
 		const data = await request.formData();
-		console.log(data);
 		const userId = Number(data.get('userId'));
 		const userRoles = data.getAll('userRoles') as ('USER' | 'STAFF' | 'REVIEWER' | 'ORGANIZER')[];
 
