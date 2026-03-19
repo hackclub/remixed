@@ -65,5 +65,5 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 	cookies.delete('ref', { path: '/' });
 	const sessionSignature = signSession(String(user.id));
 	cookies.set('session_token', `${user.id}.${sessionSignature}`, { path: '/' });
-	redirect(307, '/dashboard');
+	redirect(307, '/projects');
 };
