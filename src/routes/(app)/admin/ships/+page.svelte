@@ -17,7 +17,6 @@
 	let orgMultMode = $state(false);
 </script>
 
-<Sidebar />
 <div class={stylePopover} popover id="confirm-approve">
 	<h1 class="mb-8 text-center font-nikkyou text-3xl">APPROVE</h1>
 	<form action="?/approve" method="POST">

@@ -5,6 +5,7 @@ import { db } from '$lib/server/db';
 import { auditLogs, notesLedger, projects, ships, users } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import type { ShipStatusPub } from '$lib';
+import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
 
 const payoutMults = {
 	reviewer: [10.0, 15.0],
@@ -61,14 +62,15 @@ export const actions: Actions = {
 		const payout = Math.ceil((payoutMult * shipSeconds) / (60.0 * 60.0));
 
 		await Promise.all([
-			db.update(ships).set({ status: 'APPROVED' }).where(eq(ships.id, shipId)),
-			db
-				.insert(notesLedger)
-				.values({ userId, delta: payout, reason: 'ship_approved', refId: shipId }),
+			sendUpdatedBalance(user.slackId, user.notesBalance, user.notesBalance + payout),
 			db
 				.update(users)
 				.set({ notesBalance: sql`${users.notesBalance} + ${payout}` })
 				.where(eq(users.id, userId)),
+			db.update(ships).set({ status: 'APPROVED' }).where(eq(ships.id, shipId)),
+			db
+				.insert(notesLedger)
+				.values({ userId, delta: payout, reason: 'ship_approved', refId: shipId }),
 			db.insert(auditLogs).values({
 				category: 'SHIP_REVIEW',
 				userId: locals.user!.id,
@@ -80,5 +82,7 @@ export const actions: Actions = {
 				},
 			}),
 		]);
+
+		// sendUpdatedBalance(userId, ),
 	},
 };
