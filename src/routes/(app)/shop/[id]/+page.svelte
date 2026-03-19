@@ -7,8 +7,6 @@
 	let { data } = $props();
 </script>
 
-<Sidebar />
-
 <div class="{stylePopover} max-h-9/10" id="continue" popover>
 	<h1 class="mb-8 text-center font-nikkyou text-3xl">Confirm</h1>
 	<form action="?/placeOrder" method="POST">
@@ -16,7 +14,7 @@
 	</form>
 </div>
 
-<div class="h-screen pr-10 pl-40">
+<div class="h-screen p-10 pb-40">
 	<div class="flex h-full w-full flex-col justify-center">
 		<h1 class="{styleH1} mb-4 text-text">PURCHASE</h1>
 		<h2 class="{styleH2} mb-4 text-text">BALANCE: {data.balance}<Note /></h2>

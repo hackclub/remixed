@@ -48,9 +48,8 @@
 	}
 </script>
 
-<Sidebar />
 {#if anim}
-	<div class="h-screen pt-8 pr-8 pl-40">
+	<div class="h-screen p-10">
 		<main class="mx-auto flex h-full w-full items-center">
 			<form method="POST" action="?/update">
 				<div popover id="hackatime-project-select" class={stylePopover}>

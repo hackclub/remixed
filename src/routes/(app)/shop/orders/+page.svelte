@@ -5,8 +5,7 @@
 	let { data } = $props();
 </script>
 
-<Sidebar />
-<div class="pt-10 pr-10 pl-40">
+<div class="p-10">
 	<h1 class="{styleH1} mb-4 text-text">ORDERS</h1>
 	{#if data.orders.length > 0}
 		<div class="flex flex-row flex-wrap justify-center gap-4">
