@@ -6,7 +6,7 @@
 
 <a
 	href="/projects/{proj.id}"
-	class="hover-effect-shadow block w-72 snap-center rounded-3xl border-4 border-[#8B81FF] bg-text p-4"
+	class="hover-effect-shadow block w-72 snap-center break-inside-avoid rounded-3xl border-4 border-[#8B81FF] bg-text p-4"
 >
 	<CoverArt
 		src={proj.coverArt}
