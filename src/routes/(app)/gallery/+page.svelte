@@ -32,6 +32,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Gallery</title>
+</svelte:head>
+
 <PageHeader title="Gallery" desc="Look at what other peeps have made!" />
 
 <div onscroll={waterfallScrolled} class="h-screen w-screen overflow-y-auto pt-48">

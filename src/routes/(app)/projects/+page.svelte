@@ -4,7 +4,6 @@
 	import ProjectCard from '$lib/ProjectCard.svelte';
 	import { onMount } from 'svelte';
 	import { styleButton, styleH1 } from '$lib/styles';
-	import { title } from 'process';
 
 	let { data } = $props();
 	let projectView: HTMLElement | null = $state(null);
