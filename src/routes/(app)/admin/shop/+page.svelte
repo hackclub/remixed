@@ -63,7 +63,7 @@
 	{/if}
 </div>
 
-<div class="pt-10 pr-10 pl-40">
+<div class="p-10 pb-40">
 	<button
 		class="{styleButton} mx-auto mb-8 block bg-primary"
 		onclick={newItem}

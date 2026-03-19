@@ -5,7 +5,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { sendShopMessage } from '$lib/server/slack/shop_message';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const items = await db.select().from(shopItems);
+	const items = await db.select().from(shopItems).orderBy(shopItems.id);
 	return { items };
 };
 
