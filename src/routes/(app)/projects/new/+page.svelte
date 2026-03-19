@@ -7,7 +7,6 @@
 	let { data }: PageProps = $props();
 </script>
 
-<Sidebar />
 <form method="POST" class="m-auto flex h-screen w-80 flex-col justify-center">
 	<label class="font-nikkyou text-2xl text-text" for="title">Title</label>
 	<input

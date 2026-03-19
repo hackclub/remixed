@@ -5,14 +5,12 @@
 
 	const records = [
 		{ name: 'Projects', route: '/projects', img: '/dashboard/crunch-projects.png' },
-		{ name: 'Gallery', route: '/discover', img: '/dashboard/crunch-gallery.png' },
+		{ name: 'Gallery', route: '/gallery', img: '/dashboard/crunch-gallery.png' },
 		{ name: 'Shop', route: '/shop', img: '/dashboard/crunch-shop.png' },
 	];
 
-	let currentPageIndex: number = $state(
-		records.findIndex((rec) => page.url.pathname.startsWith(rec.route)),
-	);
-	let hoveredIndex: number = $state(currentPageIndex);
+	let currentPageIndex: number = $state(100);
+	let hoveredIndex: number = $state(100);
 
 	function getBgColor(i: number): string {
 		return i == currentPageIndex ? 'var(--color-primary)' : 'var(--color-text)';
@@ -26,6 +24,12 @@
 		left: ${i * 100 + (i > hoveredIndex ? 40 : 0)}px;
 		`;
 	}
+
+	$effect(() => {
+		const testIndex = records.findIndex((rec) => page.url.pathname.startsWith(rec.route));
+		currentPageIndex = testIndex != -1 ? testIndex : 100;
+		hoveredIndex = currentPageIndex;
+	});
 </script>
 
 <div class={stylePopover} popover id="confirm-signout">

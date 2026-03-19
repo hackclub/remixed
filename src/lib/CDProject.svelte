@@ -1,16 +1,6 @@
 <script lang="ts">
 	import CoverArt from '$lib/CoverArt.svelte';
 	let { project } = $props();
-
-	// let rotate = $state([0.0, 0.0]);
-
-	// function handleMouseMove(e: MouseEvent) {
-	// 	const mult = 60.0;
-	// 	const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-	// 	const pos = [e.clientX - rect.left, e.clientY - rect.top];
-	// 	rotate = [(pos[1] / rect.height - 0.5) * -mult, (pos[0] / rect.width - 0.5) * -mult];
-	// 	console.log(rotate[0], rotate[1]);
-	// }
 </script>
 
 <a

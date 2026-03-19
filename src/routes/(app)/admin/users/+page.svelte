@@ -8,7 +8,6 @@
 
 	function openRolesMenu() {
 		activeUserRoles = data.users.find((u) => u.id == activeUserId).roles;
-		console.log(activeUserRoles);
 	}
 </script>
 

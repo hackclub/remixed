@@ -21,7 +21,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		.innerJoin(users, eq(projects.userId, users.id))
 		.where(eq(ships.status, status))
 		.orderBy(ships.id);
-	console.log(projectShips);
 	return {
 		ships: projectShips,
 		roles: locals.user?.roles,

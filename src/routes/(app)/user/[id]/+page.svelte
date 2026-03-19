@@ -7,8 +7,7 @@
 	let { data } = $props();
 </script>
 
-<Sidebar />
-<div class="p-10 pl-40">
+<div class="p-10">
 	<h1 class="{styleH1} mb-4 text-text">{data.user!.username}</h1>
 
 	<div

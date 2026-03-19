@@ -1,12 +1,9 @@
 <script lang="ts">
 	import Sidebar from '$lib/Sidebar.svelte';
-	import CDProject from '$lib/CDProject.svelte';
-	import CassetteProject from '$lib/CassetteProject.svelte';
-	import ProfileCard from '$lib/ProfileCard.svelte';
 	import PageHeader from '$lib/PageHeader.svelte';
+	import ProjectCard from '$lib/ProjectCard.svelte';
 	import { onMount } from 'svelte';
 	import { styleButton, styleH1 } from '$lib/styles';
-	import CoverArt from '$lib/CoverArt.svelte';
 
 	let { data } = $props();
 	let projectView: HTMLElement | null = $state(null);
@@ -20,7 +17,7 @@
 			localStorage.removeItem('userProjects');
 		}
 
-		fetch('/api/projects')
+		fetch('/api/user_projects')
 			.then((r) => r.json())
 			.then((data) => {
 				userProjects = data;
@@ -39,18 +36,18 @@
 	}
 </script>
 
-<img src="/dashboard/dots-tl.png" alt="dots" class="fixed top-0 left-0 w-2/3" />
-<img src="/dashboard/dots-br.png" alt="dots" class="fixed right-0 bottom-0 w-3/5" />
-<Sidebar />
-<ProfileCard user={data.user} />
+<svelte:head>
+	<title>Projects</title>
+</svelte:head>
+
 <PageHeader
 	title="Projects"
 	desc="Describe your idea for a project, build it, then ship and get prizes!"
 />
 
 <div class="relative z-2 flex h-screen w-screen flex-col items-center justify-center pt-16">
-	<div class="flex">
-		<button class="hover-effect mr-8 cursor-pointer" onclick={() => scroll(false)}>
+	<div class="flex items-center">
+		<button class="hover-effect mr-8 h-min cursor-pointer" onclick={() => scroll(false)}>
 			<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16" />
 		</button>
 		<div
@@ -67,24 +64,10 @@
 				</h2>
 			</a>
 			{#each userProjects as proj}
-				<a
-					href="/projects/{proj.id}"
-					class="hover-effect-shadow w-72 snap-center rounded-3xl border-4 border-[#8B81FF] bg-text p-4"
-				>
-					<CoverArt
-						src={proj.coverArt}
-						class="mb-4 h-30 w-full rounded-xl border-4 border-[#E2BEFF] object-cover"
-					/>
-					<div class="flex grow flex-col justify-end">
-						<h2 class=" line-clamp-1 font-jua text-3xl text-[#E2BEFF] text-shadow-flat">
-							{proj.title}
-						</h2>
-						<p class="line-clamp-3 font-jua text-[#E2BEFF]">{proj.description}</p>
-					</div>
-				</a>
+				<ProjectCard {proj} />
 			{/each}
 		</div>
-		<button class="hover-effect ml-8 cursor-pointer" onclick={() => scroll(true)}>
+		<button class="hover-effect ml-8 h-min cursor-pointer" onclick={() => scroll(true)}>
 			<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16 rotate-180" />
 		</button>
 	</div>

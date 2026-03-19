@@ -53,10 +53,8 @@ export const actions: Actions = {
 		)
 			.map((p) => p.existingHackatimeProjects)
 			.reduce((sum, s) => sum.concat(s), []);
-		console.log(takenHackatimeProjects);
 
 		const data = await request.formData();
-		console.log(data);
 		const title = (data.get('title') as string)?.trim();
 		const description = (data.get('description') as string)?.trim();
 		const coverArt = (data.get('coverArt') as string | null)?.trim();

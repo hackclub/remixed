@@ -40,7 +40,6 @@
 			currentIndex += 1;
 			currentIndex %= items.length;
 		}
-		console.log(marqueeItems);
 		requestAnimationFrame(update);
 	}
 
@@ -61,7 +60,15 @@
 	}
 </script>
 
-<a href={hackatimeOauthUrl} class="fixed">LOGIN</a>
+<svelte:head>
+	<title>Remixed</title>
+	<meta
+		property="og:description"
+		content="ship something music related, get something music related!"
+	/>
+	<meta property="og:image" content="/logo.png" />
+</svelte:head>
+
 <div class="fixed h-screen w-screen bg-accent-purple"></div>
 <div
 	class="relative flex h-screen w-screen items-center justify-center overflow-x-clip bg-accent-purple"
