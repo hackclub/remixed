@@ -2,6 +2,7 @@ import { db } from '$lib/server/db';
 import { auditLogs, shopItems } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
+import { sendShopMessage } from '$lib/server/slack/shop_message';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const items = await db.select().from(shopItems);
@@ -17,6 +18,7 @@ export const actions: Actions = {
 		const description = (data.get('description') as string).trim();
 		const cost = Number(data.get('cost'));
 		const imageUrl = (data.get('imageUrl') as string).trim();
+		const [prevItem] = (await db.select().from(shopItems).where(eq(shopItems.id, id))) ?? null;
 		let newItem = {};
 
 		if (id == -1) {
@@ -31,6 +33,7 @@ export const actions: Actions = {
 				.where(eq(shopItems.id, id))
 				.returning();
 		}
+		await sendShopMessage(prevItem, newItem);
 		await db.insert(auditLogs).values({
 			category: 'SHOP_ITEM',
 			userId: locals.user!.id,

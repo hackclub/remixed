@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/private';
 
 export async function sendMessage(slackId: string, message: string) {
-	await fetch('https://slack.com/api/chat.postMessage', {
+	const resp = await fetch('https://slack.com/api/chat.postMessage', {
 		method: 'POST',
 		body: JSON.stringify({ channel: slackId, text: message }),
 		headers: {
@@ -9,4 +9,5 @@ export async function sendMessage(slackId: string, message: string) {
 			Authorization: `Bearer ${env.SLACK_BOT_USER_OAUTH_TOKEN}`,
 		},
 	});
+	console.log(await resp.json());
 }
