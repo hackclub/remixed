@@ -9,10 +9,8 @@
 		{ name: 'Shop', route: '/shop', img: '/dashboard/crunch-shop.png' },
 	];
 
-	let currentPageIndex: number = $state(
-		records.findIndex((rec) => page.url.pathname.startsWith(rec.route)),
-	);
-	let hoveredIndex: number = $state(currentPageIndex);
+	let currentPageIndex: number = $state(-1);
+	let hoveredIndex: number = $state(-1);
 
 	function getBgColor(i: number): string {
 		return i == currentPageIndex ? 'var(--color-primary)' : 'var(--color-text)';
@@ -26,6 +24,11 @@
 		left: ${i * 100 + (i > hoveredIndex ? 40 : 0)}px;
 		`;
 	}
+
+	$effect(() => {
+		currentPageIndex = records.findIndex((rec) => page.url.pathname.startsWith(rec.route));
+		hoveredIndex = currentPageIndex;
+	});
 </script>
 
 <div class={stylePopover} popover id="confirm-signout">
