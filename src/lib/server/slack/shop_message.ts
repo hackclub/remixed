@@ -3,7 +3,6 @@ import { sendMessage } from './send_message';
 
 export async function sendShopMessage(previousItem: any, newItem: any) {
 	let message = '';
-	console.log(previousItem, newItem);
 	if (previousItem == null) {
 		message += '*<https://remixed.hackclub.com/shop/${newItem.id}|New Item> Added!*\n';
 		message += `Name: _${newItem.name}_\n`;
@@ -27,7 +26,6 @@ export async function sendShopMessage(previousItem: any, newItem: any) {
 			message += `Image: _${nullImage(previousItem.imageUrl, 'Previous')} -> ${nullImage(newItem.imageUrl, 'New')}_\n`;
 		}
 	}
-	console.log(message);
 	await sendMessage(env.SHOP_UPDATES_CHANNEL_ID, message);
 	return;
 }

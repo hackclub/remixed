@@ -9,5 +9,4 @@ export async function sendMessage(slackId: string, message: string) {
 			Authorization: `Bearer ${env.SLACK_BOT_USER_OAUTH_TOKEN}`,
 		},
 	});
-	console.log(await resp.json());
 }
