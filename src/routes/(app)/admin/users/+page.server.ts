@@ -5,7 +5,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const allUsers = await db.select().from(users);
+	const allUsers = await db.select().from(users).orderBy(users.id);
 	return {
 		users: allUsers,
 	};
