@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Sidebar from '$lib/Sidebar.svelte';
-	import { styleButton, styleInput, stylePopover } from '$lib/styles.js';
+	import { styleButton, styleH1, styleInput, stylePopover } from '$lib/styles.js';
 	let { data } = $props();
 
 	let activeUserId = $state(null);
@@ -30,8 +30,9 @@
 	</form>
 </div>
 
-<div class="pt-20 pr-10 pl-40">
-	<table class="w-full">
+<div class="p-10 pb-40">
+	<h1 class="{styleH1} mb-4 text-text">USERS</h1>
+	<table class="w-full bg-accent-purple">
 		<thead class="font-gothic text-text">
 			<tr>
 				<th>ID</th>

@@ -71,9 +71,9 @@
 	</form>
 </div>
 
-<div class="pt-10 pr-10 pl-40">
+<div class="p-10 pb-40">
 	<h1 class="{styleH1} mb-4 text-text">ORDERS</h1>
-	<table class="w-full">
+	<table class="w-full bg-accent-purple">
 		<thead class="font-gothic text-text">
 			<tr>
 				<th>ID</th>

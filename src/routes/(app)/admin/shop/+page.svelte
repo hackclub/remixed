@@ -69,7 +69,7 @@
 		onclick={newItem}
 		popovertarget="manage-item">New</button
 	>
-	<table class="w-full">
+	<table class="w-full bg-accent-purple">
 		<thead class="font-gothic text-text">
 			<tr>
 				<th>ID</th>
