@@ -71,13 +71,9 @@
 			class="cd-spin aspect-square w-full animate-spin mask-[url(/cd.png)] mask-cover object-cover"
 		/>
 	</div>
-	<div>
-		<a
-			href={draft.githubUrl}
-			class="hover-effect-shadow cursor-pointer rounded-xl border-4 border-[#8B81FF] bg-[#1C2C44] px-8 py-2 text-center font-jua text-2xl text-light"
-		>
-			Repository
-		</a>
+	<div class="flex flex-col gap-4">
+		<a href={draft.githubUrl} class="{styleButton} "> Repository </a>
+		<a href={draft.demoUrl} class="{styleButton} "> Demo </a>
 	</div>
 </div>
 
