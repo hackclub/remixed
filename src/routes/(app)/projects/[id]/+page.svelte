@@ -49,12 +49,18 @@
 	}
 </script>
 
-{#snippet pageHeaderSubtitle()}
-	by <a class="underline decoration-2" href="/user/{data.user.id}">@{data.user.username}</a>
-{/snippet}
-
 <div class="absolute bottom-90 w-full">
-	<PageHeader title={draft.title} subtitleRich={pageHeaderSubtitle} full />
+	<PageHeader title={draft.title} full>
+		{#snippet subtitleRich()}
+			by <a class="underline decoration-2" href="/user/{data.user.id}">@{data.user.username}</a>
+		{/snippet}
+		{#snippet under()}
+			<div class="float-right">
+				<button class="{styleButton} ">Edit</button>
+				<button class="{styleButton} ">Ship</button>
+			</div>
+		{/snippet}
+	</PageHeader>
 </div>
 
 <div class="flex h-[50vh] w-full items-center justify-center">

@@ -5,12 +5,21 @@
 
 	let start = $state(false);
 
-	let { subtitleRich = null, subtitle = '', title, full = false } = $props();
+	let { subtitleRich = null, under = null, subtitle = '', title, full = false } = $props();
 
 	onMount(() => (start = true));
 </script>
 
 {#if start}
+	{#if under}
+		<div
+			style="width: {full ? 120 : 60}%;"
+			class="absolute top-56 right-8 z-21 -rotate-4 overflow-y-clip p-4 font-jua"
+			transition:fly={{ x: -200 }}
+		>
+			{@render under()}
+		</div>
+	{/if}
 	<div
 		style="width: {full ? 120 : 60}%;"
 		class="absolute top-16 -left-8 z-20 -rotate-4 overflow-y-clip bg-text p-4 pl-12 font-jua"
