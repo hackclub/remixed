@@ -43,7 +43,7 @@
 
 <PageHeader
 	title="Projects"
-	desc="Describe your idea for a project, build it, then ship and get prizes!"
+	subtitle="Describe your idea for a project, build it, then ship and get prizes!"
 />
 
 <div class="relative z-2 flex h-screen w-screen flex-col items-center justify-center pt-16">

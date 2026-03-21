@@ -6,6 +6,7 @@
 	import { formatHours, validUrl } from '$lib';
 	import { scale } from 'svelte/transition';
 	import { styleButton, styleH1, styleInput, stylePopover } from '$lib/styles';
+	import PageHeader from '$lib/PageHeader.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -48,7 +49,16 @@
 	}
 </script>
 
-{#if anim}
+{#snippet pageHeaderSubtitle()}
+	by <a class="underline decoration-2" href="/user/{data.user.id}">@{data.user.username}</a>
+{/snippet}
+
+<div class="absolute bottom-90 w-full">
+	<PageHeader title={draft.title} subtitleRich={pageHeaderSubtitle} full />
+</div>
+<div class=""></div>
+
+<!--
 	<div class="h-screen p-10">
 		<main class="mx-auto flex h-full w-full items-center">
 			<form method="POST" action="?/update">
@@ -243,5 +253,4 @@
 		.cd-spin {
 			--animate-spin: spin 8s linear infinite;
 		}
-	</style>
-{/if}
+	</style> -->
