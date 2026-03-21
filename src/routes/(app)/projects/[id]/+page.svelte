@@ -60,6 +60,9 @@
 				<button class="{styleButton} ">Ship</button>
 			</div>
 		{/snippet}
+		{#snippet description()}
+			{draft.description}
+		{/snippet}
 	</PageHeader>
 </div>
 
