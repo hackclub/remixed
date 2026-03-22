@@ -54,7 +54,7 @@
 
 			{#if description}
 				<div
-					class="absolute right-8 h-full w-md overflow-y-auto bg-red-500 text-right font-jua text-lg text-light"
+					class="absolute right-8 h-full w-md overflow-y-auto text-right font-jua text-lg text-light"
 				>
 					{@render description()}
 				</div>

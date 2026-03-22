@@ -9,3 +9,4 @@ export const styleInput =
 
 export const styleH1 = 'text-center font-nikkyou text-5xl';
 export const styleH2 = 'text-center font-nikkyou text-3xl';
+export const styleH3 = 'text-center font-nikkyou text-2xl';
