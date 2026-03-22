@@ -143,6 +143,9 @@
 		{/snippet}
 		{#snippet under()}
 			<div class="float-right">
+				{#if editing}
+					<button class="{styleButton} " onclick={cancelEdit}>Cancel</button>
+				{/if}
 				<button class="{styleButton} " onclick={startEdit} popovertarget="editProject">Edit</button>
 				<button class="{styleButton} ">Ship</button>
 			</div>
