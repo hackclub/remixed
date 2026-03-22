@@ -7,6 +7,7 @@
 	import { scale } from 'svelte/transition';
 	import { styleButton, styleH1, styleInput, stylePopover } from '$lib/styles';
 	import PageHeader from '$lib/PageHeader.svelte';
+	import BoldText from '$lib/BoldText.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -56,7 +57,7 @@
 		{/snippet}
 		{#snippet under()}
 			<div class="float-right">
-				<button class="{styleButton} ">Edit</button>
+				<button class="{styleButton} " onclick={startEdit}>Edit</button>
 				<button class="{styleButton} ">Ship</button>
 			</div>
 		{/snippet}

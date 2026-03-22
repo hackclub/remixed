@@ -6,11 +6,12 @@
 	let start = $state(false);
 
 	let {
+		titleRich = null,
 		subtitleRich = null,
 		under = null,
 		description = null,
 		subtitle = '',
-		title,
+		title = '',
 		full = false,
 	} = $props();
 
@@ -36,8 +37,12 @@
 			class="absolute top-0 right-0 z-4 h-full w-24 origin-bottom-right scale-y-110 rotate-24 bg-text"
 		></div>
 		<div class="relative z-5 flex w-screen justify-between">
-			<div class="">
-				<BoldText class="text-5xl" stroke="2">{title}</BoldText>
+			<div>
+				{#if titleRich}
+					{@render titleRich()}
+				{:else}
+					<BoldText class="text-5xl" stroke="2">{title}</BoldText>
+				{/if}
 				<p class="text-xl text-light">
 					{#if subtitleRich}
 						{@render subtitleRich()}
@@ -49,7 +54,7 @@
 
 			{#if description}
 				<div
-					class="absolute right-8 h-full w-md overflow-y-auto text-right font-jua text-lg text-light"
+					class="absolute right-8 h-full w-md overflow-y-auto bg-red-500 text-right font-jua text-lg text-light"
 				>
 					{@render description()}
 				</div>
