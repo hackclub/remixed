@@ -57,6 +57,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{data.project.title} - Remixed</title>
+	<meta property="og:description" content={data.project.description} />
+</svelte:head>
+
 <div class="{stylePopover} max-h-4/5 font-jua text-text" popover id="editProject">
 	<form method="POST" action="?/update">
 		<label for="title" class="{styleH3} ">Project Name</label>
