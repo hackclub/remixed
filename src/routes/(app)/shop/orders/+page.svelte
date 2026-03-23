@@ -1,8 +1,9 @@
 <script lang="ts">
+	import type { PageProps } from './$types';
 	import PageHeader from '$lib/PageHeader.svelte';
 	import { styleInteractiveCard } from '$lib/styles';
 
-	let { data } = $props();
+	let { data }: PageProps = $props();
 </script>
 
 <svelte:head>
@@ -25,7 +26,7 @@
 							class="max-h-full w-full object-contain"
 						/>
 					</div>
-					<div class="flex min-w-0 grow flex-col justify-between">
+					<div class="flex min-w-0 grow flex-col justify-between font-jua">
 						<div>
 							<h2 class="text-3xl text-[#E2BEFF] text-shadow-flat">{orderInfo.item.name}</h2>
 							<p

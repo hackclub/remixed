@@ -1,10 +1,11 @@
 <script lang="ts">
+	import type { PageProps } from './$types';
 	import AddressForm from '$lib/AddressForm.svelte';
 	import Note from '$lib/Note.svelte';
 	import PageHeader from '$lib/PageHeader.svelte';
 	import { styleAdminPopover, styleButton, styleCard } from '$lib/styles';
 
-	let { data } = $props();
+	let { data }: PageProps = $props();
 
 	function canAfford() {
 		return data.item.cost <= (data.balance ?? 0);
@@ -32,11 +33,13 @@
 />
 
 <div class="relative z-2 flex min-h-screen w-full items-start justify-center px-4 pt-52 pb-40 sm:px-8">
-	<div class="{styleCard} grid w-full max-w-5xl gap-6 p-6 lg:grid-cols-[minmax(0,20rem)_1fr]">
-		<div class="flex items-center justify-center rounded-2xl border-4 border-[#E2BEFF] bg-light p-6">
-			<img src={data.item.imageUrl} alt={data.item.name} class="max-h-80 w-full object-contain" />
+	<div class="{styleCard} grid w-full max-w-5xl gap-6 p-6 lg:grid-cols-[minmax(0,20.125rem)_1fr]">
+		<div
+			class="mx-auto flex aspect-square w-full max-w-[20.125rem] items-center justify-center rounded-2xl border-4 border-[#E2BEFF] bg-light p-6"
+		>
+			<img src={data.item.imageUrl} alt={data.item.name} class="h-full w-full object-contain" />
 		</div>
-		<div class="flex flex-col justify-between">
+		<div class="flex flex-col justify-between font-jua">
 			<div>
 				<div class="mb-6 flex flex-wrap gap-3">
 					<div

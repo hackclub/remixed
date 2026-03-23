@@ -6,7 +6,13 @@
 
 	let shopItems: any[] = $state([]);
 
-	let { data } = $props();
+	type ShopProps = {
+		data: {
+			user?: App.Locals['user'];
+		};
+	};
+
+	let { data }: ShopProps = $props();
 
 	function canAfford(cost: number) {
 		return (data.user?.notesBalance ?? 0) >= cost;
@@ -55,11 +61,11 @@
 			{#each shopItems as item}
 				<a href="/shop/{item.id}" class="{styleInteractiveCard} flex h-full flex-col p-4">
 					<div
-						class="flex aspect-square items-center justify-center rounded-2xl border-4 border-[#E2BEFF] bg-light p-4"
+						class="mx-auto flex aspect-square w-full max-w-[20.125rem] items-center justify-center rounded-2xl border-4 border-[#E2BEFF] bg-light p-4"
 					>
-						<img src={item.imageUrl} alt={item.name} class="max-h-full w-full object-contain" />
+						<img src={item.imageUrl} alt={item.name} class="h-full w-full object-contain" />
 					</div>
-					<div class="mt-4 flex grow flex-col">
+					<div class="mt-4 flex grow flex-col font-jua">
 						<h2 class="text-3xl text-[#E2BEFF] text-shadow-flat">{item.name}</h2>
 						<p class="mt-3 grow text-lg text-light/80">{item.description}</p>
 						<div

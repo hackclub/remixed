@@ -1,10 +1,18 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import PageHeader from '$lib/PageHeader.svelte';
 	import ProfileCard from '$lib/ProfileCard.svelte';
 	import Sidebar from '$lib/Sidebar.svelte';
 	import '../layout.css';
 
-	let { children, data } = $props();
+	type AppLayoutProps = {
+		children: Snippet;
+		data: {
+			user?: App.Locals['user'];
+		};
+	};
+
+	let { children, data }: AppLayoutProps = $props();
 </script>
 
 <svelte:head><link rel="icon" href="/favicon.ico" /></svelte:head>
