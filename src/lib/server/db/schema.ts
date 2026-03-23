@@ -23,10 +23,11 @@ export const auditCategory = pgEnum('audit_category', [
 
 export const users = pgTable('users', {
 	id: serial('id').primaryKey(),
+	hcaId: text('hca_id').unique(),
 	slackId: text('slack_id').notNull().unique(),
 	username: text('username').notNull(),
 	avatarUrl: text('avatar_url'),
-	accessToken: text('access_token').notNull(), // encrypted
+	accessToken: text('access_token'), // encrypted Hackatime token
 	notesBalance: integer('notes_balance').notNull().default(0),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	roles: roleEnum('roles').array().notNull().default(['USER']),

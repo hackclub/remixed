@@ -26,7 +26,7 @@
 	type="text"
 	name="zipCode"
 	id="zipCode"
-	autocomplete="shipping zip-code"
+	autocomplete="shipping postal-code"
 	required
 	class="{styleInput} w-full font-jua"
 />

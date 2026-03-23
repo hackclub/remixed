@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { env } from '$env/dynamic/public';
 	import CrunchCard from '$lib/CrunchCard.svelte';
 	import BoldText from '$lib/BoldText.svelte';
 	import FAQCard from '$lib/FAQCard.svelte';
 	import { onMount } from 'svelte';
+
+	let { data } = $props();
 
 	const PROJECT_IDEAS = ['rhythm game', 'daw', 'vst'];
 	const REWARD_IDEAS = ['headphones', 'a microphone', 'a speaker', 'an instrument'];
@@ -22,14 +23,6 @@
 	let heroTextInterval: ReturnType<typeof setInterval> | undefined;
 	let heroTextSwapTimeout: ReturnType<typeof setTimeout> | undefined;
 	let heroTextResetTimeout: ReturnType<typeof setTimeout> | undefined;
-
-	let hackatimeOauthUrl =
-		'https://hackatime.hackclub.com/oauth/authorize?' +
-		new URLSearchParams({
-			client_id: env.PUBLIC_HACKATIME_OAUTH_UID!,
-			redirect_uri: env.PUBLIC_CALLBACK_URL!,
-			response_type: 'code',
-		}).toString();
 
 	onMount(() => {
 		heroTextInterval = setInterval(changeIdeas, 2000);
@@ -138,12 +131,19 @@
 				ship a {PROJECT_IDEAS[currentProjectIdea]}, get {REWARD_IDEAS[currentRewardIdea]}!
 			</BoldText>
 		</div>
+		{#if data.authError}
+			<p
+				class="mx-auto mt-4 w-max max-w-[32rem] rounded-2xl border-4 border-text bg-light px-6 py-3 text-center font-jua text-xl text-text"
+			>
+				{data.authError}
+			</p>
+		{/if}
 		<a
-			href={hackatimeOauthUrl}
+			href="/auth/hca"
 			class="relative top-0 mx-auto mt-4 w-max cursor-pointer rounded-2xl bg-linear-to-r from-secondary to-[#54C1D7] p-1 shadow-none transition-all hover:-top-1 hover:shadow-lg/30 active:top-1 active:shadow-none"
 		>
-			<div class="rounded-xl bg-text px-24 py-2">
-				<div class="relative font-jua text-3xl">
+			<div class="rounded-xl bg-text px-8 py-2 md:px-16">
+				<div class="relative font-jua text-xl md:text-3xl">
 					<span class="text-stroke text-stroke-1 bg-linear-to-r from-[#6EF5FB] to-[#938BEC] p-1">
 						join now!
 					</span>
