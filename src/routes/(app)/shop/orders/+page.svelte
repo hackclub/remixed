@@ -1,31 +1,42 @@
 <script lang="ts">
-	import Sidebar from '$lib/Sidebar.svelte';
-	import { styleButton, styleH1, styleH2 } from '$lib/styles';
+	import PageHeader from '$lib/PageHeader.svelte';
+	import { styleInteractiveCard } from '$lib/styles';
 
 	let { data } = $props();
 </script>
 
-<div class="p-10">
-	<h1 class="{styleH1} mb-4 text-text">ORDERS</h1>
+<svelte:head>
+	<title>Orders</title>
+</svelte:head>
+
+<PageHeader title="Orders" subtitle="Track the rewards you've already claimed." />
+
+<div class="relative z-2 flex min-h-screen w-full flex-col items-center px-4 pt-52 pb-40 sm:px-8">
 	{#if data.orders.length > 0}
-		<div class="flex flex-row flex-wrap justify-center gap-4">
+		<div class="grid w-full max-w-6xl gap-6 md:grid-cols-2 xl:grid-cols-3">
 			{#each data.orders as orderInfo}
-				<div
-					class="relative top-0 flex h-32 gap-4 bg-accent-purple p-4 shadow-button transition-all hover:-top-1 hover:shadow-button-hover"
-				>
-					<img src={orderInfo.item.imageUrl} alt="item" />
-					<div class="flex h-full flex-col justify-between">
+				<div class="{styleInteractiveCard} flex h-full items-center gap-4 p-4">
+					<div
+						class="flex h-28 w-28 shrink-0 items-center justify-center rounded-2xl border-4 border-[#E2BEFF] bg-light p-3"
+					>
+						<img
+							src={orderInfo.item.imageUrl}
+							alt={orderInfo.item.name}
+							class="max-h-full w-full object-contain"
+						/>
+					</div>
+					<div class="flex min-w-0 grow flex-col justify-between">
 						<div>
-							<h2 class="{styleH2} text-text">{orderInfo.item.name}</h2>
+							<h2 class="text-3xl text-[#E2BEFF] text-shadow-flat">{orderInfo.item.name}</h2>
 							<p
 								class="{orderInfo.order.status == 'PENDING'
 									? 'bg-accent-red'
-									: 'bg-primary'} mt-2 box-content border-4 border-b-8 border-text text-center font-gothic text-sm text-text"
+									: 'bg-primary'} mt-3 w-max rounded-xl border-4 border-[#8B81FF] px-3 py-1 text-center font-jua text-sm text-text"
 							>
 								{orderInfo.order.status}
 							</p>
 						</div>
-						<p class="text-center font-gothic text-xs text-text">
+						<p class="mt-4 text-sm text-light/70">
 							Order ID: #{orderInfo.order.id}
 						</p>
 					</div>
@@ -33,6 +44,10 @@
 			{/each}
 		</div>
 	{:else}
-		<p class="text-center font-gothic text-xl text-text">You haven't ordered anything!</p>
+		<div
+			class="w-full max-w-3xl rounded-[2rem] border-4 border-[#8B81FF] bg-text px-8 py-10 text-center font-jua text-2xl text-light shadow-xl/30"
+		>
+			You haven't ordered anything!
+		</div>
 	{/if}
 </div>

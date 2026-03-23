@@ -7,6 +7,13 @@ export const styleAdminPopover =
 export const styleButton =
 	'hover-effect-shadow cursor-pointer rounded-xl border-4 border-[#8B81FF] bg-[#1C2C44] px-16 py-2 text-center font-jua text-2xl text-light';
 
+export const styleCard = 'rounded-3xl border-4 border-[#8B81FF] bg-text text-light';
+
+export const styleInteractiveCard = `hover-effect-shadow ${styleCard}`;
+
+export const styleCardInput =
+	'w-full rounded-2xl border-4 border-[#8B81FF] bg-light px-4 py-3 font-jua text-lg text-text outline-none ring-secondary transition focus:ring-2';
+
 export const styleInput =
 	'rounded-md bg-accent-purple p-2 ring-secondary outline-none focus:ring-2 shadow-md';
 

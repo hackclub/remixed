@@ -1,42 +1,68 @@
 <script lang="ts">
-	import Sidebar from '$lib/Sidebar.svelte';
 	import AddressForm from '$lib/AddressForm.svelte';
 	import Note from '$lib/Note.svelte';
-	import { stylePopover, styleButton, styleH1, styleH2, styleInput } from '$lib/styles';
+	import PageHeader from '$lib/PageHeader.svelte';
+	import { styleAdminPopover, styleButton, styleCard } from '$lib/styles';
 
 	let { data } = $props();
+
+	function canAfford() {
+		return data.item.cost <= (data.balance ?? 0);
+	}
 </script>
 
-<div class="{stylePopover} max-h-9/10" id="continue" popover>
-	<h1 class="mb-8 text-center font-nikkyou text-3xl">Confirm</h1>
+<svelte:head>
+	<title>Purchase</title>
+</svelte:head>
+
+<div
+	class="{styleAdminPopover} max-h-[90vh] w-[min(92vw,40rem)] overflow-y-auto rounded-[2rem] border-4 border-[#8B81FF] shadow-2xl/30"
+	id="continue"
+	popover
+>
+	<h1 class="mb-8 text-center font-jua text-4xl text-shadow-flat">Confirm</h1>
 	<form action="?/placeOrder" method="POST">
 		<AddressForm />
 	</form>
 </div>
 
-<div class="h-screen p-10 pb-40">
-	<div class="flex h-full w-full flex-col justify-center">
-		<h1 class="{styleH1} mb-4 text-text">PURCHASE</h1>
-		<h2 class="{styleH2} mb-4 text-text">BALANCE: {data.balance ?? 0}<Note /></h2>
-		<div class="grid grid-cols-2 gap-2 bg-accent-purple shadow-button">
-			<div class="{styleButton} m-12 bg-accent-red">
-				<img src={data.item.imageUrl} alt="item" />
-			</div>
-			<div class="flex flex-col justify-between p-4">
-				<div>
-					<h2 class="{styleH2} mb-4 text-text">{data.item.name}</h2>
-					<p class="text-center font-zcool text-text">{data.item.description}</p>
+<PageHeader
+	title="Purchase"
+	subtitle="Review the reward details, then confirm your shipping info."
+/>
+
+<div class="relative z-2 flex min-h-screen w-full items-start justify-center px-4 pt-52 pb-40 sm:px-8">
+	<div class="{styleCard} grid w-full max-w-5xl gap-6 p-6 lg:grid-cols-[minmax(0,20rem)_1fr]">
+		<div class="flex items-center justify-center rounded-2xl border-4 border-[#E2BEFF] bg-light p-6">
+			<img src={data.item.imageUrl} alt={data.item.name} class="max-h-80 w-full object-contain" />
+		</div>
+		<div class="flex flex-col justify-between">
+			<div>
+				<div class="mb-6 flex flex-wrap gap-3">
+					<div
+						class="rounded-2xl border-4 border-[#8B81FF] bg-light px-4 py-2 font-jua text-xl text-text"
+					>
+						Balance: {data.balance ?? 0}<Note />
+					</div>
+					<div
+						class="rounded-2xl border-4 border-[#8B81FF] bg-light px-4 py-2 font-jua text-xl text-text"
+					>
+						Cost: {data.item.cost}<Note />
+					</div>
 				</div>
-				{#if data.item.cost <= (data.balance ?? 0)}
-					<button class="{styleButton} w-full bg-primary" popovertarget="continue"
-						>Continue ({data.item.cost}<Note />)</button
-					>
-				{:else}
-					<button class="{styleButton} w-full bg-accent-red"
-						>Too Expensive! ({data.item.cost}<Note />)</button
-					>
-				{/if}
+				<h2 class="text-4xl text-[#E2BEFF] text-shadow-flat">{data.item.name}</h2>
+				<p class="mt-4 text-xl text-light/80">{data.item.description}</p>
 			</div>
+
+			{#if canAfford()}
+				<button class="{styleButton} mt-8 w-full bg-primary text-text" popovertarget="continue"
+					>Continue ({data.item.cost}<Note />)</button
+				>
+			{:else}
+				<button class="{styleButton} mt-8 w-full bg-accent-red" disabled
+					>Too Expensive! ({data.item.cost}<Note />)</button
+				>
+			{/if}
 		</div>
 	</div>
 </div>
