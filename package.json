@@ -41,6 +41,7 @@
 		"drizzle-orm": "^0.45.1",
 		"marked": "^17.0.4",
 		"postgres": "^3.4.8",
+		"posthog-js": "^1.363.3",
 		"sanitize-html": "^2.17.1"
 	}
 }
