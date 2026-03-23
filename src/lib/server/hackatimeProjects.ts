@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { projects } from './db/schema';
+import { env } from '$env/dynamic/private';
 
 export async function getProjects(userId: number, accessToken: string) {
 	const userProjects = await db
@@ -10,7 +11,7 @@ export async function getProjects(userId: number, accessToken: string) {
 
 	const allHackatimeProjects = await fetch(
 		'https://hackatime.hackclub.com/api/v1/authenticated/projects?' +
-			new URLSearchParams({ start: '2026-03-07' }),
+			new URLSearchParams({ start: env.HACKATIME_START_DATE }),
 		{
 			method: 'GET',
 			headers: {
