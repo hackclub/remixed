@@ -1,69 +1,66 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { env } from '$env/dynamic/public';
-import { env as senv } from '$env/dynamic/private';
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
-import { encrypt, signSession } from '$lib/server/crypto';
-import { eq, sql } from 'drizzle-orm';
-import { createHmac } from 'crypto';
+import { encrypt } from '$lib/server/crypto';
+import { eq } from 'drizzle-orm';
+import {
+	consumeOauthState,
+	exchangeHackatimeCode,
+	fetchHackatimeProfile,
+	fetchSlackIdentity,
+	hackatimeCallbackUrl,
+} from '$lib/server/auth';
+import { isRedirect } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ url, cookies }) => {
-	const tokenReq = await fetch('https://hackatime.hackclub.com/oauth/token', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded',
-		},
-		body: new URLSearchParams({
-			client_id: env.PUBLIC_HACKATIME_OAUTH_UID,
-			client_secret: senv.HACKATIME_OAUTH_SECRET,
-			code: url.searchParams.get('code')!,
-			redirect_uri: env.PUBLIC_CALLBACK_URL!,
-			grant_type: 'authorization_code',
-		}).toString(),
-	});
-	const { access_token } = await tokenReq.json();
-
-	const hackatimeInfo = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/me', {
-		headers: { Authorization: `Bearer ${access_token}` },
-	}).then((r) => r.json());
-
-	const slackProfile = await fetch('https://slack.com/api/users.profile.get', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-		body: new URLSearchParams({
-			token: senv.SLACK_BOT_USER_OAUTH_TOKEN,
-			user: hackatimeInfo.slack_id,
-		}),
-	}).then((r) => r.json());
-
-	const slackId = hackatimeInfo.slack_id;
-	const username = slackProfile.profile.display_name;
-	const avatarUrl = slackProfile.profile?.image_1024 || null;
-
-	const [existingUser] = await db.select().from(users).where(eq(users.slackId, slackId));
-
-	const [user] = await db
-		.insert(users)
-		.values({ slackId, username, avatarUrl, accessToken: encrypt(access_token) })
-		.onConflictDoUpdate({
-			target: users.slackId,
-			set: { username, avatarUrl, accessToken: encrypt(access_token) },
-		})
-		.returning({ id: users.id });
-
-	const referrerId = Number(cookies.get('ref'));
-	if (!existingUser && referrerId) {
-		if (referrerId != user.id) {
-			await db
-				.update(users)
-				.set({ referrals: sql`${users.referrals} + 1` })
-				.where(eq(users.id, referrerId));
-		}
+export const load: PageServerLoad = async ({ url, cookies, locals }) => {
+	if (!locals.user) {
+		throw redirect(303, '/?error=hackatime_requires_hackclub');
 	}
 
-	cookies.delete('ref', { path: '/' });
-	const sessionSignature = signSession(String(user.id));
-	cookies.set('session_token', `${user.id}.${sessionSignature}`, { path: '/' });
-	redirect(307, '/projects');
+	if (url.searchParams.get('error')) {
+		throw redirect(303, '/auth/hackatime?error=hackatime_denied');
+	}
+
+	const code = url.searchParams.get('code');
+	if (!code) {
+		throw redirect(303, '/auth/hackatime?error=hackatime_failed');
+	}
+
+	if (!consumeOauthState(cookies, url, 'hackatime', url.searchParams.get('state'))) {
+		throw redirect(303, '/auth/hackatime?error=hackatime_state');
+	}
+
+	try {
+		const accessToken = await exchangeHackatimeCode(code, hackatimeCallbackUrl(url));
+		const hackatimeInfo = await fetchHackatimeProfile(accessToken);
+
+		if (!hackatimeInfo.slack_id || hackatimeInfo.slack_id !== locals.user.slackId) {
+			throw redirect(303, '/auth/hackatime?error=hackatime_mismatch');
+		}
+
+		const slackIdentity = await fetchSlackIdentity(
+			locals.user.slackId,
+			locals.user.username,
+			locals.user.avatarUrl,
+		);
+
+		await db
+			.update(users)
+			.set({
+				username: slackIdentity.username,
+				avatarUrl: slackIdentity.avatarUrl,
+				accessToken: encrypt(accessToken),
+			})
+			.where(eq(users.id, locals.user.id));
+
+		throw redirect(303, '/projects');
+	} catch (error) {
+		if (isRedirect(error)) {
+			throw error;
+		}
+
+		console.error('Hackatime callback failed', error);
+		throw redirect(303, '/auth/hackatime?error=hackatime_failed');
+	}
 };

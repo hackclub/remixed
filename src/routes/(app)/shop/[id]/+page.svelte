@@ -17,7 +17,7 @@
 <div class="h-screen p-10 pb-40">
 	<div class="flex h-full w-full flex-col justify-center">
 		<h1 class="{styleH1} mb-4 text-text">PURCHASE</h1>
-		<h2 class="{styleH2} mb-4 text-text">BALANCE: {data.balance}<Note /></h2>
+		<h2 class="{styleH2} mb-4 text-text">BALANCE: {data.balance ?? 0}<Note /></h2>
 		<div class="grid grid-cols-2 gap-2 bg-accent-purple shadow-button">
 			<div class="{styleButton} m-12 bg-accent-red">
 				<img src={data.item.imageUrl} alt="item" />
@@ -27,7 +27,7 @@
 					<h2 class="{styleH2} mb-4 text-text">{data.item.name}</h2>
 					<p class="text-center font-zcool text-text">{data.item.description}</p>
 				</div>
-				{#if data.item.cost <= data.balance}
+				{#if data.item.cost <= (data.balance ?? 0)}
 					<button class="{styleButton} w-full bg-primary" popovertarget="continue"
 						>Continue ({data.item.cost}<Note />)</button
 					>

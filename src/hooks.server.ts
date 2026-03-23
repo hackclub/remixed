@@ -1,10 +1,8 @@
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
-import { env as senv } from '$env/dynamic/private';
 import { eq } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
-import { createHmac } from 'crypto';
 import { signSession } from '$lib/server/crypto';
 import type { RoleEnumPub } from '$lib';
 
@@ -21,22 +19,34 @@ const PROTECTED: { [key in RoleEnumPub]: string[] } = {
 	],
 };
 
+const HACKATIME_REQUIRED = ['/projects', '/api/hackatime', '/api/project_time', '/api/ship'];
+
 export const handle: Handle = async ({ event, resolve }) => {
 	const sessionToken = event.cookies.get('session_token');
 	const userId = sessionToken ? verifySessionToken(sessionToken) : null;
 
 	if (userId) {
 		const user = await db.query.users.findFirst({ where: eq(users.id, Number(userId)) });
-		if (!user) redirect(303, '/');
+		if (!user) throw redirect(303, '/');
 		event.locals.user = user;
 	} else {
 		event.locals.user = null;
 	}
 
+	if (HACKATIME_REQUIRED.some((p) => event.url.pathname.startsWith(p))) {
+		if (!event.locals.user) {
+			throw redirect(303, '/');
+		}
+
+		if (!event.locals.user.accessToken) {
+			throw redirect(303, '/auth/hackatime');
+		}
+	}
+
 	for (const requiredRole in PROTECTED) {
 		if (PROTECTED[requiredRole as RoleEnumPub].some((p) => event.url.pathname.startsWith(p))) {
 			if (!event.locals.user?.roles.includes(requiredRole as RoleEnumPub)) {
-				redirect(303, '/');
+				throw redirect(303, '/');
 			}
 		}
 	}

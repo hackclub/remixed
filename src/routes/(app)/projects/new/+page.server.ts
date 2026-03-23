@@ -9,6 +9,7 @@ import { getProjects } from '$lib/server/hackatimeProjects';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) return new Response('Unauthorized', { status: 401 });
+	if (!locals.user.accessToken) throw redirect(303, '/auth/hackatime');
 	const accessToken = decrypt(locals.user.accessToken);
 
 	const projects = await getProjects(locals.user.id, accessToken);
