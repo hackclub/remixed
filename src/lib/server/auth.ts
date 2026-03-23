@@ -4,7 +4,7 @@ import type { Cookies } from '@sveltejs/kit';
 import { randomBytes } from 'crypto';
 import { signSession } from './crypto';
 
-const HCA_BASE_URL = 'https://api.hackclub.com';
+const DEFAULT_HCA_BASE_URL = 'https://auth.hackclub.com';
 const HACKATIME_BASE_URL = 'https://hackatime.hackclub.com';
 const HCA_SCOPES = ['openid', 'email', 'name', 'slack_id', 'verification_status'];
 
@@ -16,6 +16,13 @@ type HcaProfile = {
 	first_name?: string;
 	last_name?: string;
 	slack_id?: string;
+};
+
+type RawHcaProfile = HcaProfile & {
+	primary_email?: string;
+	identity?: HcaProfile & {
+		primary_email?: string;
+	};
 };
 
 type HackatimeProfile = {
@@ -45,6 +52,14 @@ function cookieOptions(url: URL, maxAge?: number) {
 
 function oauthStateCookie(provider: AuthProvider) {
 	return `oauth_state_${provider}`;
+}
+
+function getHcaBaseUrl() {
+	return env.HCA_BASE_URL?.replace(/\/+$/, '') || DEFAULT_HCA_BASE_URL;
+}
+
+function hcaUrl(pathname: string) {
+	return new URL(pathname, `${getHcaBaseUrl()}/`).toString();
 }
 
 export function issueOauthState(cookies: Cookies, url: URL, provider: AuthProvider) {
@@ -88,16 +103,16 @@ export function hcaAuthorizeUrl(url: URL, state: string) {
 		throw new Error('PUBLIC_HCA_CLIENT_ID is required');
 	}
 
-	return (
-		`${HCA_BASE_URL}/oauth/authorize?` +
-		new URLSearchParams({
-			client_id: publicEnv.PUBLIC_HCA_CLIENT_ID,
-			redirect_uri: hcaCallbackUrl(url),
-			response_type: 'code',
-			scope: HCA_SCOPES.join(' '),
-			state,
-		}).toString()
-	);
+	const authorizeUrl = new URL(hcaUrl('/oauth/authorize'));
+	authorizeUrl.search = new URLSearchParams({
+		client_id: publicEnv.PUBLIC_HCA_CLIENT_ID,
+		redirect_uri: hcaCallbackUrl(url),
+		response_type: 'code',
+		scope: HCA_SCOPES.join(' '),
+		state,
+	}).toString();
+
+	return authorizeUrl.toString();
 }
 
 export function hackatimeAuthorizeUrl(url: URL, state: string) {
@@ -121,7 +136,7 @@ export async function exchangeHcaCode(code: string, redirectUri: string) {
 		throw new Error('HCA credentials are not configured');
 	}
 
-	const response = await fetch(`${HCA_BASE_URL}/oauth/token`, {
+	const response = await fetch(hcaUrl('/oauth/token'), {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded',
@@ -148,7 +163,7 @@ export async function exchangeHcaCode(code: string, redirectUri: string) {
 }
 
 export async function fetchHcaProfile(accessToken: string): Promise<HcaProfile> {
-	const response = await fetch(`${HCA_BASE_URL}/api/v1/me`, {
+	const response = await fetch(hcaUrl('/api/v1/me'), {
 		headers: {
 			Authorization: `Bearer ${accessToken}`,
 		},
@@ -158,7 +173,16 @@ export async function fetchHcaProfile(accessToken: string): Promise<HcaProfile> 
 		throw new Error(`HCA profile request failed with ${response.status}`);
 	}
 
-	return response.json();
+	const rawProfile = (await response.json()) as RawHcaProfile;
+	const profile = rawProfile.identity ?? rawProfile;
+
+	return {
+		id: profile.id,
+		email: profile.email ?? profile.primary_email,
+		first_name: profile.first_name,
+		last_name: profile.last_name,
+		slack_id: profile.slack_id,
+	};
 }
 
 export async function exchangeHackatimeCode(code: string, redirectUri: string) {

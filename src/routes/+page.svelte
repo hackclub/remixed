@@ -145,18 +145,15 @@
 			<div class="rounded-xl bg-text px-8 py-2 md:px-16">
 				<div class="relative font-jua text-xl md:text-3xl">
 					<span class="text-stroke text-stroke-1 bg-linear-to-r from-[#6EF5FB] to-[#938BEC] p-1">
-						continue with Hack Club Auth
+						join now!
 					</span>
 					<span
 						class="absolute top-0 left-0 bg-linear-to-b from-[#3E236D] to-[#42518E] bg-clip-text p-1 pt-0 text-transparent"
-						>continue with Hack Club Auth</span
+						>join now!</span
 					>
 				</div>
 			</div>
 		</a>
-		<p class="mx-auto mt-3 max-w-xl text-center font-jua text-xl text-text">
-			After sign-in, we&apos;ll ask you to connect Hackatime so Remixed can verify project time.
-		</p>
 	</div>
 </div>
 <div class="relative pb-150">
