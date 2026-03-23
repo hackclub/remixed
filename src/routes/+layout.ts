@@ -1,16 +1,14 @@
-import posthog from 'posthog-js'
+import posthog from 'posthog-js';
 import { browser } from '$app/environment';
+import { env } from '$env/dynamic/public';
 
 export const load = async () => {
-  if (browser) {
-    posthog.init(
-      'phc_OKX9X3nuj6FBajQz5RC7IJJlXloyEmRlfa6KBFdew5g',
-      {
-        api_host: 'https://us.i.posthog.com',
-        defaults: '2026-01-30'
-      }
-    );
-  }
+	if (browser) {
+		posthog.init(env.PUBLIC_POSTHOG_PROJECT_KEY, {
+			api_host: 'https://us.i.posthog.com',
+			defaults: '2026-01-30',
+		});
+	}
 
-  return;
+	return;
 };
