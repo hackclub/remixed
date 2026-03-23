@@ -14,6 +14,13 @@
 	let hackatimeProjects: null | any[] = $state(null);
 	let hoursText: string = $state('LOADING');
 	let editing: boolean = $state(false);
+	let canShip: boolean = $derived(
+		!data.hasPendingShip &&
+			validUrl(data.project?.demoUrl ?? null) &&
+			validUrl(data.project?.githubUrl ?? null) &&
+			data.project?.hackatimeProjects.length != 0 &&
+			!editing,
+	);
 
 	let draft = $state({ ...data.project });
 	let anim = $state(false);
@@ -150,7 +157,11 @@
 					<button class="{styleButton} " onclick={startEdit} popovertarget="editProject"
 						>Edit</button
 					>
-					<button class="{styleButton} ">Ship</button>
+					{#if canShip}
+						<form action="?/ship" method="POST" class="inline">
+							<input type="submit" value="Ship" class={styleButton} />
+						</form>
+					{/if}
 				</div>
 			{/if}
 		{/snippet}
