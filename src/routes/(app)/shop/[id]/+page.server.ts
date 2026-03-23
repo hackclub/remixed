@@ -2,23 +2,36 @@ import { db } from '$lib/server/db';
 import { notesLedger, orders, shopItems, users } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { encrypt } from '$lib/server/crypto';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const itemId = Number(params.id);
 	const [item] = await db.select().from(shopItems).where(eq(shopItems.id, itemId));
+
+	if (!item) {
+		throw error(404, 'Shop item not found');
+	}
+
 	return { item, balance: locals.user?.notesBalance };
 };
 
 export const actions: Actions = {
 	placeOrder: async ({ locals, params, request }) => {
+		if (!locals.user) {
+			return fail(401, { error: 'Unauthorized' });
+		}
+
 		const itemId = Number(params.id);
 		const [item] = await db.select().from(shopItems).where(eq(shopItems.id, itemId));
-		if (locals.user!.notesBalance < item.cost) return fail(400, { error: 'Too Expensive' });
+		if (!item) {
+			throw error(404, 'Shop item not found');
+		}
+
+		if (locals.user.notesBalance < item.cost) return fail(400, { error: 'Too Expensive' });
 
 		const data = await request.formData();
-		const userId = locals.user!.id;
+		const userId = locals.user.id;
 		const addressLine1 = encrypt((data.get('addressLine1') as string).trim());
 		const addressLine2 =
 			(data.get('addressLine2') as string).trim().length > 0

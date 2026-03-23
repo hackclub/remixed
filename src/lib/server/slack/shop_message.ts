@@ -1,14 +1,21 @@
 import { env } from '$env/dynamic/private';
 import { sendMessage } from './send_message';
 
-export async function sendShopMessage(previousItem: any, newItem: any) {
+export async function sendShopMessage(previousItem: any | null, newItem: any | null) {
 	let message = '';
-	if (previousItem == null) {
-		message += '*<https://remixed.hackclub.com/shop/${newItem.id}|New Item> Added!*\n';
+	if (previousItem == null && newItem != null) {
+		message += `*<https://remixed.hackclub.com/shop/${newItem.id}|New Item> Added!*\n`;
 		message += `Name: _${newItem.name}_\n`;
 		message += `Description: _${nullText(newItem.description)}_\n`;
 		message += `Cost: _${newItem.cost}_\n`;
-		message += `Image: ${newItem.imageUrl.trim().length > 0 ? formatImage(newItem.imageUrl, 'Link') : 'None'}\n`;
+		message += `Image: ${valueText(newItem.imageUrl).length > 0 ? formatImage(newItem.imageUrl, 'Link') : 'None'}\n`;
+	} else if (previousItem != null && newItem == null) {
+		message += '*Shop Item Deleted!*\n';
+		message += `ID: _${previousItem.id}_\n`;
+		message += `Name: _${previousItem.name}_\n`;
+		message += `Description: _${nullText(previousItem.description)}_\n`;
+		message += `Cost: _${previousItem.cost}_\n`;
+		message += `Image: _${nullImage(previousItem.imageUrl, 'Previous')}_\n`;
 	} else {
 		message += `*<https://remixed.hackclub.com/shop/${newItem.id}|Item> Updated!*\n`;
 		if (newItem.name != previousItem.name) {
@@ -30,11 +37,18 @@ export async function sendShopMessage(previousItem: any, newItem: any) {
 	return;
 }
 
-function nullText(text: string): string {
-	return `${text.trim().length > 0 ? text : '*None*'}`;
+function valueText(text: string | null | undefined): string {
+	return String(text ?? '').trim();
 }
-function nullImage(url: string, text: string): string {
-	return `${url.trim().length > 0 ? formatImage(url, text) : '*None*'}`;
+
+function nullText(text: string | null | undefined): string {
+	const value = valueText(text);
+	return `${value.length > 0 ? value : '*None*'}`;
+}
+
+function nullImage(url: string | null | undefined, text: string): string {
+	const value = valueText(url);
+	return `${value.length > 0 ? formatImage(value, text) : '*None*'}`;
 }
 
 function formatImage(url: string, text: string): string {

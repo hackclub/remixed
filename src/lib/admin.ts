@@ -25,7 +25,7 @@ export const ADMIN_PAGES: AdminPageDefinition[] = [
 	{
 		href: '/admin/shop',
 		title: 'Shop Catalog',
-		description: 'Create or update shop items, pricing, descriptions, and imagery.',
+		description: 'Create, update, or delete shop items, pricing, descriptions, and imagery.',
 		roles: ['ORGANIZER'],
 	},
 	{
