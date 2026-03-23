@@ -1,11 +1,20 @@
 <script lang="ts">
-	import Sidebar from '$lib/Sidebar.svelte';
-	import { stylePopover } from '$lib/styles.js';
-	import { styleButton, styleH1, styleInput } from '$lib/styles';
-	let { data } = $props();
+	import type { PageData } from './$types';
+	import { styleAdminPopover } from '$lib/styles.js';
+	import { styleButton, styleInput } from '$lib/styles';
+	type EditableItem = {
+		id: number;
+		name: string;
+		cost: number;
+		description: string;
+		imageUrl: string;
+	};
 
-	let activeItem = $state(null);
+	let { data }: { data: PageData } = $props();
+
+	let activeItem = $state<EditableItem | null>(null);
 	let actionText = $state('');
+	let manageItemPopover: HTMLElement | undefined = $state();
 
 	function newItem() {
 		actionText = 'Create';
@@ -19,58 +28,66 @@
 	}
 </script>
 
-<Sidebar />
-
-<div class={stylePopover} popover id="manage-item">
-	<h1 class="mb-8 text-center font-nikkyou text-3xl">{actionText}</h1>
+<div bind:this={manageItemPopover} class={styleAdminPopover} popover id="manage-item">
 	{#if activeItem}
-		<form action="?/updateItem" method="POST">
+		<form action="?/updateItem" method="POST" class="space-y-4">
 			<input type="hidden" name="itemId" bind:value={activeItem.id} />
-			<label for="name" class="mt-4 font-nikkyou text-2xl text-text">Name</label>
+			<label for="name" class="block font-jua text-2xl text-light">Name</label>
 			<input
 				type="text"
 				id="name"
 				name="name"
-				class="{styleInput} w-full font-jua"
+				class="{styleInput} w-full font-jua text-text"
 				bind:value={activeItem.name}
 			/>
-			<label for="cost" class="mt-4 font-nikkyou text-2xl text-text">Cost</label>
+			<label for="cost" class="block font-jua text-2xl text-light">Cost</label>
 			<input
 				type="number"
 				min="0"
 				id="cost"
 				name="cost"
-				class="{styleInput} w-full font-jua"
+				class="{styleInput} w-full font-jua text-text"
 				bind:value={activeItem.cost}
 			/>
-			<label for="description" class="mt-4 font-nikkyou text-2xl text-text">Description</label>
+			<label for="description" class="block font-jua text-2xl text-light">Description</label>
 			<textarea
 				name="description"
 				id="description"
 				bind:value={activeItem.description}
-				class="{styleInput} w-full font-jua"
+				class="{styleInput} w-full font-jua text-text"
 			></textarea>
-			<label for="imageUrl" class="mt-4 font-nikkyou text-2xl text-text">Image URL</label>
+			<label for="imageUrl" class="block font-jua text-2xl text-light">Image URL</label>
 			<input
 				type="url"
 				id="imageUrl"
 				name="imageUrl"
-				class="{styleInput} w-full font-mono text-xs"
+				class="{styleInput} w-full font-mono text-xs text-text"
 				bind:value={activeItem.imageUrl}
 			/>
-			<input type="submit" value={actionText} class="{styleButton} mt-8 w-full bg-primary" />
+			<div class="flex gap-3 pt-4">
+				<button
+					type="button"
+					class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
+					onclick={() => manageItemPopover?.hidePopover()}>Cancel</button
+				>
+				<input
+					type="submit"
+					value={actionText}
+					class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
+				/>
+			</div>
 		</form>
 	{/if}
 </div>
 
-<div class="p-10 pb-40">
-	<button
-		class="{styleButton} mx-auto mb-8 block bg-primary"
-		onclick={newItem}
-		popovertarget="manage-item">New</button
-	>
-	<table class="w-full bg-accent-purple">
-		<thead class="font-gothic text-text">
+<div class="p-10 pb-40 font-jua text-text">
+	<div class="mb-8 flex justify-end">
+		<button class="{styleButton} bg-text text-light" onclick={newItem} popovertarget="manage-item"
+			>New</button
+		>
+	</div>
+	<table class="admin-table w-full bg-accent-purple">
+		<thead class="font-jua text-text">
 			<tr>
 				<th>ID</th>
 				<th>Name</th>
@@ -79,7 +96,7 @@
 				<th>Image</th>
 			</tr>
 		</thead>
-		<tbody class="font-zcool text-text">
+		<tbody class="font-jua text-text">
 			{#each data.items as item}
 				<tr>
 					<td>{item.id}</td>
@@ -99,10 +116,16 @@
 						<button
 							onclick={() => {
 								actionText = 'Update';
-								activeItem = item;
+								activeItem = {
+									id: item.id,
+									name: item.name,
+									cost: item.cost,
+									description: item.description ?? '',
+									imageUrl: item.imageUrl ?? '',
+								};
 							}}
 							popovertarget="manage-item"
-							class="cursor-pointer bg-primary px-4 font-nikkyou text-text"
+							class="{styleButton} bg-text px-4 py-1 text-lg text-light"
 						>
 							Manage
 						</button>
@@ -114,11 +137,24 @@
 </div>
 
 <style>
+	.admin-table {
+		border: 2px solid var(--color-text);
+		border-collapse: separate;
+		border-radius: 1rem;
+		border-spacing: 0;
+		overflow: hidden;
+	}
+	th,
 	td {
-		border: 2px solid currentColor;
+		border-right: 1px solid var(--color-text);
+		border-bottom: 1px solid var(--color-text);
 		padding: 4px 8px;
 	}
-	a {
-		text-decoration: underline;
+	th:last-child,
+	td:last-child {
+		border-right: none;
+	}
+	tbody tr:last-child td {
+		border-bottom: none;
 	}
 </style>

@@ -9,10 +9,16 @@ import { signSession } from '$lib/server/crypto';
 import type { RoleEnumPub } from '$lib';
 
 const PROTECTED: { [key in RoleEnumPub]: string[] } = {
-	USER: ['/dashboard', '/projects', '/api/me', '/api/ship', '/api/project_time'],
+	USER: ['/projects', '/api/me', '/api/ship', '/api/project_time'],
 	STAFF: [],
 	REVIEWER: ['/admin/ships'],
-	ORGANIZER: ['/admin/users', '/admin/shop', '/admin/orders', '/api/admin/order_info'],
+	ORGANIZER: [
+		'/admin/users',
+		'/admin/shop',
+		'/admin/orders',
+		'/admin/projects',
+		'/api/admin/order_info',
+	],
 };
 
 export const handle: Handle = async ({ event, resolve }) => {
