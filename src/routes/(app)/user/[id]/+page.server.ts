@@ -12,6 +12,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		.where(eq(projects.userId, userId))
 		.orderBy(projects.id);
 	return {
+		currentUser: locals.user,
 		user,
 		userProjects,
 	};

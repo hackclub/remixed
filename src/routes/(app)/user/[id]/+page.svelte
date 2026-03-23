@@ -2,12 +2,23 @@
 	import CDProject from '$lib/CDProject.svelte';
 	import CoverArt from '$lib/CoverArt.svelte';
 	import Sidebar from '$lib/Sidebar.svelte';
-	import { styleH1, styleH2 } from '$lib/styles';
+	import { styleButton, styleH1, styleH2 } from '$lib/styles';
 
 	let { data } = $props();
+
+	function copyReferral() {
+		navigator.clipboard.writeText(`https://remixed.hackclub.com/?ref=${data.user.id}`);
+	}
 </script>
 
+<svelte:head>
+	<title>{data.user.username} - Remixed</title>
+</svelte:head>
+
 <div class="p-10">
+	{#if data.currentUser?.id == data.user.id}
+		<button class="{styleButton} mx-auto block" onclick={copyReferral}>Copy Referral Link</button>
+	{/if}
 	<h1 class="{styleH1} mb-4 text-text">{data.user!.username}</h1>
 
 	<div
