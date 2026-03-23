@@ -4,18 +4,24 @@
 	import BoldText from '$lib/BoldText.svelte';
 	import FAQCard from '$lib/FAQCard.svelte';
 	import { onMount } from 'svelte';
-	import { crossfade, fade, fly } from 'svelte/transition';
 
 	const PROJECT_IDEAS = ['rhythm game', 'daw', 'vst'];
 	const REWARD_IDEAS = ['headphones', 'a microphone', 'a speaker', 'an instrument'];
+	const STRIP_LABEL = '/// MICROPHONES /// HEADPHONES /// INSTRUMENTS /// RHYTHM GAMES /// AUDIO INTERFACES';
+	const HERO_TEXT_POP_DURATION = 320;
+	const HERO_TEXT_SWAP_DELAY = 60;
 
 	const ITEM_WIDTH = 180.0;
 	let currentProjectIdea = $state(0);
 	let currentRewardIdea = $state(0);
 	let projectTurn = true;
+	let heroTextPopping = $state(false);
 	let currentIndex = 0;
 	let items: any[] = $state([]);
 	let marqueeItems: any = $state([]);
+	let heroTextInterval: ReturnType<typeof setInterval> | undefined;
+	let heroTextSwapTimeout: ReturnType<typeof setTimeout> | undefined;
+	let heroTextResetTimeout: ReturnType<typeof setTimeout> | undefined;
 
 	let hackatimeOauthUrl =
 		'https://hackatime.hackclub.com/oauth/authorize?' +
@@ -26,28 +32,52 @@
 		}).toString();
 
 	onMount(() => {
-		setInterval(changeIdeas, 2000);
+		heroTextInterval = setInterval(changeIdeas, 2000);
 		fetch('/api/shop')
 			.then((resp) => resp.json())
 			.then((r) => {
 				items = r;
 				fillMarquee();
 			});
+
+		return () => {
+			clearInterval(heroTextInterval);
+			clearTimeout(heroTextSwapTimeout);
+			clearTimeout(heroTextResetTimeout);
+		};
 	});
 
 	function changeIdeas() {
+		let nextProjectIdea = currentProjectIdea;
+		let nextRewardIdea = currentRewardIdea;
+
 		if (projectTurn) {
-			let t = currentProjectIdea;
-			while (currentProjectIdea == t) {
-				currentProjectIdea = Math.floor(Math.random() * PROJECT_IDEAS.length);
+			while (nextProjectIdea === currentProjectIdea) {
+				nextProjectIdea = Math.floor(Math.random() * PROJECT_IDEAS.length);
 			}
 		} else {
-			let t = currentRewardIdea;
-			while (currentRewardIdea == t) {
-				currentRewardIdea = Math.floor(Math.random() * REWARD_IDEAS.length);
+			while (nextRewardIdea === currentRewardIdea) {
+				nextRewardIdea = Math.floor(Math.random() * REWARD_IDEAS.length);
 			}
 		}
-		projectTurn = !projectTurn;
+
+		heroTextPopping = false;
+		clearTimeout(heroTextSwapTimeout);
+		clearTimeout(heroTextResetTimeout);
+
+		requestAnimationFrame(() => {
+			heroTextPopping = true;
+
+			heroTextSwapTimeout = setTimeout(() => {
+				currentProjectIdea = nextProjectIdea;
+				currentRewardIdea = nextRewardIdea;
+				projectTurn = !projectTurn;
+			}, HERO_TEXT_SWAP_DELAY);
+
+			heroTextResetTimeout = setTimeout(() => {
+				heroTextPopping = false;
+			}, HERO_TEXT_POP_DURATION);
+		});
 	}
 
 	function fillMarquee() {
@@ -81,25 +111,6 @@
 
 		requestAnimationFrame(update);
 	}
-
-	function typewriter(node: HTMLElement, { speed = 1 }: { speed?: number }) {
-		const valid = node.childNodes.length === 1 && node.childNodes[0].nodeType === Node.TEXT_NODE;
-
-		if (!valid) {
-			throw new Error(`This transition only works on elements with a single text node child`);
-		}
-
-		const text = node.textContent;
-		const duration = text.length / (speed * 0.01);
-
-		return {
-			duration,
-			tick: (t: number) => {
-				const i = ~~(text.length * t);
-				node.textContent = text.slice(0, i);
-			},
-		};
-	}
 </script>
 
 <svelte:head>
@@ -115,22 +126,18 @@
 <div
 	class="relative flex h-screen w-screen items-center justify-center overflow-x-clip bg-accent-purple"
 >
-	<img src="/landing/dots-topleft.png" alt="dots" class="absolute top-0 left-0 z-2 w-1/2" />
-	<img src="/landing/dots-right.png" alt="dots" class="absolute right-0 -bottom-64 z-2 w-1/2" />
-	<img src="/landing/concentric.png" alt="ellipse" class="absolute top-0 z-1 h-full object-cover" />
-	<div class="relative -top-8 z-5 flex -rotate-6 flex-col justify-center">
-		<div class="relative flex min-w-500 justify-center bg-text">
+	<img src="/landing/dots-topleft.png" alt="" class="absolute top-0 left-0 z-2 w-1/2" />
+	<img src="/landing/dots-right.png" alt="" class="absolute right-0 -bottom-64 z-2 w-1/2" />
+	<img src="/landing/concentric.png" alt="" class="absolute top-0 z-1 h-full object-cover" />
+	<div class="relative -top-8 z-5 flex -rotate-6 flex-col justify-center w-screen scale-105">
+		<div class="relative flex justify-center bg-text">
 			<img src="/logo.png" alt="logo" class="h-30" />
 		</div>
-		<BoldText class="mx-auto mt-4 text-center font-jua text-3xl" stroke="2">
-			ship a
-			{#key currentProjectIdea}
-				<span transition:typewriter> {PROJECT_IDEAS[currentProjectIdea]} </span>
-			{/key}, get
-			{#key currentRewardIdea}
-				<span transition:typewriter>{REWARD_IDEAS[currentRewardIdea]}</span>
-			{/key}!
-		</BoldText>
+		<div class="hero-copy mx-auto mt-4 w-max" class:hero-copy-pop={heroTextPopping}>
+			<BoldText class="text-center font-jua text-3xl" stroke="2">
+				ship a {PROJECT_IDEAS[currentProjectIdea]}, get {REWARD_IDEAS[currentRewardIdea]}!
+			</BoldText>
+		</div>
 		<a
 			href={hackatimeOauthUrl}
 			class="relative top-0 mx-auto mt-4 w-max cursor-pointer rounded-2xl bg-linear-to-r from-secondary to-[#54C1D7] p-1 shadow-none transition-all hover:-top-1 hover:shadow-lg/30 active:top-1 active:shadow-none"
@@ -195,13 +202,22 @@
 	</div>
 </div>
 
-<div class="relative -top-110 flex justify-center overflow-x-clip">
-	<div class="absolute z-6 flex w-1000 rotate-12 justify-center bg-text p-4">
-		<BoldText class="font-daydream text-4xl" stroke="2">
-			/// MICROPHONES /// HEADPHONES /// INSTRUMENTS ///
-		</BoldText>
+<div class="relative -mt-110 flex justify-center overflow-x-clip">
+	<div
+		class="absolute left-1/2 z-6 w-[calc(100vw+16rem)] -translate-x-1/2 rotate-12 overflow-hidden bg-text p-4"
+	>
+		<div class="strip-marquee" aria-label={STRIP_LABEL}>
+			<div class="strip-marquee__segment">
+				<BoldText class="font-daydream text-4xl" stroke="2">{STRIP_LABEL}</BoldText>
+			</div>
+			<div class="strip-marquee__segment" aria-hidden="true">
+				<BoldText class="font-daydream text-4xl" stroke="2">{STRIP_LABEL}</BoldText>
+			</div>
+		</div>
 	</div>
-	<div class="relative top-2 z-5 flex w-1000 rotate-12 justify-center gap-8 pt-32">
+	<div
+		class="relative top-2 z-5 flex w-[calc(100vw+16rem)] rotate-12 justify-center gap-8 pt-32"
+	>
 		<img
 			src="/landing/dots-marquee-left.png"
 			alt="dots"
@@ -212,7 +228,7 @@
 			alt="dots"
 			class="absolute -right-16 bottom-0 z-1 h-full -rotate-12"
 		/>
-		<div class="absolute top-16 h-full w-1000 bg-accent-purple"></div>
+		<div class="absolute top-16 h-full w-full bg-accent-purple"></div>
 		<div class="">
 			<BoldText class="z-3 mx-auto flex! font-jua text-4xl" stroke="2">
 				Ship your project, and get all sorts of cool stuff!
@@ -234,9 +250,72 @@
 	</div>
 </div>
 
-<div class="relative -top-160 z-5 w-full">
-	<img src="/landing/faq-bg.png" alt="bg" class="absolute w-full scale-x-[-1]" />
-	<div class="relative z-8 mx-auto max-w-5xl p-8 pt-64">
+<style>
+	.strip-marquee {
+		display: flex;
+		width: max-content;
+		will-change: transform;
+		animation: strip-marquee-scroll 18s linear infinite;
+	}
+
+	.strip-marquee__segment {
+		flex: 0 0 auto;
+		padding-right: 1em;
+	}
+
+	@keyframes strip-marquee-scroll {
+		from {
+			transform: translateX(-50%);
+		}
+
+		to {
+			transform: translateX(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero-copy-pop {
+			animation: none;
+		}
+
+		.strip-marquee {
+			animation: none;
+			transform: translateX(0);
+		}
+	}
+
+	.hero-copy {
+		transform-origin: center;
+	}
+
+	.hero-copy-pop {
+		animation: hero-copy-pop 320ms both;
+	}
+
+	@keyframes hero-copy-pop {
+		0% {
+			transform: scale(1);
+			animation-timing-function: cubic-bezier(0.18, 0.95, 0.35, 1);
+		}
+
+		28% {
+			transform: scale(1.12);
+			animation-timing-function: cubic-bezier(0.12, 0, 0.22, 1);
+		}
+
+		100% {
+			transform: scale(1);
+		}
+	}
+</style>
+
+<div class="relative -mt-160 z-5 w-full">
+	<img
+		src="/landing/faq-bg.png"
+		alt="bg"
+		class="absolute inset-0 h-full w-full object-cover object-top scale-x-[-1]"
+	/>
+	<div class="relative z-8 mx-auto max-w-5xl p-8 pt-64 pb-48">
 		<BoldText class="font-jua text-9xl" stroke="4">FAQ</BoldText>
 		<BoldText class="mb-8 flex! font-jua text-4xl" stroke="2">
 			(Frequently Asked Questions)
@@ -297,28 +376,29 @@
 			</FAQCard>
 		</div>
 	</div>
-</div>
 
-<div class="relative z-8 -mt-120 w-full overflow-x-clip bg-text">
-	<div class="flex justify-center">
-		<div class="absolute -top-20 h-40 w-1000 -rotate-6 bg-text"></div>
-	</div>
-	<div class="relative mx-auto max-w-5xl p-16">
-		<h1 class="mb-8 font-jua text-4xl text-light">
-			A project by
-			<BoldText stroke="2">Hack Club</BoldText>, built by
-			<BoldText stroke="2">kc</BoldText>,
-			<BoldText stroke="2">fireentity</BoldText>,
-			<BoldText stroke="2">helloonearth311</BoldText>,
-			<BoldText stroke="2">ascpixi</BoldText>, and
-			<BoldText stroke="2">Shuflduf</BoldText>.
-		</h1>
-		<p class="font-jua text-xl text-light">
-			Hack Club is a 501(c)(3) nonprofit and network of 60k+ technical high schoolers. We believe
-			you learn best by building so we're creating community and providing grants so you can make
-			awesome projects. In the past few years, we've partnered with GitHub to run Summer of
-			Making, hosted the world's longest hackathon on land, and ran Canada's largest high school
-			hackathon. <br /><br /> At Hack Club, students aren't just learning, they're shipping.
-		</p>
+	<div class="relative z-8 w-full overflow-x-clip bg-text">
+		<div
+			class="absolute left-1/2 -top-24 h-48 w-[calc(100vw+16rem)] -translate-x-1/2 -rotate-6 bg-text"
+		></div>
+		<div class="relative mx-auto max-w-5xl p-16 pt-28 pb-32">
+			<h1 class="mb-8 font-jua text-4xl text-light">
+				A project by
+				<BoldText stroke="2">Hack Club</BoldText>, built by
+				<BoldText stroke="2">kc</BoldText>,
+				<BoldText stroke="2">fireentity</BoldText>,
+				<BoldText stroke="2">helloonearth311</BoldText>,
+				<BoldText stroke="2">ascpixi</BoldText>, and
+				<BoldText stroke="2">Shuflduf</BoldText>.
+			</h1>
+			<p class="font-jua text-xl text-light">
+				Hack Club is a 501(c)(3) nonprofit and network of 60k+ technical high schoolers. We
+				believe you learn best by building so we're creating community and providing grants so you
+				can make awesome projects. In the past few years, we've partnered with GitHub to run
+				Summer of Making, hosted the world's longest hackathon on land, and ran Canada's largest
+				high school hackathon. <br /><br /> At Hack Club, students aren't just learning, they're
+				shipping.
+			</p>
+		</div>
 	</div>
 </div>
