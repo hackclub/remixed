@@ -23,7 +23,7 @@ export const auditCategory = pgEnum('audit_category', [
 
 export const users = pgTable('users', {
 	id: serial('id').primaryKey(),
-	hackClubId: text('hack_club_id').unique(),
+	hcaId: text('hca_id').unique(),
 	slackId: text('slack_id').notNull().unique(),
 	username: text('username').notNull(),
 	avatarUrl: text('avatar_url'),

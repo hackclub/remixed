@@ -2,11 +2,11 @@ import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 const AUTH_ERRORS: Record<string, string> = {
-	hackclub_denied: 'Hack Club Auth did not complete. Try again to continue.',
-	hackclub_state: 'The Hack Club Auth session expired. Start the sign-in flow again.',
-	hackclub_missing_slack: 'Hack Club Auth did not return a Slack ID for this account.',
-	hackclub_failed: 'Hack Club Auth failed. Try again in a moment.',
-	hackatime_requires_hackclub: 'Sign in with Hack Club Auth before connecting Hackatime.',
+	hca_denied: 'Hack Club Auth did not complete. Try again to continue.',
+	hca_state: 'The Hack Club Auth session expired. Start the sign-in flow again.',
+	hca_missing_slack: 'Hack Club Auth did not return a Slack ID for this account.',
+	hca_failed: 'Hack Club Auth failed. Try again in a moment.',
+	hackatime_requires_hca: 'Sign in with Hack Club Auth before connecting Hackatime.',
 };
 
 export const load: PageServerLoad = ({ url, cookies, locals }) => {

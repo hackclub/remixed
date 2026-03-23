@@ -4,13 +4,13 @@ import type { Cookies } from '@sveltejs/kit';
 import { randomBytes } from 'crypto';
 import { signSession } from './crypto';
 
-const HACK_CLUB_AUTH_BASE_URL = 'https://api.hackclub.com';
+const HCA_BASE_URL = 'https://api.hackclub.com';
 const HACKATIME_BASE_URL = 'https://hackatime.hackclub.com';
-const HACK_CLUB_SCOPES = ['openid', 'email', 'name', 'slack_id', 'verification_status'];
+const HCA_SCOPES = ['openid', 'email', 'name', 'slack_id', 'verification_status'];
 
-type AuthProvider = 'hackclub' | 'hackatime';
+type AuthProvider = 'hca' | 'hackatime';
 
-type HackClubProfile = {
+type HcaProfile = {
 	id: string;
 	email?: string;
 	first_name?: string;
@@ -66,7 +66,7 @@ export function consumeOauthState(
 }
 
 export function clearOauthStateCookies(cookies: Cookies, url: URL) {
-	cookies.delete(oauthStateCookie('hackclub'), cookieOptions(url));
+	cookies.delete(oauthStateCookie('hca'), cookieOptions(url));
 	cookies.delete(oauthStateCookie('hackatime'), cookieOptions(url));
 }
 
@@ -75,26 +75,26 @@ export function createSession(cookies: Cookies, url: URL, userId: number) {
 	cookies.set('session_token', `${userId}.${sessionSignature}`, cookieOptions(url, 60 * 60 * 24 * 180));
 }
 
-export function hackClubCallbackUrl(url: URL) {
-	return new URL('/auth/callback/hackclub', url).toString();
+export function hcaCallbackUrl(url: URL) {
+	return new URL('/auth/callback/hca', url).toString();
 }
 
 export function hackatimeCallbackUrl(url: URL) {
 	return new URL('/auth/callback', url).toString();
 }
 
-export function hackClubAuthorizeUrl(url: URL, state: string) {
-	if (!publicEnv.PUBLIC_HACKCLUB_CLIENT_ID) {
-		throw new Error('PUBLIC_HACKCLUB_CLIENT_ID is required');
+export function hcaAuthorizeUrl(url: URL, state: string) {
+	if (!publicEnv.PUBLIC_HCA_CLIENT_ID) {
+		throw new Error('PUBLIC_HCA_CLIENT_ID is required');
 	}
 
 	return (
-		`${HACK_CLUB_AUTH_BASE_URL}/oauth/authorize?` +
+		`${HCA_BASE_URL}/oauth/authorize?` +
 		new URLSearchParams({
-			client_id: publicEnv.PUBLIC_HACKCLUB_CLIENT_ID,
-			redirect_uri: hackClubCallbackUrl(url),
+			client_id: publicEnv.PUBLIC_HCA_CLIENT_ID,
+			redirect_uri: hcaCallbackUrl(url),
 			response_type: 'code',
-			scope: HACK_CLUB_SCOPES.join(' '),
+			scope: HCA_SCOPES.join(' '),
 			state,
 		}).toString()
 	);
@@ -116,19 +116,19 @@ export function hackatimeAuthorizeUrl(url: URL, state: string) {
 	);
 }
 
-export async function exchangeHackClubCode(code: string, redirectUri: string) {
-	if (!publicEnv.PUBLIC_HACKCLUB_CLIENT_ID || !env.HACKCLUB_CLIENT_SECRET) {
-		throw new Error('Hack Club Auth credentials are not configured');
+export async function exchangeHcaCode(code: string, redirectUri: string) {
+	if (!publicEnv.PUBLIC_HCA_CLIENT_ID || !env.HCA_CLIENT_SECRET) {
+		throw new Error('HCA credentials are not configured');
 	}
 
-	const response = await fetch(`${HACK_CLUB_AUTH_BASE_URL}/oauth/token`, {
+	const response = await fetch(`${HCA_BASE_URL}/oauth/token`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded',
 		},
 		body: new URLSearchParams({
-			client_id: publicEnv.PUBLIC_HACKCLUB_CLIENT_ID,
-			client_secret: env.HACKCLUB_CLIENT_SECRET,
+			client_id: publicEnv.PUBLIC_HCA_CLIENT_ID,
+			client_secret: env.HCA_CLIENT_SECRET,
 			code,
 			redirect_uri: redirectUri,
 			grant_type: 'authorization_code',
@@ -136,26 +136,26 @@ export async function exchangeHackClubCode(code: string, redirectUri: string) {
 	});
 
 	if (!response.ok) {
-		throw new Error(`Hack Club token exchange failed with ${response.status}`);
+		throw new Error(`HCA token exchange failed with ${response.status}`);
 	}
 
 	const tokenResponse = await response.json();
 	if (!tokenResponse.access_token || typeof tokenResponse.access_token !== 'string') {
-		throw new Error('Hack Club token exchange returned no access token');
+		throw new Error('HCA token exchange returned no access token');
 	}
 
 	return tokenResponse.access_token;
 }
 
-export async function fetchHackClubProfile(accessToken: string): Promise<HackClubProfile> {
-	const response = await fetch(`${HACK_CLUB_AUTH_BASE_URL}/api/v1/me`, {
+export async function fetchHcaProfile(accessToken: string): Promise<HcaProfile> {
+	const response = await fetch(`${HCA_BASE_URL}/api/v1/me`, {
 		headers: {
 			Authorization: `Bearer ${accessToken}`,
 		},
 	});
 
 	if (!response.ok) {
-		throw new Error(`Hack Club profile request failed with ${response.status}`);
+		throw new Error(`HCA profile request failed with ${response.status}`);
 	}
 
 	return response.json();

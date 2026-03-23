@@ -139,7 +139,7 @@
 			</p>
 		{/if}
 		<a
-			href="/auth/hackclub"
+			href="/auth/hca"
 			class="relative top-0 mx-auto mt-4 w-max cursor-pointer rounded-2xl bg-linear-to-r from-secondary to-[#54C1D7] p-1 shadow-none transition-all hover:-top-1 hover:shadow-lg/30 active:top-1 active:shadow-none"
 		>
 			<div class="rounded-xl bg-text px-8 py-2 md:px-16">

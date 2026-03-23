@@ -6,10 +6,10 @@ import { eq, or, sql } from 'drizzle-orm';
 import {
 	consumeOauthState,
 	createSession,
-	exchangeHackClubCode,
-	fetchHackClubProfile,
+	exchangeHcaCode,
+	fetchHcaProfile,
 	fetchSlackIdentity,
-	hackClubCallbackUrl,
+	hcaCallbackUrl,
 } from '$lib/server/auth';
 
 function fallbackUsername(
@@ -26,37 +26,37 @@ function fallbackUsername(
 
 export const GET: RequestHandler = async ({ cookies, url }) => {
 	if (url.searchParams.get('error')) {
-		throw redirect(303, '/?error=hackclub_denied');
+		throw redirect(303, '/?error=hca_denied');
 	}
 
 	const code = url.searchParams.get('code');
 	if (!code) {
-		throw redirect(303, '/?error=hackclub_failed');
+		throw redirect(303, '/?error=hca_failed');
 	}
 
-	if (!consumeOauthState(cookies, url, 'hackclub', url.searchParams.get('state'))) {
-		throw redirect(303, '/?error=hackclub_state');
+	if (!consumeOauthState(cookies, url, 'hca', url.searchParams.get('state'))) {
+		throw redirect(303, '/?error=hca_state');
 	}
 
 	try {
-		const accessToken = await exchangeHackClubCode(code, hackClubCallbackUrl(url));
-		const hackClubProfile = await fetchHackClubProfile(accessToken);
-		const slackId = hackClubProfile.slack_id?.trim();
+		const accessToken = await exchangeHcaCode(code, hcaCallbackUrl(url));
+		const hcaProfile = await fetchHcaProfile(accessToken);
+		const slackId = hcaProfile.slack_id?.trim();
 
-		if (!hackClubProfile.id || !slackId) {
-			throw redirect(303, '/?error=hackclub_missing_slack');
+		if (!hcaProfile.id || !slackId) {
+			throw redirect(303, '/?error=hca_missing_slack');
 		}
 
 		const existingUser = await db.query.users.findFirst({
-			where: or(eq(users.hackClubId, hackClubProfile.id), eq(users.slackId, slackId)),
+			where: or(eq(users.hcaId, hcaProfile.id), eq(users.slackId, slackId)),
 		});
 
 		const slackIdentity = await fetchSlackIdentity(
 			slackId,
 			fallbackUsername(
-				hackClubProfile.first_name,
-				hackClubProfile.last_name,
-				hackClubProfile.email,
+				hcaProfile.first_name,
+				hcaProfile.last_name,
+				hcaProfile.email,
 				slackId,
 			),
 			existingUser?.avatarUrl ?? null,
@@ -69,7 +69,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 			await db
 				.update(users)
 				.set({
-					hackClubId: hackClubProfile.id,
+					hcaId: hcaProfile.id,
 					slackId,
 					username: slackIdentity.username,
 					avatarUrl: slackIdentity.avatarUrl,
@@ -79,7 +79,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 			const [user] = await db
 				.insert(users)
 				.values({
-					hackClubId: hackClubProfile.id,
+					hcaId: hcaProfile.id,
 					slackId,
 					username: slackIdentity.username,
 					avatarUrl: slackIdentity.avatarUrl,
@@ -106,7 +106,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 			throw error;
 		}
 
-		console.error('Hack Club Auth callback failed', error);
-		throw redirect(303, '/?error=hackclub_failed');
+		console.error('HCA callback failed', error);
+		throw redirect(303, '/?error=hca_failed');
 	}
 };

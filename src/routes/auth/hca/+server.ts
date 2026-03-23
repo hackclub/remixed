@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { hackClubAuthorizeUrl, issueOauthState } from '$lib/server/auth';
+import { hcaAuthorizeUrl, issueOauthState } from '$lib/server/auth';
 
 export const GET: RequestHandler = async ({ cookies, url, locals }) => {
 	if (locals.user?.accessToken) {
@@ -11,6 +11,6 @@ export const GET: RequestHandler = async ({ cookies, url, locals }) => {
 		throw redirect(303, '/auth/hackatime');
 	}
 
-	const state = issueOauthState(cookies, url, 'hackclub');
-	throw redirect(303, hackClubAuthorizeUrl(url, state));
+	const state = issueOauthState(cookies, url, 'hca');
+	throw redirect(303, hcaAuthorizeUrl(url, state));
 };

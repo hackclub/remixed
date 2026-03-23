@@ -15,7 +15,7 @@ import { isRedirect } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ url, cookies, locals }) => {
 	if (!locals.user) {
-		throw redirect(303, '/?error=hackatime_requires_hackclub');
+		throw redirect(303, '/?error=hackatime_requires_hca');
 	}
 
 	if (url.searchParams.get('error')) {

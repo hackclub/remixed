@@ -463,8 +463,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "hack_club_id": {
-          "name": "hack_club_id",
+        "hca_id": {
+          "name": "hca_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -527,11 +527,11 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "users_hack_club_id_unique": {
-          "name": "users_hack_club_id_unique",
+        "users_hca_id_unique": {
+          "name": "users_hca_id_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "hack_club_id"
+            "hca_id"
           ]
         },
         "users_slack_id_unique": {
