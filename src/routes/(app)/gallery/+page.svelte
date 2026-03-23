@@ -23,7 +23,7 @@
 		for (const proj of list) {
 			projectList.push({
 				height: Math.random() * 200.0 + 300.0,
-				x: Math.random() * 100.0 - 50.0,
+				x: Math.random() * 50.0 - 25.0,
 				y: Math.random() * 50.0 - 25.0,
 				rot: Math.random() * 20.0 - 10.0,
 				...proj,
@@ -36,9 +36,9 @@
 	<title>Gallery</title>
 </svelte:head>
 
-<PageHeader title="Gallery" desc="Look at what other peeps have made!" />
+<PageHeader title="Gallery" subtitle="Look at what other peeps have made!" />
 
-<div onscroll={waterfallScrolled} class="h-screen w-screen overflow-y-auto pt-48">
+<div onscroll={waterfallScrolled} class="h-screen w-screen overflow-y-auto pt-24">
 	<div class="px-32 [column-count:3]">
 		{#each projectList as proj}
 			<div

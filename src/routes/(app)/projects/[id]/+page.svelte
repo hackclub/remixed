@@ -5,7 +5,9 @@
 	import type { PageProps } from './$types';
 	import { formatHours, validUrl } from '$lib';
 	import { scale } from 'svelte/transition';
-	import { styleButton, styleH1, styleInput, stylePopover } from '$lib/styles';
+	import { styleButton, styleH1, styleH2, styleH3, styleInput, stylePopover } from '$lib/styles';
+	import PageHeader from '$lib/PageHeader.svelte';
+	import BoldText from '$lib/BoldText.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -48,7 +50,133 @@
 	}
 </script>
 
-{#if anim}
+<div class="{stylePopover} max-h-4/5 font-jua text-text" popover id="editProject">
+	<form method="POST" action="?/update">
+		<label for="title" class="{styleH3} ">Project Name</label>
+		<input
+			type="text"
+			id="title"
+			name="title"
+			class="{styleInput} mb-4 w-full"
+			bind:value={draft.title}
+			required
+		/>
+		<label for="description" class={styleH3}>Description</label>
+		<textarea
+			id="description"
+			name="description"
+			class="{styleInput} mb-4 h-40 w-full"
+			bind:value={draft.description}
+			required
+		></textarea>
+		<label for="hackatimeProjects" class={styleH3}>Hackatime Projects</label>
+		<select
+			multiple
+			id="hackatimeProjects"
+			name="hackatimeProjects"
+			class="{styleInput} w-full text-center font-jua text-xl font-bold"
+		>
+			{#if hackatimeProjects && hackatimeProjects.length > 0}
+				{#each hackatimeProjects as proj}
+					{#if proj.claimedBy == null}
+						<option selected={proj.claimedBy == data.project!.id} value={proj.name}>
+							{proj.name}
+						</option>
+					{:else}
+						<option disabled value={proj.name}>{proj.name}</option>
+					{/if}
+				{/each}
+			{:else}
+				<option disabled value="none"><i>No Projects Found</i></option>
+			{/if}
+		</select>
+		<sub class="mt-2 mb-4 block text-center font-zcool text-text">Ctrl+Click to select multiple</sub
+		>
+		<label for="githubUrl" class="{styleH3} ">Category</label>
+		<select
+			name="category"
+			id="category"
+			bind:value={draft.category}
+			class="{styleInput} mb-4 block w-full cursor-pointer text-center font-gothic text-sm font-bold text-text"
+		>
+			<option value="GAME">Game</option>
+			<option value="WEBSITE">Website</option>
+			<option value="DESKTOP_APP">Desktop App</option>
+			<option value="CLI">CLI</option>
+			<option value="OTHER">Other</option>
+		</select>
+		<label for="coverArt" class="{styleH3} ">Cover Art URL</label>
+		<input
+			type="url"
+			id="coverArt"
+			name="coverArt"
+			class="{styleInput} mb-4 w-full font-mono text-xs"
+			bind:value={draft.coverArt}
+			required
+		/>
+		<label for="githubUrl" class="{styleH3} ">Repository URL</label>
+		<input
+			type="url"
+			id="githubUrl"
+			name="githubUrl"
+			class="{styleInput} mb-4 w-full font-mono text-xs"
+			bind:value={draft.githubUrl}
+			required
+		/>
+		<label for="demoUrl" class="{styleH3} ">Demo URL</label>
+		<input
+			type="url"
+			id="demoUrl"
+			name="demoUrl"
+			class="{styleInput} mb-4 w-full font-mono text-xs"
+			bind:value={draft.demoUrl}
+			required
+		/>
+		<input type="submit" class="{styleButton} w-full" value="Confirm" />
+	</form>
+</div>
+
+<div class="absolute bottom-90 w-full">
+	<PageHeader title={draft.title} full>
+		{#snippet subtitleRich()}
+			by <a class="underline decoration-2" href="/user/{data.user.id}">@{data.user.username}</a>
+		{/snippet}
+		{#snippet under()}
+			<div class="float-right">
+				{#if editing}
+					<button class="{styleButton} " onclick={cancelEdit}>Cancel</button>
+				{/if}
+				<button class="{styleButton} " onclick={startEdit} popovertarget="editProject">Edit</button>
+				<button class="{styleButton} ">Ship</button>
+			</div>
+		{/snippet}
+		{#snippet description()}
+			{draft.description}
+		{/snippet}
+	</PageHeader>
+</div>
+
+<div class="flex h-[50vh] w-full items-center justify-center">
+	<div class="relative m-4 aspect-square h-80">
+		<img
+			src="/cd.png"
+			alt="cd"
+			class="cd-spin absolute aspect-square w-full animate-spin object-cover opacity-30"
+		/>
+		<img
+			src={draft?.coverArt ?? '/404.jpg'}
+			onerror={(e: any) => (e.currentTarget.src = '/404.jpg')}
+			alt="cover art"
+			class="cd-spin aspect-square w-full animate-spin mask-[url(/cd.png)] mask-cover object-cover"
+		/>
+	</div>
+	<div class="flex flex-col gap-4">
+		<a href={draft.githubUrl} class="{styleButton} "> Repository </a>
+		<a href={draft.demoUrl} class="{styleButton} "> Demo </a>
+	</div>
+</div>
+
+<!--
 	<div class="h-screen p-10">
 		<main class="mx-auto flex h-full w-full items-center">
 			<form method="POST" action="?/update">
@@ -239,9 +367,9 @@
 		<form action="?/ship" method="POST" id="ship-form" hidden></form>
 	</div>
 
-	<style>
-		.cd-spin {
-			--animate-spin: spin 8s linear infinite;
-		}
-	</style>
-{/if}
+ -->
+<style>
+	.cd-spin {
+		--animate-spin: spin 8s linear infinite;
+	}
+</style>
