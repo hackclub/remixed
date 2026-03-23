@@ -142,13 +142,17 @@
 			by <a class="underline decoration-2" href="/user/{data.user.id}">@{data.user.username}</a>
 		{/snippet}
 		{#snippet under()}
-			<div class="float-right">
-				{#if editing}
-					<button class="{styleButton} " onclick={cancelEdit}>Cancel</button>
-				{/if}
-				<button class="{styleButton} " onclick={startEdit} popovertarget="editProject">Edit</button>
-				<button class="{styleButton} ">Ship</button>
-			</div>
+			{#if isOwner}
+				<div class="float-right">
+					{#if editing}
+						<button class="{styleButton} " onclick={cancelEdit}>Cancel</button>
+					{/if}
+					<button class="{styleButton} " onclick={startEdit} popovertarget="editProject"
+						>Edit</button
+					>
+					<button class="{styleButton} ">Ship</button>
+				</div>
+			{/if}
 		{/snippet}
 		{#snippet description()}
 			{draft.description}
