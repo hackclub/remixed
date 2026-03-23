@@ -18,10 +18,14 @@
 		return (data.user?.notesBalance ?? 0) >= cost;
 	}
 
+	function sortShopItems(items: any[]) {
+		return [...items].sort((a, b) => a.cost - b.cost || a.id - b.id);
+	}
+
 	onMount(() => {
 		try {
 			const cached = localStorage.getItem('shopItems');
-			if (cached) shopItems = JSON.parse(cached);
+			if (cached) shopItems = sortShopItems(JSON.parse(cached));
 		} catch {
 			localStorage.removeItem('shopItems');
 		}
@@ -29,8 +33,9 @@
 		fetch('/api/shop')
 			.then((r) => r.json())
 			.then((data) => {
-				shopItems = data;
-				localStorage.setItem('shopItems', JSON.stringify(data));
+				const sortedItems = sortShopItems(data);
+				shopItems = sortedItems;
+				localStorage.setItem('shopItems', JSON.stringify(sortedItems));
 			});
 	});
 </script>
