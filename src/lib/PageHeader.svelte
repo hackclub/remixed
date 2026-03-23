@@ -36,7 +36,7 @@
 		<div
 			class="absolute top-0 right-0 z-4 h-full w-24 origin-bottom-right scale-y-110 rotate-24 bg-text"
 		></div>
-		<div class="relative z-5 flex w-screen justify-between">
+		<div class="relative z-5 flex w-screen justify-between pl-12">
 			<div>
 				{#if titleRich}
 					{@render titleRich()}

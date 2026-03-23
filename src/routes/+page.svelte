@@ -86,7 +86,7 @@
 				url: items[currentIndex].imageUrl,
 				name: items[currentIndex].name,
 				cost: items[currentIndex].cost,
-				rotation: Math.random() * 12.0 - 6.0,
+				rotation: Math.random() * 15.0 - 6.0,
 				vOffset: Math.random() * 16.0 - 8.0,
 				xOffset: i * ITEM_WIDTH - ITEM_WIDTH - 50.0,
 			});
@@ -202,7 +202,7 @@
 	</div>
 </div>
 
-<div class="relative -mt-110 flex justify-center overflow-x-clip">
+<div class="relative -mt-110 flex justify-center overflow-x-clip pb-40 md:pb-56">
 	<div
 		class="absolute left-1/2 z-6 w-[calc(100vw+16rem)] -translate-x-1/2 rotate-12 overflow-hidden bg-text p-4"
 	>
@@ -221,12 +221,12 @@
 		<img
 			src="/landing/dots-marquee-left.png"
 			alt="dots"
-			class="absolute top-0 -left-4 z-1 h-full -rotate-12"
+			class="absolute -top-8 -left-12 z-1 h-[125%] max-w-none -rotate-12 md:-top-12 md:-left-20 md:h-[145%]"
 		/>
 		<img
 			src="/landing/dots-marquee-right.png"
 			alt="dots"
-			class="absolute -right-16 bottom-0 z-1 h-full -rotate-12"
+			class="absolute -right-24 -bottom-10 z-1 h-[125%] max-w-none -rotate-12 md:-right-32 md:-bottom-14 md:h-[145%]"
 		/>
 		<div class="absolute top-16 h-full w-full bg-accent-purple"></div>
 		<div class="">
@@ -309,7 +309,7 @@
 	}
 </style>
 
-<div class="relative -mt-160 z-5 w-full">
+<div class="relative -mt-48 z-5 w-full md:-mt-72">
 	<img
 		src="/landing/faq-bg.png"
 		alt="bg"

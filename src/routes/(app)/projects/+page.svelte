@@ -46,7 +46,7 @@
 	subtitle="Describe your idea for a project, build it, then ship and get prizes!"
 />
 
-<div class="relative z-2 flex h-screen w-screen flex-col items-center justify-center pt-16">
+<div class="relative z-2 flex h-[80vh] w-screen flex-col items-center justify-center pt-16">
 	<div class="flex items-center">
 		<button class="hover-effect mr-8 h-min cursor-pointer" onclick={() => scroll(false)}>
 			<img src="/dashboard/arrow-left.png" alt="arrow" class="w-16" />
