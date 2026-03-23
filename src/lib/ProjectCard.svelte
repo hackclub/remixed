@@ -7,7 +7,7 @@
 
 <a
 	href="/projects/{proj.id}"
-	class="{styleInteractiveCard} block w-72 snap-center break-inside-avoid p-4"
+	class="{styleInteractiveCard} block w-72 snap-center break-inside-avoid p-4 px-6 h-full"
 >
 	<CoverArt
 		src={proj.coverArt}

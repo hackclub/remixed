@@ -11,61 +11,76 @@
 <div class="relative z-2 flex min-h-screen w-full items-start justify-center px-4 pt-12 pb-40 sm:px-8">
 	<form
 		method="POST"
-		class="flex w-full max-w-3xl flex-col rounded-[2rem] border-4 border-[#8B81FF] bg-text px-6 py-8 font-jua text-light shadow-2xl/30 sm:px-10 sm:py-10"
+		class="flex w-full max-w-4xl flex-col rounded-[2rem] border-4 border-[#8B81FF] bg-text px-6 py-8 font-jua text-light shadow-2xl/30 sm:px-10 sm:py-10"
 	>
-		<h1 class="mb-8 text-center text-4xl text-shadow-flat sm:text-5xl">Create new project</h1>
+		<h1 class="text-left text-4xl text-[#E2BEFF] text-shadow-flat sm:text-5xl">
+			Create new project
+		</h1>
+		<p class="mt-1 mb-8 text-left text-lg text-[#E2BEFF]">
+			You can change all of these fields later!
+		</p>
 
-		<label class="mb-2 text-2xl" for="title">Title</label>
-		<input
-			type="text"
-			id="title"
-			name="title"
-			class="w-full rounded-2xl border-4 border-[#8B81FF] bg-light px-5 py-4 text-xl text-text outline-none ring-secondary transition focus:ring-2"
-			required
-		/>
+		<div>
+			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="title">Title</label>
+			<p class="mb-2 text-lg text-[#E2BEFF]">Give your project a cool name!</p>
+			<input
+				type="text"
+				id="title"
+				name="title"
+				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 text-xl text-[#E2BEFF] outline-none"
+				required
+			/>
+		</div>
 
-		<label class="mt-6 mb-2 text-2xl" for="desc">Description</label>
-		<textarea
-			id="desc"
-			name="desc"
-			rows="6"
-			class="w-full rounded-2xl border-4 border-[#8B81FF] bg-light px-5 py-4 text-xl text-text outline-none ring-secondary transition focus:ring-2"
-		></textarea>
+		<div class="mt-6">
+			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="desc">Description</label>
+			<p class="mb-2 text-lg text-[#E2BEFF]">Describe what your project is in detail.</p>
+			<textarea
+				id="desc"
+				name="desc"
+				rows="6"
+				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 text-xl text-[#E2BEFF] outline-none"
+			></textarea>
+		</div>
 
-		<label class="mt-6 mb-2 text-2xl" for="category">Category</label>
-		<select
-			name="category"
-			id="category"
-			class="w-full rounded-2xl border-4 border-[#8B81FF] bg-light px-5 py-4 text-xl text-text outline-none ring-secondary transition focus:ring-2"
-		>
-			<option value="GAME">Game</option>
-			<option value="WEBSITE">Website</option>
-			<option value="DESKTOP_APP">Desktop App</option>
-			<option value="CLI">CLI</option>
-			<option value="OTHER">Other</option>
-		</select>
+		<div class="mt-6">
+			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="category">Category</label>
+			<p class="mb-2 text-lg text-[#E2BEFF]">What kind of project are ya making?</p>
+			<select
+				name="category"
+				id="category"
+				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 text-xl text-[#E2BEFF] outline-none"
+			>
+				<option value="GAME">Game</option>
+				<option value="WEBSITE">Website</option>
+				<option value="DESKTOP_APP">Desktop App</option>
+				<option value="CLI">CLI</option>
+				<option value="OTHER">Other</option>
+			</select>
+		</div>
 
-		<label class="mt-6 mb-2 text-2xl" for="hackatime">Hackatime Projects</label>
-		<select
-			multiple
-			name="hackatime_projects"
-			id="hackatime"
-			class="min-h-52 w-full rounded-2xl border-4 border-[#8B81FF] bg-light px-5 py-4 text-xl text-text outline-none ring-secondary transition focus:ring-2"
-		>
-			{#if data.projects.length > 0}
-				{#each data.projects as proj}
-					{#if proj.claimed}
-						<option disabled value={proj.name}>{proj.name}</option>
-					{:else}
-						<option value={proj.name}>{proj.name}</option>
-					{/if}
-				{/each}
-			{:else}
-				<option disabled value="none">No Projects Found</option>
-			{/if}
-		</select>
-
-		<sub class="mt-3 text-center text-lg text-secondary">Command/Ctrl-click to select multiple</sub>
+		<div class="mt-6">
+			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="hackatime">Hackatime Projects</label>
+			<p class="mb-2 text-lg text-[#E2BEFF]">Use Ctrl+Click to select multiple!</p>
+			<select
+				multiple
+				name="hackatime_projects"
+				id="hackatime"
+				class="min-h-52 w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 text-xl text-[#E2BEFF] outline-none"
+			>
+				{#if data.projects.length > 0}
+					{#each data.projects as proj}
+						{#if proj.claimed}
+							<option disabled value={proj.name}>{proj.name}</option>
+						{:else}
+							<option value={proj.name}>{proj.name}</option>
+						{/if}
+					{/each}
+				{:else}
+					<option disabled value="none">No Projects Found</option>
+				{/if}
+			</select>
+		</div>
 
 		<button
 			type="submit"
