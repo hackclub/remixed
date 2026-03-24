@@ -55,7 +55,7 @@ PUBLIC_HCA_CLIENT_ID=123456789acbdef
 # OAuth UID of the Hackatime app made for HACKATIME_OAUTH_SECRET
 PUBLIC_HACKATIME_OAUTH_UID=kdskjsljdkfsdkfjdsfslkdlkjfdslkj
 
-# Callback URL of the HCA app (make sure to add this to it's options)
+# Callback URL of the HCA app (make sure to add this to its options)
 PUBLIC_CALLBACK_URL=http://localhost:5173/auth/callback/hca
 
 # [pixi pls i need you what is this]

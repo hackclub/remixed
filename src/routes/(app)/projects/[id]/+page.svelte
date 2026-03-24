@@ -79,7 +79,6 @@
 			name="description"
 			class="{styleInput} mb-4 h-40 w-full"
 			bind:value={draft.description}
-			required
 		></textarea>
 		<label for="hackatimeProjects" class={styleH3}>Hackatime Projects</label>
 		<select
@@ -122,7 +121,6 @@
 			name="coverArt"
 			class="{styleInput} mb-4 w-full font-mono text-xs"
 			bind:value={draft.coverArt}
-			required
 		/>
 		<label for="githubUrl" class="{styleH3} ">Repository URL</label>
 		<input
@@ -131,7 +129,6 @@
 			name="githubUrl"
 			class="{styleInput} mb-4 w-full font-mono text-xs"
 			bind:value={draft.githubUrl}
-			required
 		/>
 		<label for="demoUrl" class="{styleH3} ">Demo URL</label>
 		<input
@@ -140,7 +137,6 @@
 			name="demoUrl"
 			class="{styleInput} mb-4 w-full font-mono text-xs"
 			bind:value={draft.demoUrl}
-			required
 		/>
 		<input type="submit" class="{styleButton} w-full" value="Confirm" />
 	</form>
@@ -169,6 +165,11 @@
 			{/if}
 		{/snippet}
 		{#snippet description()}
+			{#if data.project.hackatimeProjects.length > 0}
+				<h3 class="text-center text-2xl" title={data.project.hackatimeProjects.join(', ')}>
+					{formatHours(data.project.hackatimeSeconds!)}
+				</h3>
+			{/if}
 			{draft.description}
 		{/snippet}
 	</PageHeader>
