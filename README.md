@@ -14,17 +14,29 @@
 ![landing](static/og-banner.png)
 
 ## Projects
-<img width="1542" height="1012" alt="image" src="https://github.com/user-attachments/assets/425f560d-8bfe-4128-a7aa-72939a1ba015" />
+![projects](https://github.com/user-attachments/assets/425f560d-8bfe-4128-a7aa-72939a1ba015)
 
 ## Shop
-<img width="1770" height="1001" alt="image" src="https://github.com/user-attachments/assets/d23b309f-f9d9-4c9b-b4f3-8c9cc3014451" />
+![shop](https://github.com/user-attachments/assets/d23b309f-f9d9-4c9b-b4f3-8c9cc3014451)
 
 ## Profile
-<img width="1421" height="973" alt="image" src="https://github.com/user-attachments/assets/2a80e28a-bf9e-4b22-a934-ad883dd99208" />
+![profile](https://github.com/user-attachments/assets/2a80e28a-bf9e-4b22-a934-ad883dd99208)
 
 ## Admin Dashboard
-<img width="1504" height="772" alt="image" src="https://github.com/user-attachments/assets/50fde568-7f8d-4e84-8ff6-b6cd623c13e1" />
+![admin](https://github.com/user-attachments/assets/50fde568-7f8d-4e84-8ff6-b6cd623c13e1)
 
+# Features
+- [Hackatime](https://hackatime.hackclub.com/) integration
+- [Hack Club Auth](https://auth.hackclub.com/) integration
+- Referral link tracking
+- Project creating / editing
+- STD Stack (SvelteKit, TailwindCSS, Drizzle ORM)
+- Admin dashboards
+  - User roles
+  - Shop items
+  - Order fulfillment
+  - Project management
+  - Ship reviews
 
 # Contributing
 
