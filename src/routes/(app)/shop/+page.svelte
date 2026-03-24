@@ -46,7 +46,7 @@
 
 <PageHeader title="Shop" subtitle="Spend your notes on rewards for the projects you ship." />
 
-<div class="relative z-2 flex min-h-screen w-full flex-col items-center px-4 pt-52 pb-40 sm:px-8">
+<div class="relative z-2 flex min-h-screen w-full flex-col items-center px-4 pt-56 pb-40 sm:px-8">
 	<div class="mb-8 flex w-full max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
 		<div
 			class="rounded-2xl border-4 border-[#8B81FF] bg-text px-6 py-4 font-jua text-2xl text-light text-shadow-flat"

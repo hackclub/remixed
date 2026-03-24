@@ -18,9 +18,9 @@
 
 <PageHeader title="Gallery" subtitle="Look at what other peeps have made!" />
 
-<div class="h-screen w-screen overflow-y-auto pt-28">
+<div class="h-screen w-screen">
 	<div
-		class="mx-auto grid max-w-7xl grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] justify-items-center gap-8 px-6 pb-12 sm:px-10 lg:px-16"
+		class="mx-auto grid max-w-7xl grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] justify-items-center gap-8 px-6 pt-56 pb-40 sm:px-10 lg:px-16"
 	>
 		{#each projectList as proj}
 			<ProjectCard {proj} />

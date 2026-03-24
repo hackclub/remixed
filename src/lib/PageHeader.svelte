@@ -63,7 +63,7 @@
 	</div>
 	<div
 		style="width: {full ? 105 : 60}%; top: {full ? 7 : 5}rem"
-		class="relative -left-4 z-19 -rotate-4 overflow-y-clip bg-[#083F91] p-4 pl-12 font-jua"
+		class="absolute -left-4 z-19 -rotate-4 overflow-y-clip bg-[#083F91] p-4 pl-12 font-jua"
 		transition:fly={{ x: -200, delay: 50 }}
 	>
 		<div

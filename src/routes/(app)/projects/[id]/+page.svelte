@@ -146,7 +146,7 @@
 	</form>
 </div>
 
-<div class="absolute bottom-80 w-full">
+<div class="fixed bottom-100 w-full">
 	<PageHeader title={draft.title} full>
 		{#snippet subtitleRich()}
 			by <a class="underline decoration-2" href="/user/{data.user.id}">@{data.user.username}</a>
@@ -174,7 +174,7 @@
 	</PageHeader>
 </div>
 
-<div class="flex h-[60vh] w-full items-center justify-center">
+<div class="flex h-[calc(100vh-20rem)] w-full items-center justify-center">
 	<div class="relative m-4 aspect-square h-80">
 		<img
 			src="/cd.png"
