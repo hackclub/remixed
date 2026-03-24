@@ -1,11 +1,9 @@
-import type { ProjectCategory } from '$lib';
+import { isProjectCategory, type ProjectCategory } from '$lib';
 import { db } from '$lib/server/db';
 import { projects, ships, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-
-const VALID_CATEGORIES: ProjectCategory[] = ['GAME', 'WEBSITE', 'DESKTOP_APP', 'CLI', 'OTHER'];
 
 function normalizeOptionalText(value: FormDataEntryValue | null): string | null {
 	const text = String(value ?? '').trim();
@@ -33,7 +31,7 @@ export const load: PageServerLoad = async () => {
 		db.select().from(ships).orderBy(ships.id),
 	]);
 
-	const shipsByProject = new Map<number, (typeof allShips)>();
+	const shipsByProject = new Map<number, typeof allShips>();
 	for (const ship of allShips) {
 		const projectShips = shipsByProject.get(ship.projectId) ?? [];
 		projectShips.push(ship);
@@ -72,15 +70,21 @@ export const actions: Actions = {
 		const projectId = Number(data.get('projectId'));
 		const userId = Number(data.get('userId'));
 		const title = String(data.get('title') ?? '').trim();
-		const category = String(data.get('category') ?? '').trim() as ProjectCategory;
+		const categoryValue = String(data.get('category') ?? '').trim();
 		const hackatimeSecondsRaw = String(data.get('hackatimeSeconds') ?? '').trim();
 
-		if (!projectId || !userId || !title || !VALID_CATEGORIES.includes(category)) {
+		if (!projectId || !userId || !title || !isProjectCategory(categoryValue)) {
 			return fail(400, { error: 'Invalid project update' });
 		}
 
+		const category: ProjectCategory = categoryValue;
+
 		const [owner, project] = await Promise.all([
-			db.select({ id: users.id }).from(users).where(eq(users.id, userId)).then(([row]) => row),
+			db
+				.select({ id: users.id })
+				.from(users)
+				.where(eq(users.id, userId))
+				.then(([row]) => row),
 			db
 				.select({ id: projects.id })
 				.from(projects)

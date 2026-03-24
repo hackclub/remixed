@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PROJECT_CATEGORY_OPTIONS } from '$lib';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -8,7 +9,9 @@
 	<title>Create New Project</title>
 </svelte:head>
 
-<div class="relative z-2 flex min-h-screen w-full items-start justify-center px-4 pt-12 pb-40 sm:px-8">
+<div
+	class="relative z-2 flex min-h-screen w-full items-start justify-center px-4 pt-12 pb-40 sm:px-8"
+>
 	<form
 		method="POST"
 		class="flex w-full max-w-4xl flex-col rounded-[2rem] border-4 border-[#8B81FF] bg-text px-6 py-8 font-jua text-light shadow-2xl/30 sm:px-10 sm:py-10"
@@ -51,11 +54,9 @@
 				id="category"
 				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 text-xl text-[#E2BEFF] outline-none"
 			>
-				<option value="GAME">Game</option>
-				<option value="WEBSITE">Website</option>
-				<option value="DESKTOP_APP">Desktop App</option>
-				<option value="CLI">CLI</option>
-				<option value="OTHER">Other</option>
+				{#each PROJECT_CATEGORY_OPTIONS as option}
+					<option value={option.value}>{option.label}</option>
+				{/each}
 			</select>
 		</div>
 

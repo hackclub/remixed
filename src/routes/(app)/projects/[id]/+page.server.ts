@@ -4,7 +4,7 @@ import { and, eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { decrypt } from '$lib/server/crypto';
 import { fail, isValidationError } from '@sveltejs/kit';
-import { validUrl, type ProjectCategory } from '$lib';
+import { isProjectCategory, validUrl, type ProjectCategory } from '$lib';
 import { getProjects } from '$lib/server/hackatimeProjects';
 import sanitizeHtml from 'sanitize-html';
 import { marked } from 'marked';
@@ -60,13 +60,18 @@ export const actions: Actions = {
 		const coverArt = (data.get('coverArt') as string | null)?.trim();
 		const githubUrl = (data.get('githubUrl') as string | null)?.trim();
 		const demoUrl = (data.get('demoUrl') as string | null)?.trim();
-		const category = data.get('category') as ProjectCategory;
+		const categoryValue = String(data.get('category') ?? '').trim();
 		const newHackatimeProjects = (data.getAll('hackatimeProjects') ?? []) as string[];
 		const updatedHackatimeProjects = [...newHackatimeProjects, ...project.hackatimeProjects];
 
+		if (!isProjectCategory(categoryValue)) {
+			return fail(400, { error: 'Invalid category' });
+		}
 		if (newHackatimeProjects.some((elem) => takenHackatimeProjects.includes(elem))) {
 			return fail(400, 'Hackatime project taken');
 		}
+
+		const category: ProjectCategory = categoryValue;
 
 		await db
 			.update(projects)

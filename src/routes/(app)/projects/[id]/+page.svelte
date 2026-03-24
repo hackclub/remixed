@@ -3,7 +3,7 @@
 	import Sidebar from '$lib/Sidebar.svelte';
 	import { onMount } from 'svelte';
 	import type { PageProps } from './$types';
-	import { formatHours, validUrl } from '$lib';
+	import { formatHours, formatProjectCategory, PROJECT_CATEGORY_OPTIONS, validUrl } from '$lib';
 	import { scale } from 'svelte/transition';
 	import { styleButton, styleH1, styleH2, styleH3, styleInput, stylePopover } from '$lib/styles';
 	import PageHeader from '$lib/PageHeader.svelte';
@@ -111,11 +111,9 @@
 			bind:value={draft.category}
 			class="{styleInput} mb-4 block w-full cursor-pointer text-center font-gothic text-sm font-bold text-text"
 		>
-			<option value="GAME">Game</option>
-			<option value="WEBSITE">Website</option>
-			<option value="DESKTOP_APP">Desktop App</option>
-			<option value="CLI">CLI</option>
-			<option value="OTHER">Other</option>
+			{#each PROJECT_CATEGORY_OPTIONS as option}
+				<option value={option.value}>{option.label}</option>
+			{/each}
 		</select>
 		<label for="coverArt" class="{styleH3} ">Cover Art URL</label>
 		<input
@@ -261,11 +259,9 @@
 									bind:value={draft.category}
 									class="{styleInput} mb-2 cursor-pointer text-center font-gothic text-sm font-bold text-text"
 								>
-									<option value="GAME">Game</option>
-									<option value="WEBSITE">Website</option>
-									<option value="DESKTOP_APP">Desktop App</option>
-									<option value="CLI">CLI</option>
-									<option value="OTHER">Other</option>
+									{#each PROJECT_CATEGORY_OPTIONS as option}
+										<option value={option.value}>{option.label}</option>
+									{/each}
 								</select>
 							{:else}
 								<span
@@ -278,7 +274,7 @@
 									class=" font-gothic text-xl text-accent-purple"
 									title={data.project!.hackatimeProjects!.join(', ')}
 								>
-									{data.project?.category.replaceAll('_', ' ')}
+									{formatProjectCategory(data.project!.category)}
 								</span>
 							{/if}
 						</div>

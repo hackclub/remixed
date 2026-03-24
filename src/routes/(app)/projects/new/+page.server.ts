@@ -3,7 +3,7 @@ import { projects } from '$lib/server/db/schema';
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { decrypt } from '$lib/server/crypto';
-import type { ProjectCategory } from '$lib';
+import { isProjectCategory, type ProjectCategory } from '$lib';
 import { eq } from 'drizzle-orm';
 import { getProjects } from '$lib/server/hackatimeProjects';
 
@@ -28,10 +28,13 @@ export const actions = {
 		const data = await request.formData();
 		const title = (data.get('title') as string)?.trim();
 		const description = (data.get('desc') as string | null)?.trim();
-		const category = (data.get('category') ?? 'OTHER') as ProjectCategory;
+		const categoryValue = String(data.get('category') ?? 'WILDCARD').trim();
 		const hackatimeProjects = data.getAll('hackatime_projects') as string[];
 
 		if (!title) return fail(400, { error: 'Missing required fields' });
+		if (!isProjectCategory(categoryValue)) return fail(400, { error: 'Invalid category' });
+
+		const category: ProjectCategory = categoryValue;
 
 		await db.insert(projects).values({
 			userId: locals.user.id,

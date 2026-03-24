@@ -11,8 +11,8 @@ export type Record = {
 
 export const records: Record[] = [
 	{
-		title: 'GAME',
-		desc: 'make a fucking rhythm game',
+		title: 'RHYTHM GAME',
+		desc: 'make game about timing stuff to the rhythm!',
 		theme: {
 			bg: '#dc2626',
 			border: '#fb923c',
@@ -21,8 +21,8 @@ export const records: Record[] = [
 		},
 	},
 	{
-		title: 'WEBSITE',
-		desc: 'make a fucking website',
+		title: 'AUDIO EDITOR',
+		desc: 'make a tool to change up audio! any kind of editor is fine!',
 		theme: {
 			bg: '#1e3a8a',
 			border: '#93c5fd',
@@ -31,8 +31,8 @@ export const records: Record[] = [
 		},
 	},
 	{
-		title: 'MUSIC',
-		desc: 'make some fucking beats',
+		title: 'MUSIC PLAYER',
+		desc: 'make something that plays music! be creative!',
 		theme: {
 			bg: '#6b21a8',
 			border: '#e879f9',
@@ -41,8 +41,8 @@ export const records: Record[] = [
 		},
 	},
 	{
-		title: 'OTHER',
-		desc: 'anything else related to music',
+		title: 'WILDCARD',
+		desc: 'anything else related to music!!',
 		theme: {
 			bg: '#1c1917',
 			border: '#a8a29e',

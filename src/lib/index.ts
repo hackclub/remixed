@@ -1,6 +1,12 @@
 // place files you want to import through the `$lib` alias in this folder.
 
-export type ProjectCategory = 'GAME' | 'WEBSITE' | 'DESKTOP_APP' | 'CLI' | 'OTHER';
+export {
+	PROJECT_CATEGORIES,
+	PROJECT_CATEGORY_OPTIONS,
+	formatProjectCategory,
+	isProjectCategory,
+	type ProjectCategory,
+} from './projectCategories';
 export type ShipStatusPub = 'PENDING' | 'APPROVED' | 'REJECTED';
 export type RoleEnumPub = 'USER' | 'STAFF' | 'REVIEWER' | 'ORGANIZER';
 

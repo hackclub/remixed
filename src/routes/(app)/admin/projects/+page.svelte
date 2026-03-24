@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatHours } from '$lib';
+	import { formatHours, formatProjectCategory, PROJECT_CATEGORY_OPTIONS } from '$lib';
 	import { styleAdminPopover, styleButton, styleInput } from '$lib/styles.js';
 	import type { PageData } from './$types';
 
@@ -37,6 +37,7 @@
 				projectInfo.user.username,
 				projectInfo.project.title,
 				projectInfo.project.category,
+				formatProjectCategory(projectInfo.project.category),
 				projectInfo.project.description ?? '',
 				projectInfo.project.githubUrl ?? '',
 				projectInfo.project.demoUrl ?? '',
@@ -142,11 +143,9 @@
 				class="{styleInput} w-full font-jua text-text"
 				bind:value={activeProject.category}
 			>
-				<option value="GAME">Game</option>
-				<option value="WEBSITE">Website</option>
-				<option value="DESKTOP_APP">Desktop App</option>
-				<option value="CLI">CLI</option>
-				<option value="OTHER">Other</option>
+				{#each PROJECT_CATEGORY_OPTIONS as option}
+					<option value={option.value}>{option.label}</option>
+				{/each}
 			</select>
 
 			<label for="hackatimeProjects" class="block font-jua text-2xl text-light">
@@ -252,7 +251,7 @@
 							{projectInfo.project.title}
 						</a>
 					</td>
-					<td>{projectInfo.project.category}</td>
+					<td>{formatProjectCategory(projectInfo.project.category)}</td>
 					<td>{formatHours(projectInfo.stats.trackedSeconds)}</td>
 					<td>{projectInfo.stats.shipCount}</td>
 					<td>{projectInfo.stats.pendingShips}</td>

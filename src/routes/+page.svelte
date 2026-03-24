@@ -240,6 +240,7 @@
 							img={item.url}
 							h2="{item.cost} notes"
 							h1={item.name}
+							normalizeImage={true}
 							class="absolute"
 							style="rotate: {item.rotation}deg; top: {item.yOffset}px; left: {item.xOffset}px"
 						/>

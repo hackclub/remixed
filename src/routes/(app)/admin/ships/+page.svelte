@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { formatHours } from '$lib';
+	import { formatHours, formatProjectCategory } from '$lib';
 	import { styleAdminPopover, styleButton, styleInput } from '$lib/styles.js';
 
 	let { data }: { data: PageData } = $props();
@@ -28,6 +28,7 @@
 			shipInfo.user.slackId,
 			shipInfo.project.title,
 			shipInfo.project.category,
+			formatProjectCategory(shipInfo.project.category),
 			shipInfo.project.githubUrl ?? '',
 			shipInfo.project.demoUrl ?? '',
 			shipInfo.project.hackatimeProjects.join(' '),
@@ -170,7 +171,7 @@
 									{shipInfo.project.title}
 								</a>
 							</td>
-							<td>{shipInfo.project.category}</td>
+							<td>{formatProjectCategory(shipInfo.project.category)}</td>
 							<td>
 								{#if shipInfo.project.hackatimeProjects.length}
 									<div class="max-w-52 text-sm">
