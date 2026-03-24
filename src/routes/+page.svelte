@@ -113,7 +113,7 @@
 		property="og:description"
 		content="ship something music related, get something music related!"
 	/>
-	<meta property="og:image" content="/logo.png" />
+	<meta property="og:image" content="/og-banner.png" />
 </svelte:head>
 
 <div class="fixed h-screen w-screen bg-accent-purple"></div>
