@@ -14,9 +14,7 @@
 	}
 </script>
 
-<section
-	class="m-10 mb-0 rounded-[2rem] border-4 border-[#8B81FF] bg-bg font-jua text-text shadow-xl/20"
->
+<section class="m-10 mb-0 font-jua text-text">
 	<div class="flex flex-wrap items-center gap-3">
 		<nav class="flex flex-1 flex-wrap gap-3">
 			<a
