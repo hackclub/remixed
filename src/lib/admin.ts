@@ -18,8 +18,8 @@ export const ADMIN_PAGES: AdminPageDefinition[] = [
 	},
 	{
 		href: '/admin/users',
-		title: 'User Roles',
-		description: 'Manage organizer, reviewer, and staff permissions for existing accounts.',
+		title: 'Users',
+		description: 'Edit account details, balances, referrals, and admin permissions for users.',
 		roles: ['ORGANIZER'],
 	},
 	{
