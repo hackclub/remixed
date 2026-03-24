@@ -18,7 +18,7 @@
 	<div class="relative flex flex-col justify-center rounded-xl bg-text p-4 pt-20">
 		{#if normalizeImage}
 			<div
-				class="pointer-events-none absolute -top-28 left-1/2 flex h-36 w-[78%] -translate-x-1/2 items-end justify-center"
+				class="pointer-events-none absolute -top-20 left-1/2 flex h-36 w-[78%] -translate-x-1/2 items-end justify-center"
 			>
 				<img src={img} alt="crunch" class="h-full w-full object-contain object-bottom" />
 			</div>
