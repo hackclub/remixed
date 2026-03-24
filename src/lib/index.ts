@@ -21,8 +21,8 @@ export function formatHours(seconds: number) {
 export function validUrl(url: string | null): boolean {
 	if (!url) return false;
 	try {
-		new URL(url);
-		return true;
+		const parsed = new URL(url);
+		return parsed.protocol === 'http:' || parsed.protocol === 'https:';
 	} catch {
 		return false;
 	}
