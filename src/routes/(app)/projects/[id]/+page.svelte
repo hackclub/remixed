@@ -15,7 +15,8 @@
 	let hoursText: string = $state('LOADING');
 	let editing: boolean = $state(false);
 	let canShip: boolean = $derived(
-		data.pendingShips == 0 &&
+		data.pendingShips.length == 0 &&
+			data.shippableSeconds >= 3600 &&
 			validUrl(data.project?.demoUrl ?? null) &&
 			validUrl(data.project?.githubUrl ?? null) &&
 			data.project?.hackatimeProjects.length != 0 &&
@@ -66,7 +67,7 @@
 <div class="{stylePopover} font-jua text-text" popover id="shipProject">
 	<form method="POST" action="?/ship">
 		<h2 class="text-center text-3xl">Are you sure you want to ship <b>{data.project.title}</b>?</h2>
-		<i class="my-4 block text-center text-xl">{formatHours(data.project.hackatimeSeconds!)}</i>
+		<i class="my-4 block text-center text-xl">{formatHours(data.shippableSeconds)}</i>
 		<input type="submit" value="Ship" class="{styleButton} w-full" />
 	</form>
 </div>

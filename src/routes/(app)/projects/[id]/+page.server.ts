@@ -23,7 +23,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const project = projectInfo.projects;
 	const user = projectInfo.users;
 	const pendingShips = projectShips.filter((s) => s.status == 'PENDING');
-	console.log(pendingShips);
+
+	const shippedSeconds = projectShips
+		.filter((p) => p.status == 'APPROVED')
+		.reduce((sum, s) => sum + s.seconds, 0);
+	const shippableSeconds = project.hackatimeSeconds ? project.hackatimeSeconds - shippedSeconds : 0;
 
 	const dirty = await marked(project.description ?? '');
 	const descriptionHtml = sanitizeHtml(dirty, {
@@ -33,6 +37,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	return {
 		project,
 		descriptionHtml,
+		shippableSeconds,
 		user,
 		pendingShips,
 		currentUserId: locals.user?.id,
