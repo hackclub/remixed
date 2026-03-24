@@ -146,7 +146,7 @@
 	</form>
 </div>
 
-<div class="absolute bottom-110 w-full">
+<div class="absolute bottom-90 w-full">
 	<PageHeader title={draft.title} full>
 		{#snippet subtitleRich()}
 			by <a class="underline decoration-2" href="/user/{data.user.id}">@{data.user.username}</a>
