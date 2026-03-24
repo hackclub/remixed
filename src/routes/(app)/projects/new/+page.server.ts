@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	};
 };
 
-export const actions = {
+export const actions: Actions = {
 	default: async ({ locals, request }) => {
 		if (!locals.user) return fail(401, { error: 'Unauthorized' });
 
@@ -46,4 +46,4 @@ export const actions = {
 
 		redirect(303, '/projects');
 	},
-} satisfies Actions;
+};
