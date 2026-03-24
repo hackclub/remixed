@@ -80,4 +80,8 @@
 	required
 	class={styleCardInput}
 />
-<input type="submit" class="{styleButton} mt-8 block w-full bg-primary text-text" value="Place Order" />
+<input
+	type="submit"
+	class="{styleButton} mt-8 block w-full bg-primary text-text"
+	value="Place Order"
+/>

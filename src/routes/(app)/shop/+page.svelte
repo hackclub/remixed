@@ -44,10 +44,7 @@
 	<title>Shop</title>
 </svelte:head>
 
-<PageHeader
-	title="Shop"
-	subtitle="Spend your notes on rewards for the projects you ship."
-/>
+<PageHeader title="Shop" subtitle="Spend your notes on rewards for the projects you ship." />
 
 <div class="relative z-2 flex min-h-screen w-full flex-col items-center px-4 pt-52 pb-40 sm:px-8">
 	<div class="mb-8 flex w-full max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
@@ -56,8 +53,9 @@
 		>
 			Balance: {data.user?.notesBalance ?? 0}<Note />
 		</div>
-		<a href="/shop/orders" class="{styleButton} block w-full bg-primary px-8 text-xl text-text sm:w-auto"
-			>Your Orders</a
+		<a
+			href="/shop/orders"
+			class="{styleButton} block w-full bg-primary px-8 text-xl text-text sm:w-auto">Your Orders</a
 		>
 	</div>
 

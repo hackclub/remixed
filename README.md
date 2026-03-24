@@ -7,17 +7,20 @@
 **WS: Music-related prizes!**
 
 # Contributing
+
 1. Clone the repo
 
 ```sh
 git clone https://github.com/hackclub/remixed.git
 cd remixed/
 ```
+
 2. Install the dependencies
 
 ```sh
 npm install
 ```
+
 3. Setup the environment variables
 
 ```env
@@ -58,12 +61,15 @@ PUBLIC_CALLBACK_URL=http://localhost:5173/auth/callback/hca
 # [pixi pls i need you what is this]
 PUBLIC_POSTHOG_PROJECT_KEY=
 ```
+
 4. Initialize the DB
+
 ```sh
 npm run db:push
 ```
 
 5. Start the server!
+
 ```sh
 npm run dev
 ```

@@ -53,12 +53,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 
 		const slackIdentity = await fetchSlackIdentity(
 			slackId,
-			fallbackUsername(
-				hcaProfile.first_name,
-				hcaProfile.last_name,
-				hcaProfile.email,
-				slackId,
-			),
+			fallbackUsername(hcaProfile.first_name, hcaProfile.last_name, hcaProfile.email, slackId),
 			existingUser?.avatarUrl ?? null,
 		);
 

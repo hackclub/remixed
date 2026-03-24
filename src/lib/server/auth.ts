@@ -87,7 +87,11 @@ export function clearOauthStateCookies(cookies: Cookies, url: URL) {
 
 export function createSession(cookies: Cookies, url: URL, userId: number) {
 	const sessionSignature = signSession(String(userId));
-	cookies.set('session_token', `${userId}.${sessionSignature}`, cookieOptions(url, 60 * 60 * 24 * 180));
+	cookies.set(
+		'session_token',
+		`${userId}.${sessionSignature}`,
+		cookieOptions(url, 60 * 60 * 24 * 180),
+	);
 }
 
 export function hcaCallbackUrl(url: URL) {

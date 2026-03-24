@@ -32,7 +32,9 @@
 	subtitle="Review the reward details, then confirm your shipping info."
 />
 
-<div class="relative z-2 flex min-h-screen w-full items-start justify-center px-4 pt-52 pb-40 sm:px-8">
+<div
+	class="relative z-2 flex min-h-screen w-full items-start justify-center px-4 pt-52 pb-40 sm:px-8"
+>
 	<div class="{styleCard} grid w-full max-w-5xl gap-6 p-6 lg:grid-cols-[minmax(0,20.125rem)_1fr]">
 		<div
 			class="mx-auto flex aspect-square w-full max-w-[20.125rem] items-center justify-center rounded-2xl border-4 border-[#E2BEFF] bg-light p-6"

@@ -8,7 +8,8 @@
 
 	const PROJECT_IDEAS = ['rhythm game', 'daw', 'vst'];
 	const REWARD_IDEAS = ['headphones', 'a microphone', 'a speaker', 'an instrument'];
-	const STRIP_LABEL = '/// MICROPHONES /// HEADPHONES /// INSTRUMENTS /// RHYTHM GAMES /// AUDIO INTERFACES';
+	const STRIP_LABEL =
+		'/// MICROPHONES /// HEADPHONES /// INSTRUMENTS /// RHYTHM GAMES /// AUDIO INTERFACES';
 	const HERO_TEXT_POP_DURATION = 320;
 	const HERO_TEXT_SWAP_DELAY = 60;
 
@@ -122,7 +123,7 @@
 	<img src="/landing/dots-topleft.png" alt="" class="absolute top-0 left-0 z-2 w-1/2" />
 	<img src="/landing/dots-right.png" alt="" class="absolute right-0 -bottom-64 z-2 w-1/2" />
 	<img src="/landing/concentric.png" alt="" class="absolute top-0 z-1 h-full object-cover" />
-	<div class="relative -top-8 z-5 flex -rotate-6 flex-col justify-center w-screen scale-105">
+	<div class="relative -top-8 z-5 flex w-screen scale-105 -rotate-6 flex-col justify-center">
 		<div class="relative flex justify-center bg-text">
 			<img src="/logo.png" alt="logo" class="h-30" />
 		</div>
@@ -215,9 +216,7 @@
 			</div>
 		</div>
 	</div>
-	<div
-		class="relative top-2 z-5 flex w-[calc(100vw+16rem)] rotate-12 justify-center gap-8 pt-32"
-	>
+	<div class="relative top-2 z-5 flex w-[calc(100vw+16rem)] rotate-12 justify-center gap-8 pt-32">
 		<img
 			src="/landing/dots-marquee-left.png"
 			alt="dots"
@@ -251,70 +250,11 @@
 	</div>
 </div>
 
-<style>
-	.strip-marquee {
-		display: flex;
-		width: max-content;
-		will-change: transform;
-		animation: strip-marquee-scroll 18s linear infinite;
-	}
-
-	.strip-marquee__segment {
-		flex: 0 0 auto;
-		padding-right: 1em;
-	}
-
-	@keyframes strip-marquee-scroll {
-		from {
-			transform: translateX(-50%);
-		}
-
-		to {
-			transform: translateX(0);
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.hero-copy-pop {
-			animation: none;
-		}
-
-		.strip-marquee {
-			animation: none;
-			transform: translateX(0);
-		}
-	}
-
-	.hero-copy {
-		transform-origin: center;
-	}
-
-	.hero-copy-pop {
-		animation: hero-copy-pop 320ms both;
-	}
-
-	@keyframes hero-copy-pop {
-		0% {
-			transform: scale(1);
-			animation-timing-function: cubic-bezier(0.18, 0.95, 0.35, 1);
-		}
-
-		28% {
-			transform: scale(1.12);
-			animation-timing-function: cubic-bezier(0.12, 0, 0.22, 1);
-		}
-
-		100% {
-			transform: scale(1);
-		}
-	}
-</style>
-
-<div class="relative -mt-48 z-5 w-full md:-mt-72">
+<div class="relative z-5 -mt-48 w-full md:-mt-72">
 	<img
 		src="/landing/faq-bg.png"
 		alt="bg"
-		class="absolute inset-0 h-full w-full object-cover object-top scale-x-[-1]"
+		class="absolute inset-0 h-full w-full scale-x-[-1] object-cover object-top"
 	/>
 	<div class="relative z-8 mx-auto max-w-5xl p-8 pt-64 pb-48">
 		<BoldText class="font-jua text-9xl" stroke="4">FAQ</BoldText>
@@ -380,7 +320,7 @@
 
 	<div class="relative z-8 w-full overflow-x-clip bg-text">
 		<div
-			class="absolute left-1/2 -top-24 h-48 w-[calc(100vw+16rem)] -translate-x-1/2 -rotate-6 bg-text"
+			class="absolute -top-24 left-1/2 h-48 w-[calc(100vw+16rem)] -translate-x-1/2 -rotate-6 bg-text"
 		></div>
 		<div class="relative mx-auto max-w-5xl p-16 pt-28 pb-32">
 			<h1 class="mb-8 font-jua text-4xl text-light">
@@ -393,13 +333,71 @@
 				<BoldText stroke="2">Shuflduf</BoldText>.
 			</h1>
 			<p class="font-jua text-xl text-light">
-				Hack Club is a 501(c)(3) nonprofit and network of 60k+ technical high schoolers. We
-				believe you learn best by building so we're creating community and providing grants so you
-				can make awesome projects. In the past few years, we've partnered with GitHub to run
-				Summer of Making, hosted the world's longest hackathon on land, and ran Canada's largest
-				high school hackathon. <br /><br /> At Hack Club, students aren't just learning, they're
-				shipping.
+				Hack Club is a 501(c)(3) nonprofit and network of 60k+ technical high schoolers. We believe
+				you learn best by building so we're creating community and providing grants so you can make
+				awesome projects. In the past few years, we've partnered with GitHub to run Summer of
+				Making, hosted the world's longest hackathon on land, and ran Canada's largest high school
+				hackathon. <br /><br /> At Hack Club, students aren't just learning, they're shipping.
 			</p>
 		</div>
 	</div>
 </div>
+
+<style>
+	.strip-marquee {
+		display: flex;
+		width: max-content;
+		will-change: transform;
+		animation: strip-marquee-scroll 18s linear infinite;
+	}
+
+	.strip-marquee__segment {
+		flex: 0 0 auto;
+		padding-right: 1em;
+	}
+
+	@keyframes strip-marquee-scroll {
+		from {
+			transform: translateX(-50%);
+		}
+
+		to {
+			transform: translateX(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero-copy-pop {
+			animation: none;
+		}
+
+		.strip-marquee {
+			animation: none;
+			transform: translateX(0);
+		}
+	}
+
+	.hero-copy {
+		transform-origin: center;
+	}
+
+	.hero-copy-pop {
+		animation: hero-copy-pop 320ms both;
+	}
+
+	@keyframes hero-copy-pop {
+		0% {
+			transform: scale(1);
+			animation-timing-function: cubic-bezier(0.18, 0.95, 0.35, 1);
+		}
+
+		28% {
+			transform: scale(1.12);
+			animation-timing-function: cubic-bezier(0.12, 0, 0.22, 1);
+		}
+
+		100% {
+			transform: scale(1);
+		}
+	}
+</style>

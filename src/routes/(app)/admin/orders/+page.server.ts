@@ -42,12 +42,10 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const orderId = Number(data.get('orderId'));
 		await db.update(orders).set({ status: 'PENDING' }).where(eq(orders.id, orderId));
-		await db
-			.insert(auditLogs)
-			.values({
-				category: 'FULFILL',
-				userId: locals.user!.id,
-				data: { orderId, fulfilled: false },
-			});
+		await db.insert(auditLogs).values({
+			category: 'FULFILL',
+			userId: locals.user!.id,
+			data: { orderId, fulfilled: false },
+		});
 	},
 };
