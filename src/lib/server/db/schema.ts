@@ -1,13 +1,4 @@
-import {
-	pgTable,
-	serial,
-	text,
-	integer,
-	timestamp,
-	pgEnum,
-	PgTable,
-	json,
-} from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, integer, timestamp, pgEnum, json } from 'drizzle-orm/pg-core';
 import { PROJECT_CATEGORIES } from '$lib';
 
 export const roleEnum = pgEnum('role', ['USER', 'STAFF', 'REVIEWER', 'ORGANIZER']);
@@ -25,6 +16,7 @@ export const auditCategory = pgEnum('audit_category', [
 	'EDIT_USER',
 	'SHIP_REVIEW',
 	'SHOP_ITEM',
+	'PROJECT',
 ]);
 
 export const users = pgTable('users', {
@@ -86,6 +78,57 @@ export const shopItems = pgTable('shop_items', {
 	imageUrl: text('imageUrl'),
 });
 
+export const deletedProjects = pgTable('deleted_projects', {
+	id: serial('id').primaryKey(),
+	originalId: integer('original_id').notNull().unique(),
+	userId: integer('user_id')
+		.notNull()
+		.references(() => users.id),
+	title: text('title').notNull(),
+	description: text('description'),
+	coverArt: text('cover_art_url'),
+	category: categoryEnum('category').notNull(),
+	hackatimeProjects: text('hackatime_projects').array().notNull(),
+	hackatimeSeconds: integer('hackatime_seconds'),
+	githubUrl: text('github_url'),
+	demoUrl: text('demo_url'),
+	createdAt: timestamp('created_at').notNull(),
+	deletedAt: timestamp('deleted_at').notNull().defaultNow(),
+	deletedByUserId: integer('deleted_by_user_id')
+		.notNull()
+		.references(() => users.id),
+});
+
+export const deletedShips = pgTable('deleted_ships', {
+	id: serial('id').primaryKey(),
+	originalId: integer('original_id').notNull().unique(),
+	projectId: integer('project_id').notNull(),
+	userId: integer('user_id')
+		.notNull()
+		.references(() => users.id),
+	seconds: integer('seconds').notNull(),
+	status: shipStatusEnum('status').notNull(),
+	submittedAt: timestamp('submitted_at').notNull(),
+	feedback: text('feedback'),
+	deletedAt: timestamp('deleted_at').notNull().defaultNow(),
+	deletedByUserId: integer('deleted_by_user_id')
+		.notNull()
+		.references(() => users.id),
+});
+
+export const deletedShopItems = pgTable('deleted_shop_items', {
+	id: serial('id').primaryKey(),
+	originalId: integer('original_id').notNull().unique(),
+	name: text('name').notNull(),
+	description: text('description'),
+	cost: integer('cost').notNull(),
+	imageUrl: text('image_url'),
+	deletedAt: timestamp('deleted_at').notNull().defaultNow(),
+	deletedByUserId: integer('deleted_by_user_id')
+		.notNull()
+		.references(() => users.id),
+});
+
 // important fields will be encrypted
 export const orders = pgTable('orders', {
 	id: serial('id').primaryKey(),
@@ -113,6 +156,6 @@ export const auditLogs = pgTable('audit_logs', {
 		.notNull()
 		.references(() => users.id),
 	category: auditCategory('category').notNull(),
-	data: json('data'),
+	data: json('data').$type<Record<string, unknown> | null>(),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 });

@@ -1,7 +1,15 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { recordAuditLog } from '$lib/server/audit';
 import { db } from '$lib/server/db';
-import { auditLogs, notesLedger, projects, ships, users } from '$lib/server/db/schema';
+import {
+	deletedProjects,
+	deletedShips,
+	notesLedger,
+	projects,
+	ships,
+	users,
+} from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
 import { sendCertMessage } from '$lib/server/slack/cert_message';
@@ -12,17 +20,48 @@ const payoutMults = {
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const projectShips = await db
-		.select({ ship: ships, project: projects, user: users })
-		.from(ships)
-		.innerJoin(projects, eq(ships.projectId, projects.id))
-		.innerJoin(users, eq(projects.userId, users.id))
-		.orderBy(ships.id);
+	const [projectShips, archivedShips, archivedProjects, allUsers] = await Promise.all([
+		db
+			.select({ ship: ships, project: projects, user: users })
+			.from(ships)
+			.innerJoin(projects, eq(ships.projectId, projects.id))
+			.innerJoin(users, eq(projects.userId, users.id))
+			.orderBy(ships.id),
+		db.select().from(deletedShips).orderBy(deletedShips.originalId),
+		db.select().from(deletedProjects).orderBy(deletedProjects.originalId),
+		db.select({ id: users.id, username: users.username }).from(users),
+	]);
+
+	const archivedProjectById = new Map(
+		archivedProjects.map((project) => [project.originalId, project]),
+	);
+	const usernameById = new Map(allUsers.map((user) => [user.id, user.username]));
+
 	return {
 		pendingShips: projectShips.filter(({ ship }) => ship.status === 'PENDING'),
 		reviewedShips: projectShips.filter(
 			({ ship }) => ship.status === 'APPROVED' || ship.status === 'REJECTED',
 		),
+		deletedShips: archivedShips.map((ship) => {
+			const project = archivedProjectById.get(ship.projectId);
+
+			return {
+				ship,
+				project: project
+					? {
+							originalId: project.originalId,
+							title: project.title,
+							category: project.category,
+							hackatimeProjects: project.hackatimeProjects,
+							githubUrl: project.githubUrl,
+							demoUrl: project.demoUrl,
+						}
+					: null,
+				username: usernameById.get(ship.userId) ?? `User #${ship.userId}`,
+				deletedByUsername:
+					usernameById.get(ship.deletedByUserId) ?? `User #${ship.deletedByUserId}`,
+			};
+		}),
 		roles: locals.user?.roles,
 		payoutMults,
 	};
@@ -36,10 +75,16 @@ export const actions: Actions = {
 		const [user] = await db.select().from(users).where(eq(users.id, locals.user!.id));
 		await Promise.all([
 			db.update(ships).set({ status: 'REJECTED', feedback }).where(eq(ships.id, shipId)),
-			db.insert(auditLogs).values({
+			recordAuditLog(db, {
+				actorUserId: locals.user!.id,
 				category: 'SHIP_REVIEW',
-				userId: locals.user!.id,
-				data: { approved: false, shipId, org: locals.user!.roles.includes('ORGANIZER') },
+				entityType: 'ship',
+				entityId: shipId,
+				changeType: 'reject',
+				data: {
+					feedback,
+					viaOrganizerRole: locals.user!.roles.includes('ORGANIZER'),
+				},
 			}),
 			db
 				.select({ project: projects })
@@ -85,14 +130,18 @@ export const actions: Actions = {
 			db
 				.insert(notesLedger)
 				.values({ userId, delta: payout, reason: 'ship_approved', refId: shipId }),
-			db.insert(auditLogs).values({
+			recordAuditLog(db, {
+				actorUserId: locals.user!.id,
 				category: 'SHIP_REVIEW',
-				userId: locals.user!.id,
+				entityType: 'ship',
+				entityId: shipId,
+				changeType: 'approve',
 				data: {
 					shipId,
-					approved: true,
-					org: locals.user!.roles.includes('ORGANIZER'),
+					feedback,
+					viaOrganizerRole: locals.user!.roles.includes('ORGANIZER'),
 					multiplier: payoutMult,
+					payout,
 				},
 			}),
 		]);
@@ -130,10 +179,13 @@ export const actions: Actions = {
 		const awardedNotes = ledgerEntries.reduce((sum, row) => sum + row.delta, 0);
 		const updates: Promise<unknown>[] = [
 			db.update(ships).set({ status: 'PENDING', feedback: null }).where(eq(ships.id, shipId)),
-			db.insert(auditLogs).values({
+			recordAuditLog(db, {
+				actorUserId: locals.user!.id,
 				category: 'SHIP_REVIEW',
-				userId: locals.user!.id,
-				data: { shipId, undone: true, previousStatus: ship.status },
+				entityType: 'ship',
+				entityId: shipId,
+				changeType: 'undo_review',
+				data: { previousStatus: ship.status, awardedNotes },
 			}),
 		];
 

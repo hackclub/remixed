@@ -7,6 +7,7 @@
 	const payoutMults = $derived(data.payoutMults);
 	const isOrg = $derived(data.roles?.includes('ORGANIZER') ?? false);
 	type ShipRow = PageData['pendingShips'][number];
+	type DeletedShipRow = PageData['deletedShips'][number];
 
 	const hourMult = 60 * 60;
 
@@ -37,6 +38,23 @@
 		].some((value) => value.toLowerCase().includes(query));
 	}
 
+	function matchesDeletedQuery(shipInfo: DeletedShipRow, query: string) {
+		return [
+			String(shipInfo.ship.projectId),
+			String(shipInfo.ship.originalId),
+			shipInfo.username,
+			shipInfo.deletedByUsername,
+			shipInfo.project?.title ?? '',
+			shipInfo.project?.category ?? '',
+			shipInfo.project ? formatProjectCategory(shipInfo.project.category) : '',
+			shipInfo.project?.githubUrl ?? '',
+			shipInfo.project?.demoUrl ?? '',
+			shipInfo.project?.hackatimeProjects.join(' ') ?? '',
+			shipInfo.ship.status,
+			shipInfo.ship.feedback ?? '',
+		].some((value) => value.toLowerCase().includes(query));
+	}
+
 	let filteredPendingShips = $derived.by(() => {
 		const query = projectSearch.trim().toLowerCase();
 		if (!query) return data.pendingShips;
@@ -49,6 +67,13 @@
 		if (!query) return data.reviewedShips;
 
 		return data.reviewedShips.filter((shipInfo) => matchesQuery(shipInfo, query));
+	});
+
+	let filteredDeletedShips = $derived.by(() => {
+		const query = projectSearch.trim().toLowerCase();
+		if (!query) return data.deletedShips;
+
+		return data.deletedShips.filter((shipInfo) => matchesDeletedQuery(shipInfo, query));
 	});
 
 	$effect(() => {
@@ -291,6 +316,51 @@
 									</button>
 								</form>
 							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+
+		<div>
+			<p class="mb-3 text-2xl">Deleted Ships</p>
+			<table class="admin-table w-full bg-accent-purple/70">
+				<thead class="font-jua text-text">
+					<tr>
+						<th>Project</th>
+						<th>User</th>
+						<th>Title</th>
+						<th>Status</th>
+						<th>Hackatime</th>
+						<th>Time</th>
+						<th>Feedback</th>
+						<th>Deleted</th>
+						<th>Deleted By</th>
+					</tr>
+				</thead>
+				<tbody class="font-jua text-text">
+					{#each filteredDeletedShips as shipInfo}
+						<tr class="opacity-80">
+							<td>{shipInfo.ship.projectId}</td>
+							<td>{shipInfo.username}</td>
+							<td>{shipInfo.project?.title ?? 'Deleted project metadata unavailable'}</td>
+							<td>
+								<span class="text-accent-red">DELETED</span>
+								<span class="ml-2 text-text/70">({shipInfo.ship.status})</span>
+							</td>
+							<td>
+								{#if shipInfo.project?.hackatimeProjects.length}
+									<div class="max-w-52 text-sm">
+										{shipInfo.project.hackatimeProjects.join(', ')}
+									</div>
+								{:else}
+									<span class="text-text/60">None</span>
+								{/if}
+							</td>
+							<td>{formatHours(shipInfo.ship.seconds)}</td>
+							<td>{shipInfo.ship.feedback ?? 'None'}</td>
+							<td>{new Date(shipInfo.ship.deletedAt).toLocaleString()}</td>
+							<td>{shipInfo.deletedByUsername}</td>
 						</tr>
 					{/each}
 				</tbody>

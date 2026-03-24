@@ -1,13 +1,27 @@
+import { recordAuditLog } from '$lib/server/audit';
 import { db } from '$lib/server/db';
-import { auditLogs, orders, shopItems } from '$lib/server/db/schema';
+import { deletedShopItems, orders, shopItems, users } from '$lib/server/db/schema';
 import { count, eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { sendShopMessage } from '$lib/server/slack/shop_message';
 import { fail } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	const items = await db.select().from(shopItems).orderBy(shopItems.id);
-	return { items };
+export const load: PageServerLoad = async () => {
+	const [items, archivedItems, allUsers] = await Promise.all([
+		db.select().from(shopItems).orderBy(shopItems.id),
+		db.select().from(deletedShopItems).orderBy(deletedShopItems.originalId),
+		db.select({ id: users.id, username: users.username }).from(users),
+	]);
+
+	const usernameById = new Map(allUsers.map((user) => [user.id, user.username]));
+
+	return {
+		items,
+		deletedItems: archivedItems.map((item) => ({
+			item,
+			deletedByUsername: usernameById.get(item.deletedByUserId) ?? `User #${item.deletedByUserId}`,
+		})),
+	};
 };
 
 export const actions: Actions = {
@@ -20,7 +34,7 @@ export const actions: Actions = {
 		const cost = Number(data.get('cost'));
 		const imageUrl = (data.get('imageUrl') as string).trim();
 		const [prevItem] = (await db.select().from(shopItems).where(eq(shopItems.id, id))) ?? null;
-		let newItem = {};
+		let newItem!: typeof shopItems.$inferSelect;
 
 		if (id !== -1 && !prevItem) {
 			return fail(404, { error: 'Shop item not found' });
@@ -39,10 +53,16 @@ export const actions: Actions = {
 				.returning();
 		}
 		await sendShopMessage(prevItem, newItem);
-		await db.insert(auditLogs).values({
+		await recordAuditLog(db, {
+			actorUserId: locals.user!.id,
 			category: 'SHOP_ITEM',
-			userId: locals.user!.id,
-			data: { item: newItem, update: id != -1 },
+			entityType: 'shop_item',
+			entityId: newItem.id,
+			changeType: id === -1 ? 'create' : 'update',
+			data: {
+				before: prevItem ?? null,
+				after: newItem,
+			},
 		});
 	},
 	deleteItem: async ({ locals, request }) => {
@@ -66,12 +86,29 @@ export const actions: Actions = {
 			return fail(400, { error: 'Cannot delete an item with existing orders' });
 		}
 
-		await db.delete(shopItems).where(eq(shopItems.id, itemId));
-		await sendShopMessage(item, null);
-		await db.insert(auditLogs).values({
-			category: 'SHOP_ITEM',
-			userId: locals.user!.id,
-			data: { item, delete: true },
+		const deletedAt = new Date();
+
+		await db.transaction(async (tx) => {
+			await tx.insert(deletedShopItems).values({
+				originalId: item.id,
+				name: item.name,
+				description: item.description,
+				cost: item.cost,
+				imageUrl: item.imageUrl,
+				deletedAt,
+				deletedByUserId: locals.user!.id,
+			});
+			await tx.delete(shopItems).where(eq(shopItems.id, itemId));
+			await recordAuditLog(tx, {
+				actorUserId: locals.user!.id,
+				category: 'SHOP_ITEM',
+				entityType: 'shop_item',
+				entityId: itemId,
+				changeType: 'soft_delete',
+				data: { item },
+			});
 		});
+
+		await sendShopMessage(item, null);
 	},
 };

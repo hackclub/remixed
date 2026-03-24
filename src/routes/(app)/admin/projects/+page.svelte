@@ -4,6 +4,7 @@
 	import type { ActionData, PageData } from './$types';
 
 	type ProjectRow = PageData['projects'][number];
+	type DeletedProjectRow = PageData['deletedProjects'][number];
 	type EditableProject = {
 		id: number;
 		userId: number;
@@ -47,6 +48,27 @@
 		);
 	});
 
+	let filteredDeletedProjects = $derived.by(() => {
+		const query = projectSearch.trim().toLowerCase();
+		if (!query) return data.deletedProjects;
+
+		return data.deletedProjects.filter((projectInfo) =>
+			[
+				String(projectInfo.project.originalId),
+				String(projectInfo.project.userId),
+				projectInfo.ownerUsername,
+				projectInfo.deletedByUsername,
+				projectInfo.project.title,
+				projectInfo.project.category,
+				formatProjectCategory(projectInfo.project.category),
+				projectInfo.project.description ?? '',
+				projectInfo.project.githubUrl ?? '',
+				projectInfo.project.demoUrl ?? '',
+				projectInfo.project.hackatimeProjects.join(' '),
+			].some((value) => value.toLowerCase().includes(query)),
+		);
+	});
+
 	function setActiveProject(projectInfo: ProjectRow) {
 		activeProject = {
 			id: projectInfo.project.id,
@@ -75,6 +97,10 @@
 	function confirmDeleteProject(projectInfo: ProjectRow) {
 		setActiveProject(projectInfo);
 		requestAnimationFrame(() => deleteProjectPopover?.showPopover());
+	}
+
+	function formatDeletedAt(project: DeletedProjectRow['project']) {
+		return new Date(project.deletedAt).toLocaleString();
 	}
 </script>
 
@@ -240,7 +266,8 @@
 			<input type="hidden" name="projectId" value={activeProject.id} />
 			<p class="font-jua text-3xl text-light">Delete {activeProject.title}?</p>
 			<p class="font-jua text-lg text-light/80">
-				This permanently removes the project and all of its ships from the admin panel.
+				This archives the project and all of its ships, removes them from the live tables, and keeps
+				them visible in the deleted section below.
 			</p>
 			<div class="flex gap-3 pt-2">
 				<button
@@ -324,6 +351,43 @@
 			{/each}
 		</tbody>
 	</table>
+
+	<div class="mt-10">
+		<div class="mb-3">
+			<p class="text-2xl">Deleted Projects</p>
+			<p class="text-lg text-text/70">
+				Archived rows are read-only and listed after live projects.
+			</p>
+		</div>
+		<table class="admin-table w-full bg-accent-purple/70">
+			<thead class="font-jua text-text">
+				<tr>
+					<th>ID</th>
+					<th>Owner</th>
+					<th>Title</th>
+					<th>Category</th>
+					<th>Tracked</th>
+					<th>Ships</th>
+					<th>Deleted</th>
+					<th>Deleted By</th>
+				</tr>
+			</thead>
+			<tbody class="font-jua text-text">
+				{#each filteredDeletedProjects as projectInfo}
+					<tr class="opacity-80">
+						<td>{projectInfo.project.originalId}</td>
+						<td>{projectInfo.ownerUsername}</td>
+						<td>{projectInfo.project.title}</td>
+						<td>{formatProjectCategory(projectInfo.project.category)}</td>
+						<td>{formatHours(projectInfo.stats.trackedSeconds)}</td>
+						<td>{projectInfo.stats.shipCount}</td>
+						<td>{formatDeletedAt(projectInfo.project)}</td>
+						<td>{projectInfo.deletedByUsername}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
 </div>
 
 <style>

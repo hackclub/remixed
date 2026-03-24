@@ -40,6 +40,12 @@ export const ADMIN_PAGES: AdminPageDefinition[] = [
 		description: 'Search projects, inspect stats, and update project details from one place.',
 		roles: ['ORGANIZER'],
 	},
+	{
+		href: '/admin/audit',
+		title: 'Audit Logs',
+		description: 'Review admin actions, entity changes, and sensitive access events in a table.',
+		roles: ['ORGANIZER'],
+	},
 ];
 
 export function getAllowedAdminPages(roles: RoleEnumPub[] | null | undefined): AdminPageLink[] {

@@ -1,6 +1,7 @@
 import type { RoleEnumPub } from '$lib';
+import { recordAuditLog } from '$lib/server/audit';
 import { db } from '$lib/server/db';
-import { auditLogs, users } from '$lib/server/db/schema';
+import { users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
@@ -29,7 +30,13 @@ export const actions: Actions = {
 		const hcaId = normalizeOptionalText(data.get('hcaId'));
 		const avatarUrl = normalizeOptionalText(data.get('avatarUrl'));
 
-		if (!userId || !username || !slackId || !Number.isInteger(notesBalance) || !Number.isInteger(referrals)) {
+		if (
+			!userId ||
+			!username ||
+			!slackId ||
+			!Number.isInteger(notesBalance) ||
+			!Number.isInteger(referrals)
+		) {
 			return fail(400, { error: 'Invalid user update' });
 		}
 
@@ -53,7 +60,7 @@ export const actions: Actions = {
 
 		const roles: RoleEnumPub[] = ['USER', ...new Set(userRoles.filter((role) => role !== 'USER'))];
 
-		await db
+		const [updatedUser] = await db
 			.update(users)
 			.set({
 				username,
@@ -64,13 +71,19 @@ export const actions: Actions = {
 				referrals,
 				roles,
 			})
-			.where(eq(users.id, userId));
-		await db
-			.insert(auditLogs)
-			.values({
-				category: 'EDIT_USER',
-				userId: locals.user!.id,
-				data: { userId, username, slackId, hcaId, avatarUrl, notesBalance, referrals, userRoles: roles },
-			});
+			.where(eq(users.id, userId))
+			.returning();
+
+		await recordAuditLog(db, {
+			actorUserId: locals.user!.id,
+			category: 'EDIT_USER',
+			entityType: 'user',
+			entityId: userId,
+			changeType: 'update',
+			data: {
+				before: existingUser,
+				after: updatedUser,
+			},
+		});
 	},
 };
