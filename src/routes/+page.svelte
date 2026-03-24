@@ -328,7 +328,7 @@
 				<BoldText stroke="2">Hack Club</BoldText>, built by
 				<BoldText stroke="2">kc</BoldText>,
 				<BoldText stroke="2">fireentity</BoldText>,
-				<BoldText stroke="2">helloonearth311</BoldText>,
+				<BoldText stroke="2">hellonearth311</BoldText>,
 				<BoldText stroke="2">ascpixi</BoldText>, and
 				<BoldText stroke="2">Shuflduf</BoldText>.
 			</h1>
