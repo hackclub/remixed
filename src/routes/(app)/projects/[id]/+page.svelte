@@ -190,8 +190,12 @@
 		/>
 	</div>
 	<div class="flex flex-col gap-4">
-		<a href={draft.githubUrl} class="{styleButton} "> Repository </a>
-		<a href={draft.demoUrl} class="{styleButton} "> Demo </a>
+		{#if validUrl(draft.githubUrl)}
+			<a href={draft.githubUrl} class="{styleButton} "> Repository </a>
+		{/if}
+		{#if validUrl(draft.demoUrl)}
+			<a href={draft.demoUrl} class="{styleButton} "> Demo </a>
+		{/if}
 	</div>
 </div>
 
