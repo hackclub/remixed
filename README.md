@@ -6,6 +6,10 @@
 
 **WS: Music-related prizes!**
 
+# Screenshots
+
+
+
 # Contributing
 
 1. Clone the repo
@@ -73,3 +77,5 @@ npm run db:push
 ```sh
 npm run dev
 ```
+
+6. If you want admin privleges, make a user, then in Drizzle Studio (`npm run db:studio`), give your user the `ORGANIZER` role. This will let you access `/admin` pages.
