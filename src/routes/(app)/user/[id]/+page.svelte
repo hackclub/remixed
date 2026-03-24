@@ -21,6 +21,7 @@
 		<button class="{styleButton} mx-auto mb-4 block" onclick={copyReferral}
 			>Copy Referral Link</button
 		>
+		<a href="/auth/logout" class="{styleButton} mx-auto mb-8 block w-max">Log Out</a>
 	{/if}
 	<h1 class="{styleH1} mb-4 text-text">{data.user!.username}</h1>
 
