@@ -311,7 +311,7 @@
 			</FAQCard>
 			<FAQCard title="When does this end?">
 				<p class="font-jua text-xl text-light">
-					(INSERT DATE HERE)! You will have a couple of weeks to redeem your prizes after it ends,
+					April 30th, 2026! You will have a couple of weeks to redeem your prizes after it ends,
 					though.
 				</p>
 			</FAQCard>
