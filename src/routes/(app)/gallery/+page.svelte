@@ -18,12 +18,18 @@
 
 <PageHeader title="Gallery" subtitle="Look at what other peeps have made!" />
 
-<div class="h-screen w-screen">
-	<div
-		class="mx-auto grid max-w-7xl grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] justify-items-center gap-8 px-6 pt-56 pb-40 sm:px-10 lg:px-16"
-	>
-		{#each projectList as proj}
-			<ProjectCard {proj} />
-		{/each}
-	</div>
+<div class="h-screen w-screen overflow-y-auto pt-28">
+	{#if projectList.length === 0}
+		<div class="mx-auto max-w-4xl px-6 pt-28 pb-40 text-center sm:px-10 lg:px-16">
+			<p class="font-jua text-3xl text-text">No projects yet! Go ship the first one!</p>
+		</div>
+	{:else}
+		<div
+			class="mx-auto grid max-w-7xl grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] justify-items-center gap-8 px-6 pt-28 pb-40 sm:px-10 lg:px-16"
+		>
+			{#each projectList as proj}
+				<ProjectCard {proj} />
+			{/each}
+		</div>
+	{/if}
 </div>

@@ -39,8 +39,14 @@
 		};
 	}
 
-	function confirmDelete() {
-		manageItemPopover?.hidePopover();
+	function deleteItem(item: PageData['items'][number]) {
+		activeItem = {
+			id: item.id,
+			name: item.name,
+			cost: item.cost,
+			description: item.description ?? '',
+			imageUrl: item.imageUrl ?? '',
+		};
 		requestAnimationFrame(() => deleteItemPopover?.showPopover());
 	}
 </script>
@@ -83,13 +89,6 @@
 				bind:value={activeItem.imageUrl}
 			/>
 			<div class="flex gap-3 pt-4">
-				{#if activeItem.id !== -1}
-					<button
-						type="button"
-						class="{styleButton} min-w-0 flex-1 bg-accent-red px-4 py-2 text-lg text-light"
-						onclick={confirmDelete}>Delete</button
-					>
-				{/if}
 				<button
 					type="button"
 					class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
@@ -170,13 +169,23 @@
 						<img src={item.imageUrl} alt="shop item" class="w-30" />
 					</td>
 					<td>
-						<button
-							onclick={() => editItem(item)}
-							popovertarget="manage-item"
-							class="{styleButton} bg-text px-4 py-1 text-lg text-light"
-						>
-							Manage
-						</button>
+						<div class="flex gap-2">
+							<button
+								onclick={() => editItem(item)}
+								popovertarget="manage-item"
+								class="{styleButton} bg-text px-4 py-1 text-lg text-light"
+							>
+								Manage
+							</button>
+							<button
+								type="button"
+								onclick={() => deleteItem(item)}
+								popovertarget="delete-item"
+								class="{styleButton} bg-accent-red px-4 py-1 text-lg text-light"
+							>
+								Delete
+							</button>
+						</div>
 					</td>
 				</tr>
 			{/each}

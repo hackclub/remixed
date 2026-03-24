@@ -68,38 +68,43 @@
 	}
 </script>
 
-<div bind:this={manageProjectPopover} class={styleAdminPopover} popover id="manage-project">
+<div
+	bind:this={manageProjectPopover}
+	class="{styleAdminPopover} w-[min(96vw,64rem)] max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain"
+	popover
+	id="manage-project"
+>
 	{#if activeProject}
 		<form action="?/updateProject" method="POST" class="space-y-4">
 			<input type="hidden" name="projectId" value={activeProject.id} />
 
-			<div class="grid gap-3 rounded-xl bg-light/10 p-4 text-sm text-light sm:grid-cols-2">
-				<div>
-					<p class="text-light/70">Project ID</p>
-					<p class="text-lg">{activeProject.id}</p>
+			<div class="project-summary grid font-jua text-sm text-light sm:grid-cols-2">
+				<div class="project-summary__item">
+					<p class="project-summary__label">Project ID</p>
+					<p class="project-summary__value">{activeProject.id}</p>
 				</div>
-				<div>
-					<p class="text-light/70">Owner</p>
-					<p class="text-lg">@{activeProject.ownerUsername}</p>
+				<div class="project-summary__item">
+					<p class="project-summary__label">Owner</p>
+					<p class="project-summary__value">@{activeProject.ownerUsername}</p>
 				</div>
-				<div>
-					<p class="text-light/70">Created</p>
+				<div class="project-summary__item">
+					<p class="project-summary__label">Created</p>
 					<p>{activeProject.createdAt}</p>
 				</div>
-				<div>
-					<p class="text-light/70">Tracked Time</p>
+				<div class="project-summary__item">
+					<p class="project-summary__label">Tracked Time</p>
 					<p>{formatHours(activeProject.stats.trackedSeconds)}</p>
 				</div>
-				<div>
-					<p class="text-light/70">Approved Time</p>
+				<div class="project-summary__item">
+					<p class="project-summary__label">Approved Time</p>
 					<p>{formatHours(activeProject.stats.approvedSeconds)}</p>
 				</div>
-				<div>
-					<p class="text-light/70">Remaining Time</p>
+				<div class="project-summary__item">
+					<p class="project-summary__label">Remaining Time</p>
 					<p>{formatHours(activeProject.stats.remainingSeconds)}</p>
 				</div>
-				<div class="sm:col-span-2">
-					<p class="text-light/70">Ships</p>
+				<div class="project-summary__item sm:col-span-2">
+					<p class="project-summary__label">Ships</p>
 					<p>
 						{activeProject.stats.shipCount} total, {activeProject.stats.pendingShips} pending,
 						{activeProject.stats.approvedShips} approved, {activeProject.stats.rejectedShips}
@@ -291,5 +296,39 @@
 	}
 	a {
 		text-decoration: underline;
+	}
+	.project-summary {
+		border: 2px solid var(--color-accent-purple);
+		border-radius: 1rem;
+		border-collapse: separate;
+		border-spacing: 0;
+		background: var(--color-text);
+		overflow: hidden;
+	}
+	.project-summary__item {
+		border-right: 1px solid rgb(139 129 255 / 0.4);
+		border-bottom: 1px solid rgb(139 129 255 / 0.4);
+		padding: 1rem;
+	}
+	.project-summary__label {
+		margin-bottom: 0.35rem;
+		color: rgb(255 255 255 / 0.7);
+	}
+	.project-summary__value {
+		font-size: 1.125rem;
+	}
+	.project-summary__item:nth-child(2n) {
+		border-right: none;
+	}
+	.project-summary__item:last-child {
+		border-bottom: none;
+	}
+	@media (max-width: 639px) {
+		.project-summary__item {
+			border-right: none;
+		}
+		.project-summary__item:not(:last-child) {
+			border-bottom: 1px solid rgb(139 129 255 / 0.4);
+		}
 	}
 </style>
