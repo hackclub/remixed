@@ -15,7 +15,7 @@
 	let hoursText: string = $state('LOADING');
 	let editing: boolean = $state(false);
 	let canShip: boolean = $derived(
-		!data.hasPendingShip &&
+		data.pendingShips == 0 &&
 			validUrl(data.project?.demoUrl ?? null) &&
 			validUrl(data.project?.githubUrl ?? null) &&
 			data.project?.hackatimeProjects.length != 0 &&
@@ -48,6 +48,7 @@
 				.then((resp) => resp.text())
 				.then((text) => (hoursText = formatHours(Number(text))));
 		}
+		console.log(data.pendingShips);
 	});
 
 	if (data.project!.hackatimeSeconds) {
@@ -61,6 +62,26 @@
 	<title>{data.project.title} - Remixed</title>
 	<meta property="og:description" content={data.project.description} />
 </svelte:head>
+
+<div class="{stylePopover} font-jua text-text" popover id="shipProject">
+	<form method="POST" action="?/ship">
+		<h2 class="text-center text-3xl">Are you sure you want to ship <b>{data.project.title}</b>?</h2>
+		<i class="my-4 block text-center text-xl">{formatHours(data.project.hackatimeSeconds!)}</i>
+		<input type="submit" value="Ship" class="{styleButton} w-full" />
+	</form>
+</div>
+
+<div class="{stylePopover} font-jua text-text" popover id="cancelShip">
+	<form method="POST" action="?/cancelShip">
+		<h2 class="text-center text-3xl">
+			Are you sure you want to cancel <b>{data.project.title}</b>'s ship?
+		</h2>
+		{#if data.pendingShips.length > 0}
+			<i class="my-4 block text-center text-xl">{formatHours(data.pendingShips[0].seconds)}</i>
+			<input type="submit" value="Confirm" class="{styleButton} w-full" />
+		{/if}
+	</form>
+</div>
 
 <div class="{stylePopover} max-h-4/5 font-jua text-text" popover id="editProject">
 	<form method="POST" action="?/update">
@@ -157,9 +178,9 @@
 						>Edit</button
 					>
 					{#if canShip}
-						<form action="?/ship" method="POST" class="inline">
-							<input type="submit" value="Ship" class={styleButton} />
-						</form>
+						<button class={styleButton} popovertarget="shipProject">Ship</button>
+					{:else if data.pendingShips.length > 0}
+						<button class={styleButton} popovertarget="cancelShip">Cancel Ship</button>
 					{/if}
 				</div>
 			{/if}

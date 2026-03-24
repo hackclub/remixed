@@ -22,7 +22,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	]);
 	const project = projectInfo.projects;
 	const user = projectInfo.users;
-	const hasPendingShip = projectShips.some((s) => s.status == 'PENDING');
+	const pendingShips = projectShips.filter((s) => s.status == 'PENDING');
+	console.log(pendingShips);
 
 	const dirty = await marked(project.description ?? '');
 	const descriptionHtml = sanitizeHtml(dirty, {
@@ -33,7 +34,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		project,
 		descriptionHtml,
 		user,
-		hasPendingShip,
+		pendingShips,
 		currentUserId: locals.user?.id,
 	};
 };
@@ -110,5 +111,17 @@ export const actions: Actions = {
 		if (newSeconds < 3600) return fail(400, 'Must have at least an hour before shipping');
 
 		await db.insert(ships).values({ projectId, seconds: newSeconds });
+	},
+	cancelShip: async ({ locals, params }) => {
+		if (!locals.user) return fail(401, { error: 'Unauthorized' });
+		const projectId = Number(params.id);
+		const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
+
+		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
+
+		await db
+			.update(ships)
+			.set({ status: 'CANCELLED' })
+			.where(and(eq(ships.status, 'PENDING'), eq(ships.projectId, project.id)));
 	},
 };

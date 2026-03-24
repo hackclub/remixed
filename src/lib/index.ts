@@ -7,7 +7,7 @@ export {
 	isProjectCategory,
 	type ProjectCategory,
 } from './projectCategories';
-export type ShipStatusPub = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type ShipStatusPub = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 export type RoleEnumPub = 'USER' | 'STAFF' | 'REVIEWER' | 'ORGANIZER';
 
 export function formatHours(seconds: number) {

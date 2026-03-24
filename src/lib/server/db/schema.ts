@@ -12,7 +12,12 @@ import { PROJECT_CATEGORIES } from '$lib';
 
 export const roleEnum = pgEnum('role', ['USER', 'STAFF', 'REVIEWER', 'ORGANIZER']);
 export const categoryEnum = pgEnum('category', PROJECT_CATEGORIES);
-export const shipStatusEnum = pgEnum('ship_status', ['PENDING', 'APPROVED', 'REJECTED']);
+export const shipStatusEnum = pgEnum('ship_status', [
+	'PENDING',
+	'APPROVED',
+	'REJECTED',
+	'CANCELLED',
+]);
 export const orderStatusEnum = pgEnum('order_status', ['PENDING', 'FULFILLED']);
 export const auditCategory = pgEnum('audit_category', [
 	'ORDER_INFO',

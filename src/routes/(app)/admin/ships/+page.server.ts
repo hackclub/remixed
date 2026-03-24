@@ -20,7 +20,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.orderBy(ships.id);
 	return {
 		pendingShips: projectShips.filter(({ ship }) => ship.status === 'PENDING'),
-		reviewedShips: projectShips.filter(({ ship }) => ship.status !== 'PENDING'),
+		reviewedShips: projectShips.filter(
+			({ ship }) => ship.status === 'APPROVED' || ship.status === 'REJECTED',
+		),
 		roles: locals.user?.roles,
 		payoutMults,
 	};
