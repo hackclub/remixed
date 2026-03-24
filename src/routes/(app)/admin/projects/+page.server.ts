@@ -118,4 +118,26 @@ export const actions: Actions = {
 			})
 			.where(eq(projects.id, projectId));
 	},
+	deleteProject: async ({ request }) => {
+		const data = await request.formData();
+		const projectId = Number(data.get('projectId'));
+
+		if (!projectId) {
+			return fail(400, { error: 'Invalid project' });
+		}
+
+		const [project] = await db
+			.select({ id: projects.id })
+			.from(projects)
+			.where(eq(projects.id, projectId));
+
+		if (!project) {
+			return fail(404, { error: 'Project not found' });
+		}
+
+		await db.transaction(async (tx) => {
+			await tx.delete(ships).where(eq(ships.projectId, projectId));
+			await tx.delete(projects).where(eq(projects.id, projectId));
+		});
+	},
 };

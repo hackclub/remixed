@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { formatHours, formatProjectCategory, PROJECT_CATEGORY_OPTIONS } from '$lib';
 	import { styleAdminPopover, styleButton, styleInput } from '$lib/styles.js';
-	import type { PageData } from './$types';
+	import type { ActionData, PageData } from './$types';
 
 	type ProjectRow = PageData['projects'][number];
 	type EditableProject = {
@@ -20,11 +20,12 @@
 		stats: ProjectRow['stats'];
 	};
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form?: ActionData } = $props();
 
 	let activeProject = $state<EditableProject | null>(null);
 	let projectSearch = $state('');
 	let manageProjectPopover: HTMLElement | undefined = $state();
+	let deleteProjectPopover: HTMLElement | undefined = $state();
 
 	let filteredProjects = $derived.by(() => {
 		const query = projectSearch.trim().toLowerCase();
@@ -46,7 +47,7 @@
 		);
 	});
 
-	function openProjectMenu(projectInfo: ProjectRow) {
+	function setActiveProject(projectInfo: ProjectRow) {
 		activeProject = {
 			id: projectInfo.project.id,
 			userId: projectInfo.project.userId,
@@ -66,11 +67,20 @@
 			stats: projectInfo.stats,
 		};
 	}
+
+	function openProjectMenu(projectInfo: ProjectRow) {
+		setActiveProject(projectInfo);
+	}
+
+	function confirmDeleteProject(projectInfo: ProjectRow) {
+		setActiveProject(projectInfo);
+		requestAnimationFrame(() => deleteProjectPopover?.showPopover());
+	}
 </script>
 
 <div
 	bind:this={manageProjectPopover}
-	class="{styleAdminPopover} w-[min(96vw,64rem)] max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain"
+	class="{styleAdminPopover} max-h-[calc(100vh-2rem)] w-[min(96vw,64rem)] overflow-y-auto overscroll-contain"
 	popover
 	id="manage-project"
 >
@@ -219,7 +229,43 @@
 	{/if}
 </div>
 
+<div
+	bind:this={deleteProjectPopover}
+	class="{styleAdminPopover} w-[min(96vw,36rem)]"
+	popover
+	id="delete-project"
+>
+	{#if activeProject}
+		<form action="?/deleteProject" method="POST" class="space-y-4">
+			<input type="hidden" name="projectId" value={activeProject.id} />
+			<p class="font-jua text-3xl text-light">Delete {activeProject.title}?</p>
+			<p class="font-jua text-lg text-light/80">
+				This permanently removes the project and all of its ships from the admin panel.
+			</p>
+			<div class="flex gap-3 pt-2">
+				<button
+					type="button"
+					class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
+					onclick={() => deleteProjectPopover?.hidePopover()}>Cancel</button
+				>
+				<input
+					type="submit"
+					value="Delete"
+					class="{styleButton} min-w-0 flex-1 bg-accent-red px-4 py-2 text-lg text-light"
+				/>
+			</div>
+		</form>
+	{/if}
+</div>
+
 <div class="p-10 pb-40 font-jua text-text">
+	{#if form?.error}
+		<div
+			class="mb-6 rounded-2xl border-2 border-accent-red bg-light px-6 py-4 text-xl text-accent-red"
+		>
+			{form.error}
+		</div>
+	{/if}
 	<div class="mb-6">
 		<input
 			type="search"
@@ -261,11 +307,18 @@
 					<td>{projectInfo.stats.shipCount}</td>
 					<td>{projectInfo.stats.pendingShips}</td>
 					<td>
-						<button
-							class="{styleButton} bg-text px-4 py-1 text-lg text-light"
-							onclick={() => openProjectMenu(projectInfo)}
-							popovertarget="manage-project">Manage</button
-						>
+						<div class="flex gap-2">
+							<button
+								class="{styleButton} bg-text px-4 py-1 text-lg text-light"
+								onclick={() => openProjectMenu(projectInfo)}
+								popovertarget="manage-project">Manage</button
+							>
+							<button
+								type="button"
+								class="{styleButton} bg-accent-red px-4 py-1 text-lg text-light"
+								onclick={() => confirmDeleteProject(projectInfo)}>Delete</button
+							>
+						</div>
 					</td>
 				</tr>
 			{/each}
