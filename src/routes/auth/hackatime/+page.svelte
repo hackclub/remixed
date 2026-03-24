@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-	<title>Connect Hackatime</title>
+	<title>Connect Hackatime - Remixed</title>
 </svelte:head>
 
 <div

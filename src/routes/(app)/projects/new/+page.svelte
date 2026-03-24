@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>Create New Project</title>
+	<title>Create New Project - Remixed</title>
 </svelte:head>
 
 <div

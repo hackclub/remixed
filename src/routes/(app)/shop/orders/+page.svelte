@@ -7,7 +7,7 @@
 </script>
 
 <svelte:head>
-	<title>Orders</title>
+	<title>Orders - Remixed</title>
 </svelte:head>
 
 <PageHeader title="Orders" subtitle="Track the rewards you've already claimed." />

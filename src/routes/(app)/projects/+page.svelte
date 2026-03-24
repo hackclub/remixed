@@ -38,7 +38,7 @@
 </script>
 
 <svelte:head>
-	<title>Projects</title>
+	<title>Projects - Remixed</title>
 </svelte:head>
 
 <PageHeader

@@ -13,7 +13,7 @@
 </script>
 
 <svelte:head>
-	<title>Gallery</title>
+	<title>Gallery - Remixed</title>
 </svelte:head>
 
 <PageHeader title="Gallery" subtitle="Look at what other peeps have made!" />

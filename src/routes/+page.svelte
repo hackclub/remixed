@@ -108,7 +108,7 @@
 </script>
 
 <svelte:head>
-	<title>Remixed</title>
+	<title>Home - Remixed</title>
 	<meta
 		property="og:description"
 		content="ship something music related, get something music related!"

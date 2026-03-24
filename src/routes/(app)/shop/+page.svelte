@@ -41,7 +41,7 @@
 </script>
 
 <svelte:head>
-	<title>Shop</title>
+	<title>Shop - Remixed</title>
 </svelte:head>
 
 <PageHeader title="Shop" subtitle="Spend your notes on rewards for the projects you ship." />

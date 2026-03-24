@@ -13,7 +13,7 @@
 </script>
 
 <svelte:head>
-	<title>Purchase</title>
+	<title>Purchase - Remixed</title>
 </svelte:head>
 
 <div
