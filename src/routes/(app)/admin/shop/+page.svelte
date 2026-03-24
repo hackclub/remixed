@@ -2,6 +2,7 @@
 	import type { ActionData, PageData } from './$types';
 	import { styleAdminPopover } from '$lib/styles.js';
 	import { styleButton, styleInput } from '$lib/styles';
+
 	type EditableItem = {
 		id: number;
 		name: string;
@@ -48,6 +49,10 @@
 			imageUrl: item.imageUrl ?? '',
 		};
 		requestAnimationFrame(() => deleteItemPopover?.showPopover());
+	}
+
+	function formatDeletedAt(value: Date | string) {
+		return new Date(value).toLocaleString();
 	}
 </script>
 
@@ -110,7 +115,8 @@
 			<input type="hidden" name="itemId" value={activeItem.id} />
 			<p class="font-jua text-3xl text-light">Delete {activeItem.name}?</p>
 			<p class="font-jua text-lg text-light/80">
-				This removes the item from the shop. Items with existing orders cannot be deleted.
+				This archives the item and removes it from the live shop catalog. Items with existing orders
+				still cannot be deleted.
 			</p>
 			<div class="flex gap-3 pt-4">
 				<button
@@ -191,6 +197,47 @@
 			{/each}
 		</tbody>
 	</table>
+
+	<div class="mt-10">
+		<div class="mb-3">
+			<p class="text-2xl">Deleted Items</p>
+			<p class="text-lg text-text/70">
+				Archived rows are kept here after removal from the catalog.
+			</p>
+		</div>
+		<table class="admin-table w-full bg-accent-purple/70">
+			<thead class="font-jua text-text">
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Cost</th>
+					<th>Description</th>
+					<th>Image</th>
+					<th>Deleted</th>
+					<th>Deleted By</th>
+				</tr>
+			</thead>
+			<tbody class="font-jua text-text">
+				{#each data.deletedItems as deletedItem}
+					<tr class="opacity-80">
+						<td>{deletedItem.item.originalId}</td>
+						<td>{deletedItem.item.name}</td>
+						<td>{deletedItem.item.cost}</td>
+						<td class="h-20">{deletedItem.item.description}</td>
+						<td>
+							{#if deletedItem.item.imageUrl}
+								<img src={deletedItem.item.imageUrl} alt="deleted shop item" class="w-30" />
+							{:else}
+								<span class="text-text/60">None</span>
+							{/if}
+						</td>
+						<td>{formatDeletedAt(deletedItem.item.deletedAt)}</td>
+						<td>{deletedItem.deletedByUsername}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
 </div>
 
 <style>

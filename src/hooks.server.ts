@@ -15,6 +15,7 @@ const PROTECTED: { [key in RoleEnumPub]: string[] } = {
 		'/admin/shop',
 		'/admin/orders',
 		'/admin/projects',
+		'/admin/audit',
 		'/api/admin/order_info',
 	],
 };

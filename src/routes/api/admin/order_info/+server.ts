@@ -1,5 +1,6 @@
+import { recordAuditLog } from '$lib/server/audit';
 import { db } from '$lib/server/db';
-import { auditLogs, orders } from '$lib/server/db/schema';
+import { orders } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import { decrypt } from '$lib/server/crypto';
@@ -8,10 +9,19 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const orderId = Number(url.searchParams.get('id'));
 	if (!orderId) return new Response('Provide an id', { status: 400 });
 
-	await db
-		.insert(auditLogs)
-		.values({ category: 'ORDER_INFO', userId: locals.user!.id, data: { orderId } });
 	const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+	if (!order) {
+		return new Response('Order not found', { status: 404 });
+	}
+
+	await recordAuditLog(db, {
+		actorUserId: locals.user!.id,
+		category: 'ORDER_INFO',
+		entityType: 'order',
+		entityId: orderId,
+		changeType: 'view_private_info',
+	});
+
 	const decryptedOrder = {
 		...order,
 		fullName: decrypt(order.fullName),

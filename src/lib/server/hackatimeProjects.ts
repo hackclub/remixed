@@ -9,9 +9,13 @@ export async function getProjects(userId: number, accessToken: string) {
 		.from(projects)
 		.where(eq(projects.userId, userId));
 
+	const query = new URLSearchParams();
+	if (env.HACKATIME_START_DATE) {
+		query.set('start', env.HACKATIME_START_DATE);
+	}
+
 	const allHackatimeProjects = await fetch(
-		'https://hackatime.hackclub.com/api/v1/authenticated/projects?' +
-			new URLSearchParams({ start: env.HACKATIME_START_DATE }),
+		`https://hackatime.hackclub.com/api/v1/authenticated/projects?${query.toString()}`,
 		{
 			method: 'GET',
 			headers: {
