@@ -14,7 +14,13 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 	const [[projectInfo], projectShips] = await Promise.all([
 		db
-			.select()
+			.select({
+				projects,
+				users: {
+					id: users.id,
+					username: users.username,
+				},
+			})
 			.from(projects)
 			.innerJoin(users, eq(users.id, projects.userId))
 			.where(eq(projects.id, projectId)),
