@@ -97,7 +97,7 @@
 					{#each filteredPendingShips as shipInfo}
 						<tr
 							class="clickable-row"
-							onclick={() => window.open(`/admin/ships/${shipInfo.ship.id}`, '_blank')}
+							onclick={() => window.open(`/admin/ships/${shipInfo.project.id}`, '_blank')}
 						>
 							<td>#{shipInfo.ship.id}</td>
 							<td>{shipInfo.user.username}</td>
@@ -137,7 +137,7 @@
 						{#each filteredReviewerApprovedShips as shipInfo}
 							<tr
 								class="clickable-row"
-								onclick={() => window.open(`/admin/ships/${shipInfo.ship.id}`, '_blank')}
+								onclick={() => window.open(`/admin/ships/${shipInfo.project.id}`, '_blank')}
 							>
 								<td>#{shipInfo.ship.id}</td>
 								<td>{shipInfo.user.username}</td>
@@ -174,7 +174,7 @@
 							class="clickable-row"
 							onclick={(e) => {
 								if ((e.target as HTMLElement).closest('form, button')) return;
-								window.open(`/admin/ships/${shipInfo.ship.id}`, '_blank');
+								window.open(`/admin/ships/${shipInfo.project.id}`, '_blank');
 							}}
 						>
 							<td>#{shipInfo.ship.id}</td>

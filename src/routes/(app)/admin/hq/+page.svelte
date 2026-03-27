@@ -129,7 +129,7 @@
 				{#each data.ships as shipInfo}
 					<tr>
 						<td>
-							<a href="/admin/ships/{shipInfo.ship.id}" class="underline">
+							<a href="/admin/ships/{shipInfo.project.id}" class="underline">
 								#{shipInfo.ship.id}
 							</a>
 						</td>

@@ -5,10 +5,13 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// --- review creator ---
+	// --- review creator (targets the pending ship) ---
 	type ReviewMode = 'ship_comment' | 'internal_comment' | 'rejection' | 'approval';
 	let reviewMode = $state<ReviewMode>('ship_comment');
-	let adjustedHours = $state(parseFloat((data.ship.seconds / 3600).toFixed(1)));
+	const pendingShip = data.pendingShip;
+	let adjustedHours = $state(
+		pendingShip ? parseFloat((pendingShip.seconds / 3600).toFixed(1)) : 0,
+	);
 	let notesPayout = $derived(Math.ceil(adjustedHours * NOTES_PER_HOUR));
 	let isComment = $derived(reviewMode === 'ship_comment' || reviewMode === 'internal_comment');
 	let reviewFormAction = $derived(
@@ -73,13 +76,47 @@
 		}
 	}
 
-	const currentShipReviews = data.reviews.filter((r) => r.review.shipId === data.ship.id);
+	function reviewsForShip(shipId: number) {
+		return data.reviews.filter((r) => r.review.shipId === shipId);
+	}
+
+	function shipStatusLabel(status: string) {
+		switch (status) {
+			case 'REVIEWER_APPROVED':
+				return 'AWAITING HQ';
+			case 'PENDING':
+				return 'PENDING';
+			case 'APPROVED':
+				return 'APPROVED';
+			case 'REJECTED':
+				return 'REJECTED';
+			case 'CANCELLED':
+				return 'CANCELLED';
+			default:
+				return status;
+		}
+	}
+
+	function shipStatusColor(status: string) {
+		switch (status) {
+			case 'APPROVED':
+				return 'text-green-700';
+			case 'REJECTED':
+				return 'text-accent-red';
+			case 'REVIEWER_APPROVED':
+				return 'text-yellow-700';
+			case 'CANCELLED':
+				return 'text-text/50';
+			default:
+				return '';
+		}
+	}
+
 	const totalProjectSeconds = data.project.hackatimeSeconds ?? 0;
-	const unshippedSeconds = Math.max(
-		0,
-		totalProjectSeconds - data.project.committedSeconds - data.ship.seconds,
-	);
-	const isPending = data.ship.status === 'PENDING';
+	const totalShippedSeconds = data.projectShips
+		.filter((s) => s.status !== 'CANCELLED')
+		.reduce((sum, s) => sum + s.seconds, 0);
+	const unshippedSeconds = Math.max(0, totalProjectSeconds - data.project.committedSeconds - totalShippedSeconds);
 </script>
 
 <!-- Edit review popover -->
@@ -140,21 +177,14 @@
 	</div>
 
 	<!-- 2. Time stats -->
-	<div class="mb-6 grid grid-cols-2 gap-4 rounded-xl border-2 border-text bg-accent-purple p-4 text-sm sm:grid-cols-4">
+	<div class="mb-6 grid grid-cols-2 gap-4 rounded-xl border-2 border-text bg-accent-purple p-4 text-sm sm:grid-cols-3">
 		<div>
 			<p class="text-text/50">Total project time</p>
 			<p class="text-lg">{formatHours(totalProjectSeconds)}</p>
 		</div>
 		<div>
-			<p class="text-text/50">Filed for review</p>
-			<p class="text-lg">
-				{new Date(data.ship.submittedAt).toLocaleDateString()}
-			</p>
-			<p class="text-xs text-text/40">{timeAgo(data.ship.submittedAt)}</p>
-		</div>
-		<div>
-			<p class="text-text/50">Time under review</p>
-			<p class="text-lg">{formatHours(data.ship.seconds)}</p>
+			<p class="text-text/50">Committed time</p>
+			<p class="text-lg">{formatHours(data.project.committedSeconds)}</p>
 		</div>
 		<div>
 			<p class="text-text/50">Unshipped time</p>
@@ -221,105 +251,109 @@
 	<div class="mb-8 rounded-xl border-2 border-text bg-accent-purple p-6">
 		<h2 class="mb-4 text-2xl">Review Timeline</h2>
 		<div class="timeline relative ml-5 border-l-2 border-text pl-6">
-			<!-- Ship submitted event -->
-			<div class="relative mb-6">
-				<div class="absolute -left-[33px] top-0.5 h-4 w-4 rounded-full border-2 border-text bg-accent-purple"></div>
-				<div class="flex items-center gap-3">
-					<img
-						src={data.user.avatarUrl ?? '/404.jpg'}
-						alt={data.user.username}
-						class="h-8 w-8 rounded-full object-cover"
-					/>
-					<div>
-						<span class="font-bold">@{data.user.username}</span>
-						<span class="text-text/60"> shipped this project</span>
-					</div>
-					<span class="ml-auto text-xs text-text/40">
-						{new Date(data.ship.submittedAt).toLocaleString()}
-					</span>
-				</div>
-				<p class="mt-1 ml-11 text-sm text-text/60">
-					{formatHours(data.ship.seconds)} submitted for review
-				</p>
-			</div>
-
-			<!-- Review events -->
-			{#each currentShipReviews as r}
-				{@const isEdited = r.review.updatedAt.getTime() !== r.review.createdAt.getTime()}
+			{#each data.projectShips as ship}
+				{@const shipRevs = reviewsForShip(ship.id)}
+				<!-- Ship submitted event -->
 				<div class="relative mb-6">
-					<div
-						class="absolute -left-[33px] top-0.5 h-4 w-4 rounded-full border-2 border-text {r.review.type === 'APPROVAL' || r.review.type === 'HQ_APPROVAL'
-							? 'bg-green-600'
-							: r.review.type === 'REJECTION' || r.review.type === 'HQ_REJECTION'
-								? 'bg-red-500'
-								: 'bg-bg'}"
-					></div>
-					<div class="flex items-start gap-3">
+					<div class="absolute -left-[33px] top-0.5 h-4 w-4 rounded-full border-2 border-text bg-accent-purple"></div>
+					<div class="flex items-center gap-3">
 						<img
-							src={r.reviewer.avatarUrl ?? '/404.jpg'}
-							alt={r.reviewer.username}
-							class="h-8 w-8 shrink-0 rounded-full object-cover"
+							src={data.user.avatarUrl ?? '/404.jpg'}
+							alt={data.user.username}
+							class="h-8 w-8 rounded-full object-cover"
 						/>
-						<div class="min-w-0 flex-1">
-							<div class="flex flex-wrap items-center gap-x-2">
-								<span class="font-bold">@{r.reviewer.username}</span>
-								<span class="text-sm {reviewTypeColor(r.review.type)}">
-									{reviewTypeLabel(r.review.type)}
-								</span>
-								{#if r.review.adjustedHours}
-									<span class="text-sm text-text/60">
-										({r.review.adjustedHours}h &middot; {Math.ceil(r.review.adjustedHours * NOTES_PER_HOUR)} notes)
+						<div>
+							<span class="font-bold">@{data.user.username}</span>
+							<span class="text-text/60"> shipped {formatHours(ship.seconds)}</span>
+						</div>
+						<span class="ml-auto flex items-center gap-2 text-xs text-text/40">
+							<span class={shipStatusColor(ship.status)}>{shipStatusLabel(ship.status)}</span>
+							&middot;
+							{new Date(ship.submittedAt).toLocaleString()}
+							({timeAgo(ship.submittedAt)})
+						</span>
+					</div>
+				</div>
+
+				<!-- Review events for this ship -->
+				{#each shipRevs as r}
+					{@const isEdited = r.review.updatedAt.getTime() !== r.review.createdAt.getTime()}
+					<div class="relative mb-6">
+						<div
+							class="absolute -left-[33px] top-0.5 h-4 w-4 rounded-full border-2 border-text {r.review.type === 'APPROVAL' || r.review.type === 'HQ_APPROVAL'
+								? 'bg-green-600'
+								: r.review.type === 'REJECTION' || r.review.type === 'HQ_REJECTION'
+									? 'bg-red-500'
+									: 'bg-bg'}"
+						></div>
+						<div class="flex items-start gap-3">
+							<img
+								src={r.reviewer.avatarUrl ?? '/404.jpg'}
+								alt={r.reviewer.username}
+								class="h-8 w-8 shrink-0 rounded-full object-cover"
+							/>
+							<div class="min-w-0 flex-1">
+								<div class="flex flex-wrap items-center gap-x-2">
+									<span class="font-bold">@{r.reviewer.username}</span>
+									<span class="text-sm {reviewTypeColor(r.review.type)}">
+										{reviewTypeLabel(r.review.type)}
 									</span>
+									{#if r.review.adjustedHours}
+										<span class="text-sm text-text/60">
+											({r.review.adjustedHours}h &middot; {Math.ceil(r.review.adjustedHours * NOTES_PER_HOUR)} notes)
+										</span>
+									{/if}
+									{#if r.review.isInternal}
+										<span class="rounded bg-bg px-1.5 py-0.5 text-xs">internal</span>
+									{/if}
+								</div>
+								{#if r.review.userComment}
+									<div class="mt-1 rounded-lg bg-light px-3 py-2 text-sm">
+										<p class="text-xs text-text/40">Shipper-visible</p>
+										{r.review.userComment}
+									</div>
 								{/if}
-								{#if r.review.isInternal}
-									<span class="rounded bg-bg px-1.5 py-0.5 text-xs">internal</span>
+								{#if r.review.internalComment}
+									<div class="mt-1 rounded-lg bg-bg px-3 py-2 text-sm text-text">
+										<p class="text-xs text-text/40">Review-team only</p>
+										{r.review.internalComment}
+									</div>
 								{/if}
 							</div>
-							{#if r.review.userComment}
-								<div class="mt-1 rounded-lg bg-light px-3 py-2 text-sm">
-									<p class="text-xs text-text/40">Shipper-visible</p>
-									{r.review.userComment}
-								</div>
-							{/if}
-							{#if r.review.internalComment}
-								<div class="mt-1 rounded-lg bg-bg px-3 py-2 text-sm text-text">
-									<p class="text-xs text-text/40">Review-team only</p>
-									{r.review.internalComment}
-								</div>
-							{/if}
-						</div>
-						<div class="flex shrink-0 items-center gap-2">
-							<span class="text-xs text-text/40">
-								{new Date(r.review.createdAt).toLocaleString()}
-								{#if isEdited}
-									<span class="italic">(edited)</span>
+							<div class="flex shrink-0 items-center gap-2">
+								<span class="text-xs text-text/40">
+									{new Date(r.review.createdAt).toLocaleString()}
+									{#if isEdited}
+										<span class="italic">(edited)</span>
+									{/if}
+								</span>
+								{#if r.review.reviewerId === data.currentUserId}
+									<button
+										class="text-xs underline text-text/50 hover:text-text"
+										onclick={() => openEdit(r)}
+										popovertarget="edit-review"
+									>
+										Edit
+									</button>
 								{/if}
-							</span>
-							{#if r.review.reviewerId === data.currentUserId}
-								<button
-									class="text-xs underline text-text/50 hover:text-text"
-									onclick={() => openEdit(r)}
-									popovertarget="edit-review"
-								>
-									Edit
-								</button>
-							{/if}
+							</div>
 						</div>
 					</div>
-				</div>
+				{/each}
 			{/each}
 
-			{#if currentShipReviews.length === 0}
-				<p class="mb-6 text-sm text-text/40">No reviews yet</p>
+			{#if data.projectShips.length === 0}
+				<p class="mb-6 text-sm text-text/40">No ships yet</p>
 			{/if}
 		</div>
 	</div>
 
-	<!-- 8. Review Creator -->
-	{#if isPending}
+	<!-- 8. Review Creator (targets pending ship) -->
+	{#if pendingShip}
 		<div class="rounded-xl border-2 border-text bg-accent-purple p-6">
 			<h2 class="mb-4 text-2xl">Submit Review</h2>
 			<form action={reviewFormAction} method="POST" class="space-y-4">
+				<input type="hidden" name="shipId" value={pendingShip.id} />
 				<label class="block">
 					<span class="text-sm text-text/60">Review type</span>
 					<select
@@ -341,7 +375,7 @@
 							name="adjustedHours"
 							step="0.1"
 							min="0.1"
-							max={(data.ship.seconds / 3600).toFixed(1)}
+							max={(pendingShip.seconds / 3600).toFixed(1)}
 							bind:value={adjustedHours}
 							class="{styleInput} w-full border-2 border-text text-text"
 						/>

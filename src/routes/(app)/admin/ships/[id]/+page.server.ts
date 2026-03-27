@@ -3,16 +3,15 @@ import type { Actions, PageServerLoad } from './$types';
 import { recordAuditLog } from '$lib/server/audit';
 import { db } from '$lib/server/db';
 import { projects, shipReviews, ships, users } from '$lib/server/db/schema';
-import { eq, inArray, desc } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { sendReviewDM, editReviewDM } from '$lib/server/slack/review_message';
 import { NOTES_PER_HOUR } from '$lib';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const shipId = Number(params.id);
+	const projectId = Number(params.id);
 
-	const [shipInfo] = await db
+	const [projectInfo] = await db
 		.select({
-			ship: ships,
 			project: projects,
 			user: {
 				id: users.id,
@@ -21,20 +20,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				avatarUrl: users.avatarUrl,
 			},
 		})
-		.from(ships)
-		.innerJoin(projects, eq(ships.projectId, projects.id))
+		.from(projects)
 		.innerJoin(users, eq(projects.userId, users.id))
-		.where(eq(ships.id, shipId));
+		.where(eq(projects.id, projectId));
 
-	if (!shipInfo) {
-		error(404, 'Ship not found');
+	if (!projectInfo) {
+		error(404, 'Project not found');
 	}
 
 	const projectShips = await db
 		.select()
 		.from(ships)
-		.where(eq(ships.projectId, shipInfo.project.id))
-		.orderBy(desc(ships.submittedAt));
+		.where(eq(ships.projectId, projectId))
+		.orderBy(ships.submittedAt);
 
 	const shipIds = projectShips.map((s) => s.id);
 	const reviews =
@@ -54,12 +52,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					.orderBy(shipReviews.createdAt)
 			: [];
 
+	const pendingShip = projectShips.find((s) => s.status === 'PENDING') ?? null;
+
 	return {
-		ship: shipInfo.ship,
-		project: shipInfo.project,
-		user: shipInfo.user,
+		project: projectInfo.project,
+		user: projectInfo.user,
 		projectShips,
 		reviews,
+		pendingShip,
 		notesPerHour: NOTES_PER_HOUR,
 		currentUserId: locals.user!.id,
 		currentUserRoles: locals.user!.roles,
@@ -67,9 +67,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
-	approve: async ({ request, locals, params }) => {
+	approve: async ({ request, locals }) => {
 		const data = await request.formData();
-		const shipId = Number(params.id);
+		const shipId = Number(data.get('shipId'));
 		const adjustedHours = Number(data.get('adjustedHours'));
 		const userComment = (data.get('userComment') as string).trim();
 		const internalComment = (data.get('internalComment') as string).trim();
@@ -122,11 +122,11 @@ export const actions: Actions = {
 			}),
 		]);
 	},
-	reject: async ({ locals, request, params }) => {
+	reject: async ({ locals, request }) => {
 		const data = await request.formData();
 		const userComment = (data.get('userComment') as string).trim();
 		const internalComment = (data.get('internalComment') as string).trim();
-		const shipId = Number(params.id);
+		const shipId = Number(data.get('shipId'));
 
 		if (!userComment || !internalComment) {
 			return fail(400, { error: 'Both user and internal comments are required' });
@@ -174,9 +174,9 @@ export const actions: Actions = {
 			}),
 		]);
 	},
-	comment: async ({ request, locals, params }) => {
+	comment: async ({ request, locals }) => {
 		const data = await request.formData();
-		const shipId = Number(params.id);
+		const shipId = Number(data.get('shipId'));
 		const comment = (data.get('comment') as string).trim();
 		const isInternal = data.get('isInternal') === 'on';
 
