@@ -68,6 +68,9 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 					slackId,
 					username: slackIdentity.username,
 					avatarUrl: slackIdentity.avatarUrl,
+					email: hcaProfile.email ?? existingUser.email,
+					firstName: hcaProfile.first_name ?? existingUser.firstName,
+					lastName: hcaProfile.last_name ?? existingUser.lastName,
 				})
 				.where(eq(users.id, existingUser.id));
 		} else {
@@ -79,6 +82,9 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 					username: slackIdentity.username,
 					avatarUrl: slackIdentity.avatarUrl,
 					accessToken: null,
+					email: hcaProfile.email ?? null,
+					firstName: hcaProfile.first_name ?? null,
+					lastName: hcaProfile.last_name ?? null,
 				})
 				.returning({ id: users.id });
 

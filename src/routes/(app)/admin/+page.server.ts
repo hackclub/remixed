@@ -17,6 +17,7 @@ export const load: PageServerLoad = async () => {
 		[deletedProjectCount],
 		[shipCount],
 		[pendingShipCount],
+		[awaitingHqCount],
 		[deletedShipCount],
 		[orderCount],
 		[pendingOrderCount],
@@ -26,12 +27,14 @@ export const load: PageServerLoad = async () => {
 		db.select({ value: count() }).from(deletedProjects),
 		db.select({ value: count() }).from(ships),
 		db.select({ value: count() }).from(ships).where(eq(ships.status, 'PENDING')),
+		db.select({ value: count() }).from(ships).where(eq(ships.status, 'REVIEWER_APPROVED')),
 		db.select({ value: count() }).from(deletedShips),
 		db.select({ value: count() }).from(orders),
 		db.select({ value: count() }).from(orders).where(eq(orders.status, 'PENDING')),
 	]);
 
-	const reviewedShipCount = shipCount.value - pendingShipCount.value;
+	const reviewedShipCount =
+		shipCount.value - pendingShipCount.value - awaitingHqCount.value;
 
 	return {
 		stats: [
@@ -44,7 +47,7 @@ export const load: PageServerLoad = async () => {
 			{
 				label: 'Ships',
 				value: shipCount.value,
-				detail: `${pendingShipCount.value} pending, ${reviewedShipCount} reviewed, ${deletedShipCount.value} deleted`,
+				detail: `${pendingShipCount.value} pending, ${awaitingHqCount.value} awaiting HQ, ${reviewedShipCount} reviewed, ${deletedShipCount.value} deleted`,
 			},
 			{
 				label: 'Orders',

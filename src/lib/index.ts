@@ -7,8 +7,16 @@ export {
 	isProjectCategory,
 	type ProjectCategory,
 } from './projectCategories';
-export type ShipStatusPub = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
-export type RoleEnumPub = 'USER' | 'STAFF' | 'REVIEWER' | 'ORGANIZER';
+export type ShipStatusPub = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'REVIEWER_APPROVED';
+export type RoleEnumPub = 'USER' | 'STAFF' | 'REVIEWER' | 'ORGANIZER' | 'HQ';
+export type ReviewTypePub =
+	| 'APPROVAL'
+	| 'REJECTION'
+	| 'COMMENT'
+	| 'HQ_APPROVAL'
+	| 'HQ_REJECTION';
+
+export const NOTES_PER_HOUR = 10;
 
 export function formatHours(seconds: number) {
 	const minutes = seconds / 60.0;

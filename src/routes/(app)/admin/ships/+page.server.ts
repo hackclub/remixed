@@ -5,19 +5,14 @@ import { db } from '$lib/server/db';
 import {
 	deletedProjects,
 	deletedShips,
-	notesLedger,
 	projects,
+	shipReviews,
 	ships,
 	users,
 } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
-import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
-import { sendCertMessage } from '$lib/server/slack/cert_message';
-
-const payoutMults = {
-	reviewer: [10.0, 15.0],
-	organizer: [10.0, 25.0],
-};
+import { eq } from 'drizzle-orm';
+import { sendReviewDM } from '$lib/server/slack/review_message';
+import { NOTES_PER_HOUR } from '$lib';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const [projectShips, archivedShips, archivedProjects, allUsers] = await Promise.all([
@@ -39,6 +34,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		pendingShips: projectShips.filter(({ ship }) => ship.status === 'PENDING'),
+		reviewerApprovedShips: projectShips.filter(
+			({ ship }) => ship.status === 'REVIEWER_APPROVED',
+		),
 		reviewedShips: projectShips.filter(
 			({ ship }) => ship.status === 'APPROVED' || ship.status === 'REJECTED',
 		),
@@ -63,121 +61,185 @@ export const load: PageServerLoad = async ({ locals }) => {
 			};
 		}),
 		roles: locals.user?.roles,
-		payoutMults,
+		notesPerHour: NOTES_PER_HOUR,
 	};
 };
 
 export const actions: Actions = {
 	reject: async ({ locals, request }) => {
 		const data = await request.formData();
-		const feedback = (data.get('feedback') as string).trim();
+		const userComment = (data.get('userComment') as string).trim();
+		const internalComment = (data.get('internalComment') as string).trim();
 		const shipId = Number(data.get('shipId'));
-		const [user] = await db.select().from(users).where(eq(users.id, locals.user!.id));
+
+		if (!userComment || !internalComment) {
+			return fail(400, { error: 'Both user and internal comments are required' });
+		}
+
+		const [shipInfo] = await db
+			.select({ ship: ships, project: projects, user: users })
+			.from(ships)
+			.innerJoin(projects, eq(ships.projectId, projects.id))
+			.innerJoin(users, eq(projects.userId, users.id))
+			.where(eq(ships.id, shipId));
+
+		if (!shipInfo || shipInfo.ship.status !== 'PENDING') {
+			return fail(400, { error: 'Ship not available for rejection' });
+		}
+
+		const slackResult = await sendReviewDM(
+			shipInfo.user.slackId,
+			shipInfo.project.title,
+			'rejected',
+			userComment,
+		);
+
 		await Promise.all([
-			db.update(ships).set({ status: 'REJECTED', feedback }).where(eq(ships.id, shipId)),
+			db.update(ships).set({ status: 'REJECTED', feedback: userComment }).where(eq(ships.id, shipId)),
+			db.insert(shipReviews).values({
+				shipId,
+				reviewerId: locals.user!.id,
+				type: 'REJECTION',
+				userComment,
+				internalComment,
+				slackMessageTs: slackResult.ts ?? null,
+				slackChannelId: slackResult.channel ?? null,
+			}),
 			recordAuditLog(db, {
 				actorUserId: locals.user!.id,
 				category: 'SHIP_REVIEW',
 				entityType: 'ship',
 				entityId: shipId,
 				changeType: 'reject',
-				data: {
-					feedback,
-					viaOrganizerRole: locals.user!.roles.includes('ORGANIZER'),
-				},
+				data: { userComment, internalComment },
 			}),
-			db
-				.select({ project: projects })
-				.from(ships)
-				.innerJoin(projects, eq(ships.projectId, projects.id))
-				.then(([proj]) => sendCertMessage(user.slackId, proj.project.title, false, feedback)),
 		]);
 	},
 	approve: async ({ request, locals }) => {
 		const data = await request.formData();
 		const shipId = Number(data.get('shipId'));
-		const userId = Number(data.get('userId'));
-		const payoutMult = Number(data.get('payoutMult'));
-		const shipSeconds = Number(data.get('shipSeconds'));
-		const feedback = (data.get('feedback') as string).trim();
+		const adjustedHours = Number(data.get('adjustedHours'));
+		const userComment = (data.get('userComment') as string).trim();
+		const internalComment = (data.get('internalComment') as string).trim();
 
-		const [user] = await db.select().from(users).where(eq(users.id, locals.user!.id));
-		if (user.roles.includes('ORGANIZER')) {
-			if (payoutMult < payoutMults.organizer[0] || payoutMult > payoutMults.organizer[1]) {
-				return;
-			}
-		} else {
-			if (payoutMult < payoutMults.reviewer[0] || payoutMult > payoutMults.reviewer[1]) {
-				return;
-			}
+		if (!userComment || !internalComment) {
+			return fail(400, { error: 'Both user and internal comments are required' });
 		}
-		const payout = Math.ceil((payoutMult * shipSeconds) / (60.0 * 60.0));
+
+		const [shipInfo] = await db
+			.select({ ship: ships, project: projects, user: users })
+			.from(ships)
+			.innerJoin(projects, eq(ships.projectId, projects.id))
+			.innerJoin(users, eq(projects.userId, users.id))
+			.where(eq(ships.id, shipId));
+
+		if (!shipInfo || shipInfo.ship.status !== 'PENDING') {
+			return fail(400, { error: 'Ship not available for approval' });
+		}
+
+		const maxHours = shipInfo.ship.seconds / 3600;
+		if (adjustedHours <= 0 || adjustedHours > maxHours + 0.01) {
+			return fail(400, { error: `Hours must be between 0 and ${maxHours.toFixed(1)}` });
+		}
 
 		await Promise.all([
 			db
-				.select({ project: projects })
-				.from(ships)
-				.innerJoin(projects, eq(ships.projectId, projects.id))
-				.then(([proj]) => sendCertMessage(user.slackId, proj.project.title, true, feedback))
-				.then(() =>
-					sendUpdatedBalance(user.slackId, user.notesBalance, user.notesBalance + payout),
-				),
-			db
-				.update(users)
-				.set({ notesBalance: sql`${users.notesBalance} + ${payout}` })
-				.where(eq(users.id, userId)),
-			db.update(ships).set({ status: 'APPROVED' }).where(eq(ships.id, shipId)),
-			db
-				.insert(notesLedger)
-				.values({ userId, delta: payout, reason: 'ship_approved', refId: shipId }),
+				.update(ships)
+				.set({ status: 'REVIEWER_APPROVED', feedback: userComment })
+				.where(eq(ships.id, shipId)),
+			db.insert(shipReviews).values({
+				shipId,
+				reviewerId: locals.user!.id,
+				type: 'APPROVAL',
+				userComment,
+				internalComment,
+				adjustedHours,
+			}),
 			recordAuditLog(db, {
 				actorUserId: locals.user!.id,
 				category: 'SHIP_REVIEW',
 				entityType: 'ship',
 				entityId: shipId,
-				changeType: 'approve',
+				changeType: 'reviewer_approve',
 				data: {
-					shipId,
-					feedback,
-					viaOrganizerRole: locals.user!.roles.includes('ORGANIZER'),
-					multiplier: payoutMult,
-					payout,
+					adjustedHours,
+					notesPayout: Math.ceil(adjustedHours * NOTES_PER_HOUR),
+					userComment,
+					internalComment,
 				},
 			}),
 		]);
+	},
+	comment: async ({ request, locals }) => {
+		const data = await request.formData();
+		const shipId = Number(data.get('shipId'));
+		const comment = (data.get('comment') as string).trim();
+		const isInternal = data.get('isInternal') === 'on';
 
-		// sendUpdatedBalance(userId, ),
+		if (!comment) {
+			return fail(400, { error: 'Comment is required' });
+		}
+
+		const [shipInfo] = await db
+			.select({ ship: ships, project: projects, user: users })
+			.from(ships)
+			.innerJoin(projects, eq(ships.projectId, projects.id))
+			.innerJoin(users, eq(projects.userId, users.id))
+			.where(eq(ships.id, shipId));
+
+		if (!shipInfo) {
+			return fail(404, { error: 'Ship not found' });
+		}
+
+		let slackTs: string | undefined;
+		let slackChannel: string | undefined;
+
+		if (!isInternal) {
+			const slackResult = await sendReviewDM(
+				shipInfo.user.slackId,
+				shipInfo.project.title,
+				'comment',
+				comment,
+			);
+			slackTs = slackResult.ts;
+			slackChannel = slackResult.channel;
+		}
+
+		await Promise.all([
+			db.insert(shipReviews).values({
+				shipId,
+				reviewerId: locals.user!.id,
+				type: 'COMMENT',
+				userComment: isInternal ? null : comment,
+				internalComment: isInternal ? comment : null,
+				isInternal,
+				slackMessageTs: slackTs ?? null,
+				slackChannelId: slackChannel ?? null,
+			}),
+			recordAuditLog(db, {
+				actorUserId: locals.user!.id,
+				category: 'SHIP_REVIEW',
+				entityType: 'ship',
+				entityId: shipId,
+				changeType: 'comment',
+				data: { comment, isInternal },
+			}),
+		]);
 	},
 	undoReview: async ({ request, locals }) => {
+		if (!locals.user?.roles.includes('ORGANIZER')) {
+			return fail(403, { error: 'Only organizers can undo reviews' });
+		}
+
 		const data = await request.formData();
 		const shipId = Number(data.get('shipId'));
 		const [ship] = await db.select().from(ships).where(eq(ships.id, shipId));
 
 		if (!ship || ship.status === 'PENDING') {
-			return fail(404, { error: 'Ship not found' });
+			return fail(404, { error: 'Ship not found or already pending' });
 		}
 
-		const [projectInfo, ledgerEntries] = await Promise.all([
-			db
-				.select({ project: projects, user: users })
-				.from(ships)
-				.innerJoin(projects, eq(ships.projectId, projects.id))
-				.innerJoin(users, eq(projects.userId, users.id))
-				.where(eq(ships.id, shipId))
-				.then(([row]) => row),
-			db
-				.select()
-				.from(notesLedger)
-				.where(eq(notesLedger.refId, shipId))
-				.then((rows) => rows.filter((row) => row.reason === 'ship_approved')),
-		]);
-
-		if (!projectInfo) {
-			return fail(404, { error: 'Ship not found' });
-		}
-
-		const awardedNotes = ledgerEntries.reduce((sum, row) => sum + row.delta, 0);
-		const updates: Promise<unknown>[] = [
+		await Promise.all([
 			db.update(ships).set({ status: 'PENDING', feedback: null }).where(eq(ships.id, shipId)),
 			recordAuditLog(db, {
 				actorUserId: locals.user!.id,
@@ -185,30 +247,8 @@ export const actions: Actions = {
 				entityType: 'ship',
 				entityId: shipId,
 				changeType: 'undo_review',
-				data: { previousStatus: ship.status, awardedNotes },
+				data: { previousStatus: ship.status },
 			}),
-		];
-
-		if (ship.status === 'APPROVED' && awardedNotes !== 0) {
-			updates.push(
-				db
-					.update(users)
-					.set({ notesBalance: sql`${users.notesBalance} - ${awardedNotes}` })
-					.where(eq(users.id, projectInfo.user.id)),
-				db.insert(notesLedger).values({
-					userId: projectInfo.user.id,
-					delta: -awardedNotes,
-					reason: 'ship_approved',
-					refId: shipId,
-				}),
-				sendUpdatedBalance(
-					projectInfo.user.slackId,
-					projectInfo.user.notesBalance,
-					projectInfo.user.notesBalance - awardedNotes,
-				),
-			);
-		}
-
-		await Promise.all(updates);
+		]);
 	},
 };
