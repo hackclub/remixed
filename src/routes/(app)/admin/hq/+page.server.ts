@@ -94,6 +94,7 @@ export const actions: Actions = {
 		const slackResult = await sendReviewDM(
 			shipInfo.user.slackId,
 			shipInfo.project.title,
+			shipInfo.project.id,
 			'approved',
 			userComment,
 		);

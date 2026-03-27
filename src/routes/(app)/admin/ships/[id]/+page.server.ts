@@ -146,6 +146,7 @@ export const actions: Actions = {
 		const slackResult = await sendReviewDM(
 			shipInfo.user.slackId,
 			shipInfo.project.title,
+			shipInfo.project.id,
 			'rejected',
 			userComment,
 		);
@@ -202,6 +203,7 @@ export const actions: Actions = {
 			const slackResult = await sendReviewDM(
 				shipInfo.user.slackId,
 				shipInfo.project.title,
+				shipInfo.project.id,
 				'comment',
 				comment,
 			);
@@ -286,6 +288,7 @@ export const actions: Actions = {
 				reviewInfo.review.slackChannelId,
 				reviewInfo.review.slackMessageTs,
 				reviewInfo.project.title,
+				reviewInfo.project.id,
 				type,
 				userComment,
 			);
