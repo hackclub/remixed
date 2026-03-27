@@ -230,7 +230,8 @@
 	</div>
 </div>
 
-{#if isOwner && data.shipHistory.length > 0}
+<!-- TODO: Show ship history once restyling is done -->
+{#if isOwner && data.shipHistory.length > 0 && false}
 	<div class="mx-auto mb-10 max-w-2xl px-4 font-jua text-text">
 		<h2 class="mb-4 text-center text-2xl">Ship History</h2>
 		{#each data.shipHistory as ship}
