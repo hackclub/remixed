@@ -14,7 +14,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.select({
 			ship: ships,
 			project: projects,
-			user: { id: users.id, username: users.username, slackId: users.slackId },
+			user: {
+				id: users.id,
+				username: users.username,
+				slackId: users.slackId,
+				avatarUrl: users.avatarUrl,
+			},
 		})
 		.from(ships)
 		.innerJoin(projects, eq(ships.projectId, projects.id))
@@ -37,7 +42,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			? await db
 					.select({
 						review: shipReviews,
-						reviewer: { id: users.id, username: users.username },
+						reviewer: {
+							id: users.id,
+							username: users.username,
+							avatarUrl: users.avatarUrl,
+						},
 					})
 					.from(shipReviews)
 					.innerJoin(users, eq(shipReviews.reviewerId, users.id))

@@ -45,11 +45,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	for (const requiredRole in PROTECTED) {
-		if (PROTECTED[requiredRole as RoleEnumPub].some((p) => event.url.pathname.startsWith(p))) {
-			if (!event.locals.user?.roles.includes(requiredRole as RoleEnumPub)) {
-				throw redirect(303, '/');
-			}
+	const matchedRoles: RoleEnumPub[] = [];
+	for (const role in PROTECTED) {
+		if (PROTECTED[role as RoleEnumPub].some((p) => event.url.pathname.startsWith(p))) {
+			matchedRoles.push(role as RoleEnumPub);
+		}
+	}
+	if (matchedRoles.length > 0) {
+		if (!matchedRoles.some((role) => event.locals.user?.roles.includes(role))) {
+			throw redirect(303, '/');
 		}
 	}
 

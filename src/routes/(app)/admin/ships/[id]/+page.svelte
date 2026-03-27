@@ -1,45 +1,52 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { formatHours, formatProjectCategory, NOTES_PER_HOUR } from '$lib';
+	import { formatHours, NOTES_PER_HOUR } from '$lib';
 	import { styleAdminPopover, styleButton, styleInput } from '$lib/styles.js';
 
 	let { data }: { data: PageData } = $props();
 
-	let adjustedHours = $state(0);
+	// --- review creator ---
+	type ReviewMode = 'ship_comment' | 'internal_comment' | 'rejection' | 'approval';
+	let reviewMode = $state<ReviewMode>('ship_comment');
+	let adjustedHours = $state(parseFloat((data.ship.seconds / 3600).toFixed(1)));
 	let notesPayout = $derived(Math.ceil(adjustedHours * NOTES_PER_HOUR));
+	let isComment = $derived(reviewMode === 'ship_comment' || reviewMode === 'internal_comment');
+	let reviewFormAction = $derived(
+		isComment ? '?/comment' : reviewMode === 'rejection' ? '?/reject' : '?/approve',
+	);
 
+	// --- edit review popover ---
 	let editingReviewId = $state(0);
 	let editUserComment = $state('');
 	let editInternalComment = $state('');
 	let editAdjustedHours = $state(0);
 	let editHasHours = $state(false);
-
-	let approvePopover: HTMLElement | undefined = $state();
-	let rejectPopover: HTMLElement | undefined = $state();
-	let commentPopover: HTMLElement | undefined = $state();
 	let editPopover: HTMLElement | undefined = $state();
-
-	function openApprove() {
-		adjustedHours = parseFloat((data.ship.seconds / 3600).toFixed(1));
-	}
 
 	function openEdit(review: (typeof data.reviews)[number]) {
 		editingReviewId = review.review.id;
 		editUserComment = review.review.userComment ?? '';
 		editInternalComment = review.review.internalComment ?? '';
 		editAdjustedHours = review.review.adjustedHours ?? 0;
-		editHasHours =
-			review.review.type === 'APPROVAL' || review.review.type === 'HQ_APPROVAL';
+		editHasHours = review.review.type === 'APPROVAL' || review.review.type === 'HQ_APPROVAL';
 	}
 
-	function reviewsForShip(shipId: number) {
-		return data.reviews.filter((r) => r.review.shipId === shipId);
+	// --- helpers ---
+	function timeAgo(date: Date): string {
+		const s = Math.floor((Date.now() - date.getTime()) / 1000);
+		if (s < 60) return `${s}s ago`;
+		const m = Math.floor(s / 60);
+		if (m < 60) return `${m}m ago`;
+		const h = Math.floor(m / 60);
+		if (h < 24) return `${h}h ago`;
+		const d = Math.floor(h / 24);
+		return `${d}d ago`;
 	}
 
 	function reviewTypeLabel(type: string) {
 		switch (type) {
 			case 'APPROVAL':
-				return 'Reviewer Approved';
+				return 'Approved';
 			case 'REJECTION':
 				return 'Rejected';
 			case 'COMMENT':
@@ -62,149 +69,18 @@
 			case 'HQ_REJECTION':
 				return 'text-accent-red';
 			default:
-				return 'text-text';
+				return '';
 		}
 	}
 
-	function shipStatusLabel(status: string) {
-		if (status === 'REVIEWER_APPROVED') return 'AWAITING HQ';
-		return status;
-	}
-
-	function shipStatusColor(status: string) {
-		switch (status) {
-			case 'APPROVED':
-				return 'text-green-700';
-			case 'REJECTED':
-				return 'text-accent-red';
-			case 'REVIEWER_APPROVED':
-				return 'text-yellow-700';
-			case 'CANCELLED':
-				return 'text-text/50';
-			default:
-				return 'text-text';
-		}
-	}
+	const currentShipReviews = data.reviews.filter((r) => r.review.shipId === data.ship.id);
+	const totalProjectSeconds = data.project.hackatimeSeconds ?? 0;
+	const unshippedSeconds = Math.max(
+		0,
+		totalProjectSeconds - data.project.committedSeconds - data.ship.seconds,
+	);
+	const isPending = data.ship.status === 'PENDING';
 </script>
-
-<!-- Approve popover -->
-<div bind:this={approvePopover} class={styleAdminPopover} popover id="confirm-approve">
-	<form action="?/approve" method="POST" class="space-y-4">
-		<p class="text-lg">Ship time: {formatHours(data.ship.seconds)}</p>
-		<label class="block">
-			<span class="text-sm">Approved Hours</span>
-			<input
-				type="number"
-				name="adjustedHours"
-				step="0.1"
-				min="0.1"
-				max={(data.ship.seconds / 3600).toFixed(1)}
-				bind:value={adjustedHours}
-				class="{styleInput} w-full font-jua text-text"
-			/>
-		</label>
-		<p class="text-sm">
-			Payout: {notesPayout} notes ({adjustedHours}h x {NOTES_PER_HOUR} notes/h)
-		</p>
-		<label class="block">
-			<span class="text-sm">Comment for shipper (required)</span>
-			<textarea
-				required
-				name="userComment"
-				class="{styleInput} w-full font-jua text-text"
-				placeholder="Visible to the shipper"
-			></textarea>
-		</label>
-		<label class="block">
-			<span class="text-sm">Internal comment (required)</span>
-			<textarea
-				required
-				name="internalComment"
-				class="{styleInput} w-full font-jua text-text"
-				placeholder="Only visible to reviewers"
-			></textarea>
-		</label>
-		<div class="flex gap-3 pt-2">
-			<button
-				type="button"
-				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				onclick={() => approvePopover?.hidePopover()}>Cancel</button
-			>
-			<input
-				type="submit"
-				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				value="Approve"
-			/>
-		</div>
-	</form>
-</div>
-
-<!-- Reject popover -->
-<div bind:this={rejectPopover} class={styleAdminPopover} popover id="confirm-reject">
-	<form action="?/reject" method="POST" class="space-y-4">
-		<label class="block">
-			<span class="text-sm">Comment for shipper (required)</span>
-			<textarea
-				required
-				name="userComment"
-				class="{styleInput} w-full font-jua text-text"
-				placeholder="Visible to the shipper"
-			></textarea>
-		</label>
-		<label class="block">
-			<span class="text-sm">Internal comment (required)</span>
-			<textarea
-				required
-				name="internalComment"
-				class="{styleInput} w-full font-jua text-text"
-				placeholder="Only visible to reviewers"
-			></textarea>
-		</label>
-		<div class="flex gap-3">
-			<button
-				type="button"
-				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				onclick={() => rejectPopover?.hidePopover()}>Cancel</button
-			>
-			<input
-				type="submit"
-				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				value="Reject"
-			/>
-		</div>
-	</form>
-</div>
-
-<!-- Comment popover -->
-<div bind:this={commentPopover} class={styleAdminPopover} popover id="add-comment">
-	<form action="?/comment" method="POST" class="space-y-4">
-		<label class="block">
-			<span class="text-sm">Comment</span>
-			<textarea
-				required
-				name="comment"
-				class="{styleInput} w-full font-jua text-text"
-				placeholder="Write a comment..."
-			></textarea>
-		</label>
-		<label class="flex cursor-pointer items-center gap-2">
-			<input type="checkbox" name="isInternal" />
-			<span class="text-sm">Internal only (user will NOT be notified)</span>
-		</label>
-		<div class="flex gap-3">
-			<button
-				type="button"
-				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				onclick={() => commentPopover?.hidePopover()}>Cancel</button
-			>
-			<input
-				type="submit"
-				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				value="Post"
-			/>
-		</div>
-	</form>
-</div>
 
 <!-- Edit review popover -->
 <div bind:this={editPopover} class={styleAdminPopover} popover id="edit-review">
@@ -219,7 +95,7 @@
 					step="0.1"
 					min="0.1"
 					bind:value={editAdjustedHours}
-					class="{styleInput} w-full font-jua text-text"
+					class="{styleInput} w-full border-2 border-text font-jua text-text"
 				/>
 			</label>
 		{/if}
@@ -227,7 +103,7 @@
 			<span class="text-sm">User Comment</span>
 			<textarea
 				name="userComment"
-				class="{styleInput} w-full font-jua text-text"
+				class="{styleInput} w-full border-2 border-text font-jua text-text"
 				bind:value={editUserComment}
 			></textarea>
 		</label>
@@ -235,7 +111,7 @@
 			<span class="text-sm">Internal Comment</span>
 			<textarea
 				name="internalComment"
-				class="{styleInput} w-full font-jua text-text"
+				class="{styleInput} w-full border-2 border-text font-jua text-text"
 				bind:value={editInternalComment}
 			></textarea>
 		</label>
@@ -254,156 +130,280 @@
 	</form>
 </div>
 
-<div class="p-10 pb-40 font-jua text-text">
-	<!-- Project Header -->
-	<div class="mb-8">
-		<div class="flex flex-wrap items-start justify-between gap-4">
-			<div>
-				<h1 class="text-3xl">
-					<a href="/projects/{data.project.id}" class="underline">{data.project.title}</a>
-				</h1>
-				<p class="text-text/70">
-					by <a href="/user/{data.user.id}" class="underline">@{data.user.username}</a>
-					&middot; {formatProjectCategory(data.project.category)}
-				</p>
-				{#if data.project.description}
-					<p class="mt-2 max-w-xl text-sm text-text/80">{data.project.description}</p>
-				{/if}
-			</div>
-			<div class="flex flex-wrap gap-2">
-				{#if data.project.githubUrl}
-					<a
-						href={data.project.githubUrl}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="{styleButton} bg-text px-4 py-1 text-lg text-light">Repository</a
-					>
-				{/if}
-				{#if data.project.demoUrl}
-					<a
-						href={data.project.demoUrl}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="{styleButton} bg-text px-4 py-1 text-lg text-light">Demo</a
-					>
-				{/if}
-				<a
-					href="https://joe.fraud.hackclub.com/billy/overview?u={data.user.username}"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="{styleButton} bg-text px-4 py-1 text-lg text-light">Joe Stats</a
-				>
-			</div>
+<div class="mx-auto max-w-3xl p-10 pb-40 font-jua text-text">
+	<!-- 1. Project Name -->
+	<div class="mb-6 rounded-xl border-2 border-text bg-text p-5 text-light">
+		<h1 class="mb-1 text-3xl">{data.project.title}</h1>
+		<p class="text-light/60">
+			by <a href="/user/{data.user.id}" class="underline">@{data.user.username}</a>
+		</p>
+	</div>
+
+	<!-- 2. Time stats -->
+	<div class="mb-6 grid grid-cols-2 gap-4 rounded-xl border-2 border-text bg-accent-purple p-4 text-sm sm:grid-cols-4">
+		<div>
+			<p class="text-text/50">Total project time</p>
+			<p class="text-lg">{formatHours(totalProjectSeconds)}</p>
+		</div>
+		<div>
+			<p class="text-text/50">Filed for review</p>
+			<p class="text-lg">
+				{new Date(data.ship.submittedAt).toLocaleDateString()}
+			</p>
+			<p class="text-xs text-text/40">{timeAgo(data.ship.submittedAt)}</p>
+		</div>
+		<div>
+			<p class="text-text/50">Time under review</p>
+			<p class="text-lg">{formatHours(data.ship.seconds)}</p>
+		</div>
+		<div>
+			<p class="text-text/50">Unshipped time</p>
+			<p class="text-lg">{formatHours(unshippedSeconds)}</p>
 		</div>
 	</div>
 
-	<!-- Ships -->
-	<div class="space-y-6">
-		{#each data.projectShips as ship}
-			{@const isCurrentShip = ship.id === data.ship.id}
-			{@const shipReviews = reviewsForShip(ship.id)}
-			<div
-				class="rounded-xl border-2 p-6 {isCurrentShip
-					? 'border-text bg-accent-purple/40'
-					: 'border-text/50 bg-accent-purple/20'}"
+	<!-- 3. Hackatime projects -->
+	{#if data.project.hackatimeProjects.length > 0}
+		<div class="mb-6 rounded-xl border-2 border-text bg-accent-purple p-4">
+			<p class="mb-2 text-sm text-text/50">Hackatime projects</p>
+			<div class="flex flex-wrap gap-2">
+				{#each data.project.hackatimeProjects as proj}
+					<span class="rounded-lg bg-bg px-3 py-1 text-sm">{proj}</span>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
+	<!-- 4. Screenshot -->
+	{#if data.project.coverArt}
+		<div class="mb-6 overflow-hidden rounded-xl border-2 border-text bg-light">
+			<img
+				src={data.project.coverArt}
+				alt="Project screenshot"
+				class="w-full object-cover"
+				onerror={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+			/>
+		</div>
+	{/if}
+
+	<!-- 5. Description -->
+	{#if data.project.description}
+		<div class="mb-6 rounded-xl border-2 border-text bg-accent-purple p-4 whitespace-pre-wrap text-sm text-text">
+			{data.project.description}
+		</div>
+	{/if}
+
+	<!-- 6. Buttons -->
+	<div class="mb-8 flex flex-wrap gap-3">
+		{#if data.project.demoUrl}
+			<a
+				href={data.project.demoUrl}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="{styleButton} bg-text px-6 py-2 text-lg text-light">Demo</a
 			>
-				<div class="mb-4 flex items-center justify-between">
-					<div class="flex items-center gap-4">
-						<a href="/admin/ships/{ship.id}" class="text-xl underline">
-							Ship #{ship.id}
-						</a>
-						<span class={shipStatusColor(ship.status)}>
-							{shipStatusLabel(ship.status)}
-						</span>
-						{#if isCurrentShip}
-							<span class="rounded bg-text/20 px-2 py-0.5 text-xs">current</span>
-						{/if}
+		{/if}
+		{#if data.project.githubUrl}
+			<a
+				href={data.project.githubUrl}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="{styleButton} bg-text px-6 py-2 text-lg text-light">Repository</a
+			>
+		{/if}
+		<a
+			href="/projects/{data.project.id}"
+			class="{styleButton} bg-text px-6 py-2 text-lg text-light">Project Page</a
+		>
+	</div>
+
+	<!-- 7. Review Timeline -->
+	<div class="mb-8 rounded-xl border-2 border-text bg-accent-purple p-6">
+		<h2 class="mb-4 text-2xl">Review Timeline</h2>
+		<div class="timeline relative ml-5 border-l-2 border-text pl-6">
+			<!-- Ship submitted event -->
+			<div class="relative mb-6">
+				<div class="absolute -left-[33px] top-0.5 h-4 w-4 rounded-full border-2 border-text bg-accent-purple"></div>
+				<div class="flex items-center gap-3">
+					<img
+						src={data.user.avatarUrl ?? '/404.jpg'}
+						alt={data.user.username}
+						class="h-8 w-8 rounded-full object-cover"
+					/>
+					<div>
+						<span class="font-bold">@{data.user.username}</span>
+						<span class="text-text/60"> shipped this project</span>
 					</div>
-					<div class="flex items-center gap-4 text-sm text-text/70">
-						<span>{formatHours(ship.seconds)}</span>
-						<span>{new Date(ship.submittedAt).toLocaleDateString()}</span>
-					</div>
+					<span class="ml-auto text-xs text-text/40">
+						{new Date(data.ship.submittedAt).toLocaleString()}
+					</span>
 				</div>
+				<p class="mt-1 ml-11 text-sm text-text/60">
+					{formatHours(data.ship.seconds)} submitted for review
+				</p>
+			</div>
 
-				<!-- Actions for the current ship -->
-				{#if isCurrentShip && ship.status === 'PENDING'}
-					<div class="mb-4 flex gap-2">
-						<button
-							class="{styleButton} bg-text px-4 py-1 text-lg text-light"
-							onclick={openApprove}
-							popovertarget="confirm-approve">Approve</button
-						>
-						<button
-							class="{styleButton} bg-text px-4 py-1 text-lg text-light"
-							popovertarget="confirm-reject">Reject</button
-						>
-						<button
-							class="{styleButton} bg-text px-4 py-1 text-lg text-light"
-							popovertarget="add-comment">Comment</button
-						>
-					</div>
-				{:else if isCurrentShip && ship.status !== 'CANCELLED'}
-					<div class="mb-4 flex gap-2">
-						<button
-							class="{styleButton} bg-text px-4 py-1 text-lg text-light"
-							popovertarget="add-comment">Comment</button
-						>
-					</div>
-				{/if}
-
-				<!-- Reviews for this ship -->
-				{#if shipReviews.length > 0}
-					<div class="space-y-3">
-						{#each shipReviews as r}
-							<div class="border-t border-text/30 pt-3">
-								<div class="flex flex-wrap items-center justify-between gap-2">
-									<div class="flex items-center gap-2">
-										<span class="font-bold {reviewTypeColor(r.review.type)}">
-											{reviewTypeLabel(r.review.type)}
-										</span>
-										<span class="text-sm text-text/70">by {r.reviewer.username}</span>
-										{#if r.review.adjustedHours}
-											<span class="text-sm">({r.review.adjustedHours}h)</span>
-										{/if}
-										{#if r.review.isInternal}
-											<span class="rounded bg-text/20 px-1.5 py-0.5 text-xs">internal</span>
-										{/if}
-									</div>
-									<div class="flex items-center gap-2">
-										<span class="text-xs text-text/50">
-											{new Date(r.review.createdAt).toLocaleString()}
-											{#if r.review.updatedAt.getTime() !== r.review.createdAt.getTime()}
-												(edited)
-											{/if}
-										</span>
-										{#if r.review.reviewerId === data.currentUserId}
-											<button
-												class="text-xs underline"
-												onclick={() => openEdit(r)}
-												popovertarget="edit-review">Edit</button
-											>
-										{/if}
-									</div>
-								</div>
-								{#if r.review.userComment}
-									<p class="mt-1 text-sm">
-										<span class="text-text/50">User:</span>
-										{r.review.userComment}
-									</p>
+			<!-- Review events -->
+			{#each currentShipReviews as r}
+				{@const isEdited = r.review.updatedAt.getTime() !== r.review.createdAt.getTime()}
+				<div class="relative mb-6">
+					<div
+						class="absolute -left-[33px] top-0.5 h-4 w-4 rounded-full border-2 border-text {r.review.type === 'APPROVAL' || r.review.type === 'HQ_APPROVAL'
+							? 'bg-green-600'
+							: r.review.type === 'REJECTION' || r.review.type === 'HQ_REJECTION'
+								? 'bg-red-500'
+								: 'bg-bg'}"
+					></div>
+					<div class="flex items-start gap-3">
+						<img
+							src={r.reviewer.avatarUrl ?? '/404.jpg'}
+							alt={r.reviewer.username}
+							class="h-8 w-8 shrink-0 rounded-full object-cover"
+						/>
+						<div class="min-w-0 flex-1">
+							<div class="flex flex-wrap items-center gap-x-2">
+								<span class="font-bold">@{r.reviewer.username}</span>
+								<span class="text-sm {reviewTypeColor(r.review.type)}">
+									{reviewTypeLabel(r.review.type)}
+								</span>
+								{#if r.review.adjustedHours}
+									<span class="text-sm text-text/60">
+										({r.review.adjustedHours}h &middot; {Math.ceil(r.review.adjustedHours * NOTES_PER_HOUR)} notes)
+									</span>
 								{/if}
-								{#if r.review.internalComment}
-									<p class="mt-1 text-sm text-text/70">
-										<span class="text-text/50">Internal:</span>
-										{r.review.internalComment}
-									</p>
+								{#if r.review.isInternal}
+									<span class="rounded bg-bg px-1.5 py-0.5 text-xs">internal</span>
 								{/if}
 							</div>
-						{/each}
+							{#if r.review.userComment}
+								<div class="mt-1 rounded-lg bg-light px-3 py-2 text-sm">
+									<p class="text-xs text-text/40">Shipper-visible</p>
+									{r.review.userComment}
+								</div>
+							{/if}
+							{#if r.review.internalComment}
+								<div class="mt-1 rounded-lg bg-bg px-3 py-2 text-sm text-text">
+									<p class="text-xs text-text/40">Review-team only</p>
+									{r.review.internalComment}
+								</div>
+							{/if}
+						</div>
+						<div class="flex shrink-0 items-center gap-2">
+							<span class="text-xs text-text/40">
+								{new Date(r.review.createdAt).toLocaleString()}
+								{#if isEdited}
+									<span class="italic">(edited)</span>
+								{/if}
+							</span>
+							{#if r.review.reviewerId === data.currentUserId}
+								<button
+									class="text-xs underline text-text/50 hover:text-text"
+									onclick={() => openEdit(r)}
+									popovertarget="edit-review"
+								>
+									Edit
+								</button>
+							{/if}
+						</div>
 					</div>
-				{:else}
-					<p class="text-sm text-text/50">No reviews yet</p>
-				{/if}
-			</div>
-		{/each}
+				</div>
+			{/each}
+
+			{#if currentShipReviews.length === 0}
+				<p class="mb-6 text-sm text-text/40">No reviews yet</p>
+			{/if}
+		</div>
 	</div>
+
+	<!-- 8. Review Creator -->
+	{#if isPending}
+		<div class="rounded-xl border-2 border-text bg-accent-purple p-6">
+			<h2 class="mb-4 text-2xl">Submit Review</h2>
+			<form action={reviewFormAction} method="POST" class="space-y-4">
+				<label class="block">
+					<span class="text-sm text-text/60">Review type</span>
+					<select
+						bind:value={reviewMode}
+						class="{styleInput} w-full border-2 border-text text-text"
+					>
+						<option value="ship_comment">Ship Comment</option>
+						<option value="internal_comment">Internal Comment</option>
+						<option value="rejection">Rejection</option>
+						<option value="approval">Approval</option>
+					</select>
+				</label>
+
+				{#if reviewMode === 'approval'}
+					<label class="block">
+						<span class="text-sm text-text/60">Approved Hours</span>
+						<input
+							type="number"
+							name="adjustedHours"
+							step="0.1"
+							min="0.1"
+							max={(data.ship.seconds / 3600).toFixed(1)}
+							bind:value={adjustedHours}
+							class="{styleInput} w-full border-2 border-text text-text"
+						/>
+					</label>
+					<p class="text-sm text-text/50">
+						Payout: {notesPayout} notes ({adjustedHours}h &times; {NOTES_PER_HOUR} notes/h)
+					</p>
+				{/if}
+
+				{#if isComment}
+					{#if reviewMode === 'internal_comment'}
+						<input type="hidden" name="isInternal" value="on" />
+					{/if}
+					<label class="block">
+						<span class="text-sm text-text/60">
+							{reviewMode === 'internal_comment'
+								? 'Comment (only visible to review team)'
+								: 'Comment (visible to shipper)'}
+						</span>
+						<textarea
+							required
+							name="comment"
+							rows="3"
+							class="{styleInput} w-full border-2 border-text text-text"
+							placeholder={reviewMode === 'internal_comment'
+								? 'Only reviewers will see this...'
+								: 'The shipper will be notified...'}
+						></textarea>
+					</label>
+				{:else}
+					<label class="block">
+						<span class="text-sm text-text/60">Shipper-visible comment (required)</span>
+						<textarea
+							required
+							name="userComment"
+							rows="3"
+							class="{styleInput} w-full border-2 border-text text-text"
+							placeholder="This will be sent to the shipper"
+						></textarea>
+					</label>
+					<label class="block">
+						<span class="text-sm text-text/60">Review-team-only comment (required)</span>
+						<textarea
+							required
+							name="internalComment"
+							rows="2"
+							class="{styleInput} w-full border-2 border-text text-text"
+							placeholder="Only visible to reviewers"
+						></textarea>
+					</label>
+				{/if}
+
+				<button type="submit" class="{styleButton} w-full bg-text px-6 py-2 text-lg text-light">
+					{reviewMode === 'ship_comment'
+						? 'Post Comment'
+						: reviewMode === 'internal_comment'
+							? 'Post Internal Comment'
+							: reviewMode === 'rejection'
+								? 'Reject'
+								: 'Approve'}
+				</button>
+			</form>
+		</div>
+	{/if}
 </div>
