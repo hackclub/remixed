@@ -49,7 +49,6 @@
 				.then((resp) => resp.text())
 				.then((text) => (hoursText = formatHours(Number(text))));
 		}
-		console.log(data.pendingShips);
 	});
 
 	if (data.project!.hackatimeSeconds) {
@@ -111,7 +110,7 @@
 		>
 			{#if hackatimeProjects && hackatimeProjects.length > 0}
 				{#each hackatimeProjects as proj}
-					{#if proj.claimedBy == null}
+					{#if proj.claimedBy == null || proj.claimedBy == data.project!.id}
 						<option selected={proj.claimedBy == data.project!.id} value={proj.name}>
 							{proj.name}
 						</option>

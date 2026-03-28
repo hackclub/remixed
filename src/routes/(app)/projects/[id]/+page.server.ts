@@ -59,10 +59,11 @@ export const actions: Actions = {
 
 		const takenHackatimeProjects = (
 			await db
-				.select({ existingHackatimeProjects: projects.hackatimeProjects })
+				.select({ id: projects.id, existingHackatimeProjects: projects.hackatimeProjects })
 				.from(projects)
 				.where(eq(projects.userId, project.userId))
 		)
+			.filter((p) => p.id != projectId)
 			.map((p) => p.existingHackatimeProjects)
 			.reduce((sum, s) => sum.concat(s), []);
 
@@ -74,7 +75,6 @@ export const actions: Actions = {
 		const demoUrl = (data.get('demoUrl') as string | null)?.trim();
 		const categoryValue = String(data.get('category') ?? '').trim();
 		const newHackatimeProjects = (data.getAll('hackatimeProjects') ?? []) as string[];
-		const updatedHackatimeProjects = [...newHackatimeProjects, ...project.hackatimeProjects];
 
 		if (!isProjectCategory(categoryValue)) {
 			return fail(400, { error: 'Invalid category' });
@@ -94,7 +94,7 @@ export const actions: Actions = {
 				githubUrl,
 				demoUrl,
 				category,
-				hackatimeProjects: updatedHackatimeProjects,
+				hackatimeProjects: newHackatimeProjects,
 			})
 			.where(eq(projects.id, projectId));
 	},
