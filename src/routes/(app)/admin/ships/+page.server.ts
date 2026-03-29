@@ -72,7 +72,14 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const feedback = (data.get('feedback') as string).trim();
 		const shipId = Number(data.get('shipId'));
-		const [user] = await db.select().from(users).where(eq(users.id, locals.user!.id));
+
+		const [projectInfo] = await db
+			.select({ project: projects, user: users })
+			.from(ships)
+			.innerJoin(projects, eq(ships.projectId, projects.id))
+			.innerJoin(users, eq(projects.userId, users.id))
+			.where(eq(ships.id, shipId));
+
 		await Promise.all([
 			db.update(ships).set({ status: 'REJECTED', feedback }).where(eq(ships.id, shipId)),
 			recordAuditLog(db, {
@@ -86,11 +93,7 @@ export const actions: Actions = {
 					viaOrganizerRole: locals.user!.roles.includes('ORGANIZER'),
 				},
 			}),
-			db
-				.select({ project: projects })
-				.from(ships)
-				.innerJoin(projects, eq(ships.projectId, projects.id))
-				.then(([proj]) => sendCertMessage(user.slackId, proj.project.title, false, feedback)),
+			sendCertMessage(projectInfo.user.slackId, projectInfo.project.title, false, feedback),
 		]);
 	},
 	approve: async ({ request, locals }) => {
@@ -101,8 +104,14 @@ export const actions: Actions = {
 		const shipSeconds = Number(data.get('shipSeconds'));
 		const feedback = (data.get('feedback') as string).trim();
 
-		const [user] = await db.select().from(users).where(eq(users.id, locals.user!.id));
-		if (user.roles.includes('ORGANIZER')) {
+		const [projectInfo] = await db
+			.select({ project: projects, user: users })
+			.from(ships)
+			.innerJoin(projects, eq(ships.projectId, projects.id))
+			.innerJoin(users, eq(projects.userId, users.id))
+			.where(eq(ships.id, shipId));
+
+		if (locals.user!.roles.includes('ORGANIZER')) {
 			if (payoutMult < payoutMults.organizer[0] || payoutMult > payoutMults.organizer[1]) {
 				return;
 			}
@@ -114,14 +123,12 @@ export const actions: Actions = {
 		const payout = Math.ceil((payoutMult * shipSeconds) / (60.0 * 60.0));
 
 		await Promise.all([
-			db
-				.select({ project: projects })
-				.from(ships)
-				.innerJoin(projects, eq(ships.projectId, projects.id))
-				.then(([proj]) => sendCertMessage(user.slackId, proj.project.title, true, feedback))
-				.then(() =>
-					sendUpdatedBalance(user.slackId, user.notesBalance, user.notesBalance + payout),
-				),
+			sendCertMessage(projectInfo.user.slackId, projectInfo.project.title, true, feedback),
+			sendUpdatedBalance(
+				projectInfo.user.slackId,
+				projectInfo.user.notesBalance,
+				projectInfo.user.notesBalance + payout,
+			),
 			db
 				.update(users)
 				.set({ notesBalance: sql`${users.notesBalance} + ${payout}` })
@@ -145,8 +152,6 @@ export const actions: Actions = {
 				},
 			}),
 		]);
-
-		// sendUpdatedBalance(userId, ),
 	},
 	undoReview: async ({ request, locals }) => {
 		const data = await request.formData();
