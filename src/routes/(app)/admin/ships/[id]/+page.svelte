@@ -31,7 +31,7 @@
 		editUserComment = review.review.userComment ?? '';
 		editInternalComment = review.review.internalComment ?? '';
 		editAdjustedHours = review.review.adjustedHours ?? 0;
-		editHasHours = review.review.type === 'APPROVAL' || review.review.type === 'HQ_APPROVAL';
+		editHasHours = review.review.type === 'APPROVAL';
 	}
 
 	// --- helpers ---

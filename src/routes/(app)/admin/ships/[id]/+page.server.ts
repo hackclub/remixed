@@ -261,6 +261,13 @@ export const actions: Actions = {
 			return fail(403, { error: 'Can only edit your own reviews' });
 		}
 
+		if (adjustedHours !== undefined && reviewInfo.review.type === 'HQ_APPROVAL') {
+			return fail(400, {
+				error:
+					'Final approved hours cannot be edited after HQ approval. Undo and re-approve to change payout.',
+			});
+		}
+
 		if (adjustedHours !== undefined) {
 			const maxHours = reviewInfo.ship.seconds / 3600;
 			if (!Number.isFinite(adjustedHours) || adjustedHours <= 0 || adjustedHours > maxHours + 0.01) {

@@ -5,12 +5,14 @@ import { db } from '$lib/server/db';
 import {
 	deletedProjects,
 	deletedShips,
+	notesLedger,
 	projects,
 	ships,
 	users,
 } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { NOTES_PER_HOUR } from '$lib';
+import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const [projectShips, archivedShips, archivedProjects, allUsers] = await Promise.all([
@@ -117,22 +119,96 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		const shipId = Number(data.get('shipId'));
-		const [ship] = await db.select().from(ships).where(eq(ships.id, shipId));
 
-		if (!ship || ship.status === 'PENDING') {
-			return fail(404, { error: 'Ship not found or already pending' });
+		if (!Number.isFinite(shipId) || shipId <= 0) {
+			return fail(400, { error: 'Invalid ship id' });
 		}
 
-		await Promise.all([
-			db.update(ships).set({ status: 'PENDING', feedback: null }).where(eq(ships.id, shipId)),
-			recordAuditLog(db, {
+		const outcome = await db.transaction(async (tx) => {
+			const [shipInfo] = await tx
+				.select({ ship: ships, project: projects, user: users })
+				.from(ships)
+				.innerJoin(projects, eq(ships.projectId, projects.id))
+				.innerJoin(users, eq(projects.userId, users.id))
+				.where(eq(ships.id, shipId));
+
+			if (!shipInfo || shipInfo.ship.status === 'PENDING') {
+				return { notFound: true as const };
+			}
+
+			let oldBalance: number | null = null;
+			let newBalance: number | null = null;
+			let awardedNotes = 0;
+
+			if (shipInfo.ship.status === 'APPROVED') {
+				const awardedRows = await tx
+					.select({ delta: notesLedger.delta })
+					.from(notesLedger)
+					.where(
+						and(eq(notesLedger.refId, shipId), eq(notesLedger.reason, 'ship_approved')),
+					);
+
+				awardedNotes = awardedRows.reduce((sum, row) => sum + row.delta, 0);
+
+				await tx
+					.update(projects)
+					.set({
+						committedSeconds: sql`GREATEST(${projects.committedSeconds} - ${shipInfo.ship.seconds}, 0)`,
+					})
+					.where(eq(projects.id, shipInfo.project.id));
+
+				if (awardedNotes !== 0) {
+					const [updatedUser] = await tx
+						.update(users)
+						.set({ notesBalance: sql`${users.notesBalance} - ${awardedNotes}` })
+						.where(eq(users.id, shipInfo.user.id))
+						.returning({ notesBalance: users.notesBalance });
+
+					oldBalance = updatedUser.notesBalance + awardedNotes;
+					newBalance = updatedUser.notesBalance;
+
+					await tx.insert(notesLedger).values({
+						userId: shipInfo.user.id,
+						delta: -awardedNotes,
+						reason: 'ship_approved_undo',
+						refId: shipId,
+					});
+				}
+			}
+
+			await tx
+				.update(ships)
+				.set({ status: 'PENDING', feedback: null })
+				.where(eq(ships.id, shipId));
+
+			await recordAuditLog(tx, {
 				actorUserId: locals.user!.id,
 				category: 'SHIP_REVIEW',
 				entityType: 'ship',
 				entityId: shipId,
 				changeType: 'undo_review',
-				data: { previousStatus: ship.status },
-			}),
-		]);
+				data: {
+					previousStatus: shipInfo.ship.status,
+					awardedNotes,
+					revertedCommittedSeconds:
+						shipInfo.ship.status === 'APPROVED' ? shipInfo.ship.seconds : 0,
+				},
+			});
+
+			return {
+				notFound: false as const,
+				slackId: shipInfo.user.slackId,
+				oldBalance,
+				newBalance,
+			};
+		});
+
+		if (outcome.notFound) {
+			return fail(404, { error: 'Ship not found or already pending' });
+		}
+
+		if (outcome.oldBalance !== null && outcome.newBalance !== null) {
+			await sendUpdatedBalance(outcome.slackId, outcome.oldBalance, outcome.newBalance);
+		}
 	},
 };

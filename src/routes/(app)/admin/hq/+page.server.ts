@@ -67,6 +67,10 @@ export const actions: Actions = {
 		const userComment = (data.get('userComment') as string).trim();
 		const internalComment = (data.get('internalComment') as string).trim();
 
+		if (!Number.isFinite(shipId) || shipId <= 0) {
+			return fail(400, { error: 'Invalid ship id' });
+		}
+
 		if (!userComment || !internalComment) {
 			return fail(400, { error: 'Both user and internal comments are required' });
 		}
@@ -88,8 +92,71 @@ export const actions: Actions = {
 		}
 
 		const notesPayout = Math.ceil(adjustedHours * NOTES_PER_HOUR);
-		const oldBalance = shipInfo.user.notesBalance;
-		const newBalance = oldBalance + notesPayout;
+
+		const outcome = await db.transaction(async (tx) => {
+			const [approvedShip] = await tx
+				.update(ships)
+				.set({ status: 'APPROVED', feedback: userComment })
+				.where(and(eq(ships.id, shipId), eq(ships.status, 'REVIEWER_APPROVED')))
+				.returning({ id: ships.id });
+
+			if (!approvedShip) {
+				return { conflict: true as const };
+			}
+
+			const [reviewRow] = await tx
+				.insert(shipReviews)
+				.values({
+					shipId,
+					reviewerId: locals.user!.id,
+					type: 'HQ_APPROVAL',
+					userComment,
+					internalComment,
+					adjustedHours,
+					slackMessageTs: null,
+					slackChannelId: null,
+				})
+				.returning({ id: shipReviews.id });
+
+			await tx
+				.update(projects)
+				.set({ committedSeconds: sql`${projects.committedSeconds} + ${shipInfo.ship.seconds}` })
+				.where(eq(projects.id, shipInfo.project.id));
+
+			const [updatedUser] = await tx
+				.update(users)
+				.set({ notesBalance: sql`${users.notesBalance} + ${notesPayout}` })
+				.where(eq(users.id, shipInfo.user.id))
+				.returning({ notesBalance: users.notesBalance });
+
+			await Promise.all([
+				tx.insert(notesLedger).values({
+					userId: shipInfo.user.id,
+					delta: notesPayout,
+					reason: 'ship_approved',
+					refId: shipId,
+				}),
+				recordAuditLog(tx, {
+					actorUserId: locals.user!.id,
+					category: 'SHIP_REVIEW',
+					entityType: 'ship',
+					entityId: shipId,
+					changeType: 'hq_approve',
+					data: { adjustedHours, notesPayout, userComment, internalComment },
+				}),
+			]);
+
+			return {
+				conflict: false as const,
+				reviewId: reviewRow.id,
+				oldBalance: updatedUser.notesBalance - notesPayout,
+				newBalance: updatedUser.notesBalance,
+			};
+		});
+
+		if (outcome.conflict) {
+			return fail(409, { error: 'Ship was already processed by another reviewer' });
+		}
 
 		const slackResult = await sendReviewDM(
 			shipInfo.user.slackId,
@@ -99,68 +166,35 @@ export const actions: Actions = {
 			userComment,
 		);
 
+		if (slackResult.ts && slackResult.channel) {
+			await db
+				.update(shipReviews)
+				.set({ slackMessageTs: slackResult.ts, slackChannelId: slackResult.channel })
+				.where(eq(shipReviews.id, outcome.reviewId));
+		}
+
 		await Promise.all([
-			db
-				.update(ships)
-				.set({ status: 'APPROVED', feedback: userComment })
-				.where(eq(ships.id, shipId)),
-			db.insert(shipReviews).values({
-				shipId,
-				reviewerId: locals.user!.id,
-				type: 'HQ_APPROVAL',
-				userComment,
-				internalComment,
-				adjustedHours,
-				slackMessageTs: slackResult.ts ?? null,
-				slackChannelId: slackResult.channel ?? null,
-			}),
-			db
-				.update(projects)
-				.set({
-					committedSeconds: sql`${projects.committedSeconds} + ${shipInfo.ship.seconds}`,
-				})
-				.where(eq(projects.id, shipInfo.project.id)),
-			db
-				.update(users)
-				.set({ notesBalance: newBalance })
-				.where(eq(users.id, shipInfo.user.id)),
-			db.insert(notesLedger).values({
-				userId: shipInfo.user.id,
-				delta: notesPayout,
-				reason: 'ship_approved',
-				refId: shipId,
-			}),
-			recordAuditLog(db, {
-				actorUserId: locals.user!.id,
-				category: 'SHIP_REVIEW',
-				entityType: 'ship',
-				entityId: shipId,
-				changeType: 'hq_approve',
-				data: { adjustedHours, notesPayout, userComment, internalComment },
+			sendUpdatedBalance(shipInfo.user.slackId, outcome.oldBalance, outcome.newBalance),
+			createAirtableShipRecord({
+				codeUrl: shipInfo.project.githubUrl,
+				playableUrl: shipInfo.project.demoUrl,
+				firstName: shipInfo.user.firstName,
+				lastName: shipInfo.user.lastName,
+				email: shipInfo.user.email,
+				screenshot: shipInfo.project.coverArt,
+				description: shipInfo.project.description,
+				githubUsername: extractGithubUsername(shipInfo.project.githubUrl),
+				addressLine1: null,
+				addressLine2: null,
+				city: null,
+				state: null,
+				country: null,
+				zipCode: null,
+				birthday: null,
+				overrideHoursSpent: adjustedHours,
+				overrideHoursJustification: internalComment,
 			}),
 		]);
-
-		await sendUpdatedBalance(shipInfo.user.slackId, oldBalance, newBalance);
-
-		await createAirtableShipRecord({
-			codeUrl: shipInfo.project.githubUrl,
-			playableUrl: shipInfo.project.demoUrl,
-			firstName: shipInfo.user.firstName,
-			lastName: shipInfo.user.lastName,
-			email: shipInfo.user.email,
-			screenshot: shipInfo.project.coverArt,
-			description: shipInfo.project.description,
-			githubUsername: extractGithubUsername(shipInfo.project.githubUrl),
-			addressLine1: null,
-			addressLine2: null,
-			city: null,
-			state: null,
-			country: null,
-			zipCode: null,
-			birthday: null,
-			overrideHoursSpent: adjustedHours,
-			overrideHoursJustification: internalComment,
-		});
 	},
 	hqReject: async ({ request, locals }) => {
 		const data = await request.formData();
