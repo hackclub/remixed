@@ -5,20 +5,12 @@ import { db } from '$lib/server/db';
 import {
 	deletedProjects,
 	deletedShips,
-	notesLedger,
 	projects,
 	ships,
 	users,
 } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
-import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
-import { sendCertMessage } from '$lib/server/slack/cert_message';
+import { eq } from 'drizzle-orm';
 import { NOTES_PER_HOUR } from '$lib';
-
-const payoutMults = {
-	reviewer: [10.0, 15.0],
-	organizer: [10.0, 25.0],
-};
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const [projectShips, archivedShips, archivedProjects, allUsers] = await Promise.all([
@@ -74,88 +66,49 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	reject: async ({ locals, request }) => {
 		const data = await request.formData();
-		const feedback = (data.get('feedback') as string).trim();
 		const shipId = Number(data.get('shipId'));
+		const auditedShipId = Number.isFinite(shipId) ? shipId : 0;
 
-		const [projectInfo] = await db
-			.select({ project: projects, user: users })
-			.from(ships)
-			.innerJoin(projects, eq(ships.projectId, projects.id))
-			.innerJoin(users, eq(projects.userId, users.id))
-			.where(eq(ships.id, shipId));
+		await recordAuditLog(db, {
+			actorUserId: locals.user!.id,
+			category: 'SHIP_REVIEW',
+			entityType: 'ship',
+			entityId: auditedShipId,
+			changeType: 'legacy_reject_blocked',
+			data: {
+				shipId: auditedShipId,
+				message:
+					'Blocked legacy /admin/ships reject action; use /admin/ships/[id] reviewer workflow instead.',
+			},
+		});
 
-		await Promise.all([
-			db.update(ships).set({ status: 'REJECTED', feedback }).where(eq(ships.id, shipId)),
-			recordAuditLog(db, {
-				actorUserId: locals.user!.id,
-				category: 'SHIP_REVIEW',
-				entityType: 'ship',
-				entityId: shipId,
-				changeType: 'reject',
-				data: {
-					feedback,
-					viaOrganizerRole: locals.user!.roles.includes('ORGANIZER'),
-				},
-			}),
-			sendCertMessage(projectInfo.user.slackId, projectInfo.project.title, false, feedback),
-		]);
+		return fail(410, {
+			error:
+				'Legacy reject action is disabled. Use /admin/ships/[id] to submit reviewer decisions.',
+		});
 	},
-	approve: async ({ request, locals }) => {
+	approve: async ({ locals, request }) => {
 		const data = await request.formData();
 		const shipId = Number(data.get('shipId'));
-		const userId = Number(data.get('userId'));
-		const payoutMult = Number(data.get('payoutMult'));
-		const shipSeconds = Number(data.get('shipSeconds'));
-		const feedback = (data.get('feedback') as string).trim();
+		const auditedShipId = Number.isFinite(shipId) ? shipId : 0;
 
-		const [projectInfo] = await db
-			.select({ project: projects, user: users })
-			.from(ships)
-			.innerJoin(projects, eq(ships.projectId, projects.id))
-			.innerJoin(users, eq(projects.userId, users.id))
-			.where(eq(ships.id, shipId));
+		await recordAuditLog(db, {
+			actorUserId: locals.user!.id,
+			category: 'SHIP_REVIEW',
+			entityType: 'ship',
+			entityId: auditedShipId,
+			changeType: 'legacy_approve_blocked',
+			data: {
+				shipId: auditedShipId,
+				message:
+					'Blocked legacy /admin/ships approve action; use /admin/ships/[id] reviewer workflow and /admin/hq for finalization.',
+			},
+		});
 
-		if (locals.user!.roles.includes('ORGANIZER')) {
-			if (payoutMult < payoutMults.organizer[0] || payoutMult > payoutMults.organizer[1]) {
-				return;
-			}
-		} else {
-			if (payoutMult < payoutMults.reviewer[0] || payoutMult > payoutMults.reviewer[1]) {
-				return;
-			}
-		}
-		const payout = Math.ceil((payoutMult * shipSeconds) / (60.0 * 60.0));
-
-		await Promise.all([
-			sendCertMessage(projectInfo.user.slackId, projectInfo.project.title, true, feedback),
-			sendUpdatedBalance(
-				projectInfo.user.slackId,
-				projectInfo.user.notesBalance,
-				projectInfo.user.notesBalance + payout,
-			),
-			db
-				.update(users)
-				.set({ notesBalance: sql`${users.notesBalance} + ${payout}` })
-				.where(eq(users.id, userId)),
-			db.update(ships).set({ status: 'APPROVED' }).where(eq(ships.id, shipId)),
-			db
-				.insert(notesLedger)
-				.values({ userId, delta: payout, reason: 'ship_approved', refId: shipId }),
-			recordAuditLog(db, {
-				actorUserId: locals.user!.id,
-				category: 'SHIP_REVIEW',
-				entityType: 'ship',
-				entityId: shipId,
-				changeType: 'approve',
-				data: {
-					shipId,
-					feedback,
-					viaOrganizerRole: locals.user!.roles.includes('ORGANIZER'),
-					multiplier: payoutMult,
-					payout,
-				},
-			}),
-		]);
+		return fail(410, {
+			error:
+				'Legacy approve action is disabled. Use /admin/ships/[id] for reviewer approval and /admin/hq for HQ final approval.',
+		});
 	},
 	undoReview: async ({ request, locals }) => {
 		if (!locals.user?.roles.includes('ORGANIZER')) {
