@@ -152,6 +152,7 @@
 				<option value="ORGANIZER" selected={activeUser.roles.includes('ORGANIZER')}>
 					Organizer
 				</option>
+				<option value="HQ" selected={activeUser.roles.includes('HQ')}>HQ</option>
 				<option value="REVIEWER" selected={activeUser.roles.includes('REVIEWER')}>Reviewer</option>
 				<option value="STAFF" selected={activeUser.roles.includes('STAFF')}>Staff</option>
 			</select>
