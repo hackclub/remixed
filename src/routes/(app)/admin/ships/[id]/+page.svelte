@@ -113,10 +113,7 @@
 	}
 
 	const totalProjectSeconds = data.project.hackatimeSeconds ?? 0;
-	const totalShippedSeconds = data.projectShips
-		.filter((s) => s.status !== 'CANCELLED')
-		.reduce((sum, s) => sum + s.seconds, 0);
-	const unshippedSeconds = Math.max(0, totalProjectSeconds - data.project.committedSeconds - totalShippedSeconds);
+	const unshippedSeconds = Math.max(0, totalProjectSeconds - data.project.committedSeconds);
 </script>
 
 <!-- Edit review popover -->

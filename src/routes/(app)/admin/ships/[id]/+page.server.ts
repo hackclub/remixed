@@ -261,6 +261,13 @@ export const actions: Actions = {
 			return fail(403, { error: 'Can only edit your own reviews' });
 		}
 
+		if (adjustedHours !== undefined) {
+			const maxHours = reviewInfo.ship.seconds / 3600;
+			if (!Number.isFinite(adjustedHours) || adjustedHours <= 0 || adjustedHours > maxHours + 0.01) {
+				return fail(400, { error: `Hours must be between 0 and ${maxHours.toFixed(1)}` });
+			}
+		}
+
 		await db
 			.update(shipReviews)
 			.set({
