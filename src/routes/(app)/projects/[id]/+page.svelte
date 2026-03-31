@@ -25,6 +25,8 @@
 	);
 
 	let draft = $state({ ...data.project });
+	let anim = $state(false);
+	let animDone = $state(false);
 
 	const isOwner = data.currentUserId == data.project?.userId;
 
@@ -43,6 +45,8 @@
 	}
 
 	onMount(() => {
+		requestAnimationFrame(() => (anim = true));
+		setTimeout(() => (animDone = true), 1000);
 		if (isOwner) {
 			fetch(`/api/project_time?id=${data.project!.id}`)
 				.then((resp) => resp.text())
@@ -227,11 +231,12 @@
 			<img
 				src="/project/disc.png"
 				alt=""
-				class="absolute -top-6 left-2 z-0 aspect-square w-52 -rotate-[173.97deg] object-cover sm:w-64 lg:-top-8 lg:left-4 lg:w-88"
+				class="absolute -top-6 left-2 z-0 aspect-square w-52 object-cover sm:w-64 lg:-top-8 lg:left-4 lg:w-88 anim-disc"
+				class:anim-active={anim}
 			/>
 
 			<!-- Screenshot Cover -->
-			<div class="pointer-events-none relative z-10 mt-14 flex w-fit sm:mt-16 lg:mt-20">
+			<div class="pointer-events-none relative z-10 mt-14 flex w-fit sm:mt-16 lg:mt-20 anim-cover" class:anim-active={anim}>
 				<!-- Category Sidebar -->
 				<div
 					class="flex h-[200px] w-10 shrink-0 items-center justify-center overflow-hidden bg-[#1d3047] sm:h-[250px] sm:w-11 lg:h-[310px] lg:w-12"
@@ -254,7 +259,7 @@
 			<!-- Repo / Demo Buttons - tucked behind screenshot on desktop -->
 			<div class="hidden lg:absolute lg:top-28 lg:left-[340px] lg:z-5 lg:flex lg:flex-col lg:gap-7">
 				{#if validUrl(draft.githubUrl)}
-					<a href={draft.githubUrl} target="_blank" rel="noopener noreferrer" class="skew-btn group relative block w-96">
+					<a href={draft.githubUrl} target="_blank" rel="noopener noreferrer" class="skew-btn group relative block w-96 anim-btn-repo" class:anim-active={anim} class:anim-done={animDone}>
 						<img
 							src="/project/skew-btn-bg.svg"
 							alt=""
@@ -271,7 +276,7 @@
 					</a>
 				{/if}
 				{#if validUrl(draft.demoUrl)}
-					<a href={draft.demoUrl} target="_blank" rel="noopener noreferrer" class="skew-btn group relative block w-96">
+					<a href={draft.demoUrl} target="_blank" rel="noopener noreferrer" class="skew-btn group relative block w-96 anim-btn-demo" class:anim-active={anim} class:anim-done={animDone}>
 						<img
 							src="/project/skew-btn-bg-alt.svg"
 							alt=""
@@ -292,10 +297,12 @@
 
 		<!-- Primary Details -->
 		<div class="my-4 flex flex-col gap-2 pl-2 lg:my-0 lg:pl-4">
-			<BoldText class="font-jua text-3xl tracking-tight sm:text-4xl lg:text-5xl" stroke="2">
-				{draft.title}
-			</BoldText>
-			<div class="flex items-end gap-2 sm:gap-3">
+			<div class="anim-info-title" class:anim-active={anim}>
+				<BoldText class="font-jua text-3xl tracking-tight sm:text-4xl lg:text-5xl" stroke="2">
+					{draft.title}
+				</BoldText>
+			</div>
+			<div class="flex items-end gap-2 sm:gap-3 anim-info-sub" class:anim-active={anim}>
 				<CoverArt
 					src={data.user.avatarUrl ?? undefined}
 					class="h-7 w-7 shrink-0 rounded-full shadow-lg sm:h-9 sm:w-9"
@@ -349,7 +356,7 @@
 	</div>
 
 	<!-- Right Side -->
-	<div class="relative mt-8 flex w-full grow flex-col items-center px-6 pb-48 sm:px-10 lg:mt-0 lg:items-end lg:px-0 lg:pb-0 lg:pt-0">
+	<div class="relative mt-8 flex w-full grow flex-col items-center px-6 pb-48 sm:px-10 lg:mt-0 lg:items-end lg:px-0 lg:pb-0 lg:pt-0 anim-sidebar" class:anim-active={anim}>
 		<!-- Mobile: solid background -->
 		<div class="absolute inset-0 bg-[#1c2c44] lg:hidden"></div>
 		<!-- Desktop: tilted SVG panel -->
@@ -464,6 +471,81 @@
 	}
 	.skew-btn:hover {
 		transform: translateX(12px);
+	}
+
+	/* --- Entrance animations --- */
+
+	@keyframes cover-enter {
+		from { transform: translateY(60px) scale(0.92); }
+		to { transform: translateY(0) scale(1); }
+	}
+	@keyframes disc-enter {
+		from { transform: translateY(80px) rotate(0deg); }
+		to { transform: translateY(0) rotate(-173.97deg); }
+	}
+	@keyframes sidebar-enter {
+		from { transform: translateX(300px); }
+		to { transform: translateX(0); }
+	}
+
+	.anim-cover {
+		transform: translateY(60px) scale(0.92);
+	}
+	.anim-cover.anim-active {
+		animation: cover-enter 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+
+	.anim-disc {
+		transform: translateY(80px) rotate(0deg);
+	}
+	.anim-disc.anim-active {
+		animation: disc-enter 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+
+	.anim-btn-repo,
+	.anim-btn-demo {
+		transform: translateX(-120px);
+		transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+	.anim-btn-repo.anim-active,
+	.anim-btn-demo.anim-active {
+		transform: translateX(0);
+	}
+	.anim-btn-repo.anim-done,
+	.anim-btn-demo.anim-done {
+		transition: transform 0.15s ease;
+	}
+	.anim-btn-repo.anim-done:hover,
+	.anim-btn-demo.anim-done:hover {
+		transform: translateX(12px);
+	}
+
+	@keyframes info-enter {
+		from { opacity: 0; transform: translateY(20px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	.anim-info-title {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	.anim-info-title.anim-active {
+		animation: info-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+	}
+
+	.anim-info-sub {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	.anim-info-sub.anim-active {
+		animation: info-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+	}
+
+	.anim-sidebar {
+		transform: translateX(300px);
+	}
+	.anim-sidebar.anim-active {
+		animation: sidebar-enter 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 	}
 
 	.description-scroll {
