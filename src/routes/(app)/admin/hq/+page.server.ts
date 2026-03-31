@@ -4,12 +4,15 @@ import { recordAuditLog } from '$lib/server/audit';
 import { db } from '$lib/server/db';
 import {
 	notesLedger,
+	orders,
 	projects,
 	shipReviews,
 	ships,
+	shopItems,
 	users,
 } from '$lib/server/db/schema';
 import { and, eq, inArray, desc, sql } from 'drizzle-orm';
+import { sendMessage } from '$lib/server/slack/send_message';
 import { sendReviewDM } from '$lib/server/slack/review_message';
 import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
 import { createAirtableShipRecord, extractGithubUsername } from '$lib/server/airtable';
@@ -302,6 +305,147 @@ export const actions: Actions = {
 			overrideHoursSpent: hours,
 			overrideHoursJustification: justification,
 		});
+	},
+	revokeLegacyShip: async ({ request, locals }) => {
+		const data = await request.formData();
+		const shipId = Number(data.get('shipId'));
+		const reason = (data.get('reason') as string).trim();
+
+		if (!Number.isFinite(shipId) || shipId <= 0) {
+			return fail(400, { error: 'Invalid ship id' });
+		}
+		if (!reason) {
+			return fail(400, { error: 'Reason is required' });
+		}
+
+		const [shipInfo] = await db
+			.select({ ship: ships, project: projects, user: users })
+			.from(ships)
+			.innerJoin(projects, eq(ships.projectId, projects.id))
+			.innerJoin(users, eq(projects.userId, users.id))
+			.where(eq(ships.id, shipId));
+
+		if (!shipInfo || shipInfo.ship.status !== 'APPROVED') {
+			return fail(400, { error: 'Ship not found or not approved' });
+		}
+
+		const outcome = await db.transaction(async (tx) => {
+			// Find how many notes were awarded for this ship
+			const awardedRows = await tx
+				.select({ delta: notesLedger.delta })
+				.from(notesLedger)
+				.where(
+					and(eq(notesLedger.refId, shipId), eq(notesLedger.reason, 'ship_approved')),
+				);
+			const awardedNotes = awardedRows.reduce((sum, row) => sum + row.delta, 0);
+
+			// Cancel the ship
+			await tx
+				.update(ships)
+				.set({ status: 'CANCELLED', feedback: `Revoked: ${reason}` })
+				.where(eq(ships.id, shipId));
+
+			// Restore committed seconds
+			await tx
+				.update(projects)
+				.set({
+					committedSeconds: sql`GREATEST(${projects.committedSeconds} - ${shipInfo.ship.seconds}, 0)`,
+				})
+				.where(eq(projects.id, shipInfo.project.id));
+
+			let cancelledOrders: { orderId: number; itemName: string; cost: number }[] = [];
+
+			if (awardedNotes > 0) {
+				// Deduct notes
+				const [updatedUser] = await tx
+					.update(users)
+					.set({ notesBalance: sql`${users.notesBalance} - ${awardedNotes}` })
+					.where(eq(users.id, shipInfo.user.id))
+					.returning({ notesBalance: users.notesBalance });
+
+				await tx.insert(notesLedger).values({
+					userId: shipInfo.user.id,
+					delta: -awardedNotes,
+					reason: 'ship_revoked',
+					refId: shipId,
+				});
+
+				// If balance went negative, cancel pending orders until it's non-negative
+				if (updatedUser.notesBalance < 0) {
+					const pendingOrders = await tx
+						.select({ order: orders, item: shopItems })
+						.from(orders)
+						.innerJoin(shopItems, eq(orders.itemId, shopItems.id))
+						.where(
+							and(
+								eq(orders.userId, shipInfo.user.id),
+								eq(orders.status, 'PENDING'),
+							),
+						)
+						.orderBy(desc(orders.createdAt));
+
+					let balance = updatedUser.notesBalance;
+					for (const { order, item } of pendingOrders) {
+						if (balance >= 0) break;
+
+						await tx
+							.update(orders)
+							.set({ status: 'FULFILLED' }) // no CANCELLED status exists, mark fulfilled
+							.where(eq(orders.id, order.id));
+
+						// Refund the order cost
+						await tx
+							.update(users)
+							.set({ notesBalance: sql`${users.notesBalance} + ${item.cost}` })
+							.where(eq(users.id, shipInfo.user.id));
+
+						await tx.insert(notesLedger).values({
+							userId: shipInfo.user.id,
+							delta: item.cost,
+							reason: 'order_cancelled_revoke',
+							refId: order.id,
+						});
+
+						cancelledOrders.push({
+							orderId: order.id,
+							itemName: item.name,
+							cost: item.cost,
+						});
+						balance += item.cost;
+					}
+				}
+			}
+
+			return { awardedNotes, cancelledOrders };
+		});
+
+		await recordAuditLog(db, {
+			actorUserId: locals.user!.id,
+			category: 'SHIP_REVIEW',
+			entityType: 'ship',
+			entityId: shipId,
+			changeType: 'revoke_legacy_ship',
+			data: {
+				reason,
+				awardedNotes: outcome.awardedNotes,
+				cancelledOrders: outcome.cancelledOrders,
+			},
+		});
+
+		// Notify the user via Slack
+		const cancelledOrderLines = outcome.cancelledOrders
+			.map((o) => `  • Order #${o.orderId} (${o.itemName}, ${o.cost} notes) — cancelled & refunded`)
+			.join('\n');
+
+		let message = `Your ship for *${shipInfo.project.title}* has been revoked.\n_Reason: ${reason}_`;
+		if (outcome.awardedNotes > 0) {
+			message += `\n\n*${outcome.awardedNotes} notes* have been deducted from your balance.`;
+		}
+		if (cancelledOrderLines) {
+			message += `\n\nThe following pending orders were cancelled:\n${cancelledOrderLines}`;
+		}
+
+		await sendMessage(shipInfo.user.slackId, message);
 	},
 	hqReject: async ({ request, locals }) => {
 		const data = await request.formData();

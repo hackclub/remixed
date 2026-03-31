@@ -14,10 +14,13 @@
 
 	let backfillJustification = $state('');
 	let backfillShipId = $state('');
+	let revokeShipId = $state('');
+	let revokeReason = $state('');
 
 	let approvePopover: HTMLElement | undefined = $state();
 	let rejectPopover: HTMLElement | undefined = $state();
 	let backfillPopover: HTMLElement | undefined = $state();
+	let revokePopover: HTMLElement | undefined = $state();
 
 	type ShipRow = (typeof data.ships)[number];
 
@@ -138,6 +141,39 @@
 				type="submit"
 				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
 			>Send to Airtable</button>
+		</div>
+	</form>
+</div>
+
+<!-- Revoke Legacy Ship popover -->
+<div bind:this={revokePopover} class="{styleAdminPopover} font-jua" popover id="revoke-legacy">
+	<form action="?/revokeLegacyShip" method="POST" class="space-y-4">
+		<input type="hidden" name="shipId" value={revokeShipId} />
+		<p class="text-lg text-red-400">Revoke legacy ship #{revokeShipId}</p>
+		<p class="text-sm">
+			This will cancel the ship, deduct awarded notes, cancel pending orders if the balance
+			goes negative, and notify the user via Slack.
+		</p>
+		<label class="block">
+			<span class="text-sm">Reason (required, sent to user)</span>
+			<textarea
+				required
+				name="reason"
+				bind:value={revokeReason}
+				class="{styleInput} w-full font-jua text-text"
+				placeholder="Why is this ship being revoked?"
+			></textarea>
+		</label>
+		<div class="flex gap-3 pt-2">
+			<button
+				type="button"
+				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
+				onclick={() => revokePopover?.hidePopover()}>Cancel</button
+			>
+			<button
+				type="submit"
+				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-red-400"
+			>Revoke</button>
 		</div>
 	</form>
 </div>
@@ -289,15 +325,26 @@
 								</td>
 								<td>{formatHours(shipInfo.ship.seconds)}</td>
 								<td>
-									<button
-										class="{styleButton} bg-text px-4 py-1 text-lg text-light"
-										type="button"
-										onclick={() => {
-											backfillShipId = String(shipInfo.ship.id);
-											backfillJustification = 'Legacy approval, backfilled to Airtable';
-										}}
-										popovertarget="backfill-airtable"
-									>Backfill</button>
+									<div class="flex flex-wrap gap-2">
+										<button
+											class="{styleButton} bg-text px-4 py-1 text-lg text-light"
+											type="button"
+											onclick={() => {
+												backfillShipId = String(shipInfo.ship.id);
+												backfillJustification = 'Legacy approval, backfilled to Airtable';
+											}}
+											popovertarget="backfill-airtable"
+										>Backfill</button>
+										<button
+											class="{styleButton} bg-text px-4 py-1 text-lg text-red-400"
+											type="button"
+											onclick={() => {
+												revokeShipId = String(shipInfo.ship.id);
+												revokeReason = '';
+											}}
+											popovertarget="revoke-legacy"
+										>Revoke</button>
+									</div>
 								</td>
 							</tr>
 						{/each}
