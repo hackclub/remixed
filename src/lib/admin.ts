@@ -17,6 +17,12 @@ export const ADMIN_PAGES: AdminPageDefinition[] = [
 		roles: ['REVIEWER'],
 	},
 	{
+		href: '/admin/hq',
+		title: 'HQ Review',
+		description: 'Final approval queue for reviewer-approved ships.',
+		roles: ['HQ'],
+	},
+	{
 		href: '/admin/users',
 		title: 'Users',
 		description: 'Edit account details, balances, referrals, and admin permissions for users.',

@@ -2,7 +2,7 @@ export const stylePopover =
 	'fixed top-1/2 left-1/2 w-90 -translate-1/2 rounded-xl border-2 border-secondary bg-bg p-8 text-text shadow-xl/30';
 
 export const styleAdminPopover =
-	'fixed top-1/2 left-1/2 w-[min(90vw,28rem)] -translate-1/2 overflow-x-hidden rounded-xl bg-text p-8 text-light shadow-xl/30';
+	'fixed top-1/2 left-1/2 w-[min(90vw,36rem)] -translate-1/2 overflow-x-hidden rounded-xl bg-text p-8 text-light shadow-xl/30';
 
 export const styleButton =
 	'hover-effect-shadow cursor-pointer rounded-xl border-4 border-[#8B81FF] bg-[#1C2C44] px-16 py-2 text-center font-jua text-2xl text-light';

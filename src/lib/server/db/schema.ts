@@ -1,13 +1,24 @@
-import { pgTable, serial, text, integer, timestamp, pgEnum, json } from 'drizzle-orm/pg-core';
+import {
+	pgTable,
+	serial,
+	text,
+	integer,
+	timestamp,
+	pgEnum,
+	json,
+	real,
+	boolean,
+} from 'drizzle-orm/pg-core';
 import { PROJECT_CATEGORIES } from '$lib';
 
-export const roleEnum = pgEnum('role', ['USER', 'STAFF', 'REVIEWER', 'ORGANIZER']);
+export const roleEnum = pgEnum('role', ['USER', 'STAFF', 'REVIEWER', 'ORGANIZER', 'HQ']);
 export const categoryEnum = pgEnum('category', PROJECT_CATEGORIES);
 export const shipStatusEnum = pgEnum('ship_status', [
 	'PENDING',
 	'APPROVED',
 	'REJECTED',
 	'CANCELLED',
+	'REVIEWER_APPROVED',
 ]);
 export const orderStatusEnum = pgEnum('order_status', ['PENDING', 'FULFILLED']);
 export const auditCategory = pgEnum('audit_category', [
@@ -17,6 +28,13 @@ export const auditCategory = pgEnum('audit_category', [
 	'SHIP_REVIEW',
 	'SHOP_ITEM',
 	'PROJECT',
+]);
+export const reviewTypeEnum = pgEnum('review_type', [
+	'APPROVAL',
+	'REJECTION',
+	'COMMENT',
+	'HQ_APPROVAL',
+	'HQ_REJECTION',
 ]);
 
 export const users = pgTable('users', {
@@ -30,6 +48,9 @@ export const users = pgTable('users', {
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	roles: roleEnum('roles').array().notNull().default(['USER']),
 	referrals: integer('referrals').notNull().default(0),
+	email: text('email'),
+	firstName: text('first_name'),
+	lastName: text('last_name'),
 });
 
 export const projects = pgTable('projects', {
@@ -46,6 +67,7 @@ export const projects = pgTable('projects', {
 	githubUrl: text('github_url'),
 	demoUrl: text('demo_url'),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
+	committedSeconds: integer('committed_seconds').notNull().default(0),
 });
 
 export const ships = pgTable('ships', {
@@ -54,9 +76,29 @@ export const ships = pgTable('ships', {
 		.notNull()
 		.references(() => projects.id),
 	seconds: integer('seconds').notNull(),
+	capturedSeconds: integer('captured_seconds'),
 	status: shipStatusEnum('status').notNull().default('PENDING'),
 	submittedAt: timestamp('submitted_at').notNull().defaultNow(),
 	feedback: text('feedback'),
+});
+
+export const shipReviews = pgTable('ship_reviews', {
+	id: serial('id').primaryKey(),
+	shipId: integer('ship_id')
+		.notNull()
+		.references(() => ships.id),
+	reviewerId: integer('reviewer_id')
+		.notNull()
+		.references(() => users.id),
+	type: reviewTypeEnum('type').notNull(),
+	userComment: text('user_comment'),
+	internalComment: text('internal_comment'),
+	isInternal: boolean('is_internal').notNull().default(false),
+	adjustedHours: real('adjusted_hours'),
+	slackMessageTs: text('slack_message_ts'),
+	slackChannelId: text('slack_channel_id'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 export const notesLedger = pgTable('notes_ledger', {

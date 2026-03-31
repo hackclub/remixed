@@ -9,7 +9,7 @@ import type { RoleEnumPub } from '$lib';
 const PROTECTED: { [key in RoleEnumPub]: string[] } = {
 	USER: ['/projects', '/api/me', '/api/ship', '/api/project_time'],
 	STAFF: [],
-	REVIEWER: ['/admin/ships'],
+	REVIEWER: ['/admin/ships', '/admin/review'],
 	ORGANIZER: [
 		'/admin/users',
 		'/admin/shop',
@@ -18,6 +18,7 @@ const PROTECTED: { [key in RoleEnumPub]: string[] } = {
 		'/admin/audit',
 		'/api/admin/order_info',
 	],
+	HQ: ['/admin/hq', '/admin/ships'],
 };
 
 const HACKATIME_REQUIRED = ['/projects', '/api/hackatime', '/api/project_time', '/api/ship'];
@@ -44,11 +45,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	for (const requiredRole in PROTECTED) {
-		if (PROTECTED[requiredRole as RoleEnumPub].some((p) => event.url.pathname.startsWith(p))) {
-			if (!event.locals.user?.roles.includes(requiredRole as RoleEnumPub)) {
-				throw redirect(303, '/');
-			}
+	const matchedRoles: RoleEnumPub[] = [];
+	for (const role in PROTECTED) {
+		if (PROTECTED[role as RoleEnumPub].some((p) => event.url.pathname.startsWith(p))) {
+			matchedRoles.push(role as RoleEnumPub);
+		}
+	}
+	if (matchedRoles.length > 0) {
+		if (!matchedRoles.some((role) => event.locals.user?.roles.includes(role))) {
+			throw redirect(303, '/');
 		}
 	}
 

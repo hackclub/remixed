@@ -10,14 +10,9 @@ import {
 	ships,
 	users,
 } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
+import { NOTES_PER_HOUR } from '$lib';
 import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
-import { sendCertMessage } from '$lib/server/slack/cert_message';
-
-const payoutMults = {
-	reviewer: [10.0, 15.0],
-	organizer: [10.0, 25.0],
-};
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const [projectShips, archivedShips, archivedProjects, allUsers] = await Promise.all([
@@ -39,6 +34,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		pendingShips: projectShips.filter(({ ship }) => ship.status === 'PENDING'),
+		reviewerApprovedShips: projectShips.filter(
+			({ ship }) => ship.status === 'REVIEWER_APPROVED',
+		),
 		reviewedShips: projectShips.filter(
 			({ ship }) => ship.status === 'APPROVED' || ship.status === 'REJECTED',
 		),
@@ -63,157 +61,154 @@ export const load: PageServerLoad = async ({ locals }) => {
 			};
 		}),
 		roles: locals.user?.roles,
-		payoutMults,
+		notesPerHour: NOTES_PER_HOUR,
 	};
 };
 
 export const actions: Actions = {
 	reject: async ({ locals, request }) => {
 		const data = await request.formData();
-		const feedback = (data.get('feedback') as string).trim();
 		const shipId = Number(data.get('shipId'));
+		const auditedShipId = Number.isFinite(shipId) ? shipId : 0;
 
-		const [projectInfo] = await db
-			.select({ project: projects, user: users })
-			.from(ships)
-			.innerJoin(projects, eq(ships.projectId, projects.id))
-			.innerJoin(users, eq(projects.userId, users.id))
-			.where(eq(ships.id, shipId));
+		await recordAuditLog(db, {
+			actorUserId: locals.user!.id,
+			category: 'SHIP_REVIEW',
+			entityType: 'ship',
+			entityId: auditedShipId,
+			changeType: 'legacy_reject_blocked',
+			data: {
+				shipId: auditedShipId,
+				message:
+					'Blocked legacy /admin/ships reject action; use /admin/ships/[id] reviewer workflow instead.',
+			},
+		});
 
-		await Promise.all([
-			db.update(ships).set({ status: 'REJECTED', feedback }).where(eq(ships.id, shipId)),
-			recordAuditLog(db, {
-				actorUserId: locals.user!.id,
-				category: 'SHIP_REVIEW',
-				entityType: 'ship',
-				entityId: shipId,
-				changeType: 'reject',
-				data: {
-					feedback,
-					viaOrganizerRole: locals.user!.roles.includes('ORGANIZER'),
-				},
-			}),
-			sendCertMessage(projectInfo.user.slackId, projectInfo.project.title, false, feedback),
-		]);
+		return fail(410, {
+			error:
+				'Legacy reject action is disabled. Use /admin/ships/[id] to submit reviewer decisions.',
+		});
 	},
-	approve: async ({ request, locals }) => {
+	approve: async ({ locals, request }) => {
 		const data = await request.formData();
 		const shipId = Number(data.get('shipId'));
-		const userId = Number(data.get('userId'));
-		const payoutMult = Number(data.get('payoutMult'));
-		const shipSeconds = Number(data.get('shipSeconds'));
-		const feedback = (data.get('feedback') as string).trim();
+		const auditedShipId = Number.isFinite(shipId) ? shipId : 0;
 
-		const [projectInfo] = await db
-			.select({ project: projects, user: users })
-			.from(ships)
-			.innerJoin(projects, eq(ships.projectId, projects.id))
-			.innerJoin(users, eq(projects.userId, users.id))
-			.where(eq(ships.id, shipId));
+		await recordAuditLog(db, {
+			actorUserId: locals.user!.id,
+			category: 'SHIP_REVIEW',
+			entityType: 'ship',
+			entityId: auditedShipId,
+			changeType: 'legacy_approve_blocked',
+			data: {
+				shipId: auditedShipId,
+				message:
+					'Blocked legacy /admin/ships approve action; use /admin/ships/[id] reviewer workflow and /admin/hq for finalization.',
+			},
+		});
 
-		if (locals.user!.roles.includes('ORGANIZER')) {
-			if (payoutMult < payoutMults.organizer[0] || payoutMult > payoutMults.organizer[1]) {
-				return;
-			}
-		} else {
-			if (payoutMult < payoutMults.reviewer[0] || payoutMult > payoutMults.reviewer[1]) {
-				return;
-			}
-		}
-		const payout = Math.ceil((payoutMult * shipSeconds) / (60.0 * 60.0));
-
-		await Promise.all([
-			sendCertMessage(projectInfo.user.slackId, projectInfo.project.title, true, feedback),
-			sendUpdatedBalance(
-				projectInfo.user.slackId,
-				projectInfo.user.notesBalance,
-				projectInfo.user.notesBalance + payout,
-			),
-			db
-				.update(users)
-				.set({ notesBalance: sql`${users.notesBalance} + ${payout}` })
-				.where(eq(users.id, userId)),
-			db.update(ships).set({ status: 'APPROVED' }).where(eq(ships.id, shipId)),
-			db
-				.insert(notesLedger)
-				.values({ userId, delta: payout, reason: 'ship_approved', refId: shipId }),
-			recordAuditLog(db, {
-				actorUserId: locals.user!.id,
-				category: 'SHIP_REVIEW',
-				entityType: 'ship',
-				entityId: shipId,
-				changeType: 'approve',
-				data: {
-					shipId,
-					feedback,
-					viaOrganizerRole: locals.user!.roles.includes('ORGANIZER'),
-					multiplier: payoutMult,
-					payout,
-				},
-			}),
-		]);
+		return fail(410, {
+			error:
+				'Legacy approve action is disabled. Use /admin/ships/[id] for reviewer approval and /admin/hq for HQ final approval.',
+		});
 	},
 	undoReview: async ({ request, locals }) => {
-		const data = await request.formData();
-		const shipId = Number(data.get('shipId'));
-		const [ship] = await db.select().from(ships).where(eq(ships.id, shipId));
-
-		if (!ship || ship.status === 'PENDING') {
-			return fail(404, { error: 'Ship not found' });
+		if (!locals.user?.roles.includes('ORGANIZER')) {
+			return fail(403, { error: 'Only organizers can undo reviews' });
 		}
 
-		const [projectInfo, ledgerEntries] = await Promise.all([
-			db
-				.select({ project: projects, user: users })
+		const data = await request.formData();
+		const shipId = Number(data.get('shipId'));
+
+		if (!Number.isFinite(shipId) || shipId <= 0) {
+			return fail(400, { error: 'Invalid ship id' });
+		}
+
+		const outcome = await db.transaction(async (tx) => {
+			const [shipInfo] = await tx
+				.select({ ship: ships, project: projects, user: users })
 				.from(ships)
 				.innerJoin(projects, eq(ships.projectId, projects.id))
 				.innerJoin(users, eq(projects.userId, users.id))
-				.where(eq(ships.id, shipId))
-				.then(([row]) => row),
-			db
-				.select()
-				.from(notesLedger)
-				.where(eq(notesLedger.refId, shipId))
-				.then((rows) => rows.filter((row) => row.reason === 'ship_approved')),
-		]);
+				.where(eq(ships.id, shipId));
 
-		if (!projectInfo) {
-			return fail(404, { error: 'Ship not found' });
-		}
+			if (!shipInfo || shipInfo.ship.status === 'PENDING') {
+				return { notFound: true as const };
+			}
 
-		const awardedNotes = ledgerEntries.reduce((sum, row) => sum + row.delta, 0);
-		const updates: Promise<unknown>[] = [
-			db.update(ships).set({ status: 'PENDING', feedback: null }).where(eq(ships.id, shipId)),
-			recordAuditLog(db, {
+			let oldBalance: number | null = null;
+			let newBalance: number | null = null;
+			let awardedNotes = 0;
+
+			if (shipInfo.ship.status === 'APPROVED') {
+				const awardedRows = await tx
+					.select({ delta: notesLedger.delta })
+					.from(notesLedger)
+					.where(
+						and(eq(notesLedger.refId, shipId), eq(notesLedger.reason, 'ship_approved')),
+					);
+
+				awardedNotes = awardedRows.reduce((sum, row) => sum + row.delta, 0);
+
+				await tx
+					.update(projects)
+					.set({
+						committedSeconds: sql`GREATEST(${projects.committedSeconds} - ${shipInfo.ship.seconds}, 0)`,
+					})
+					.where(eq(projects.id, shipInfo.project.id));
+
+				if (awardedNotes !== 0) {
+					const [updatedUser] = await tx
+						.update(users)
+						.set({ notesBalance: sql`${users.notesBalance} - ${awardedNotes}` })
+						.where(eq(users.id, shipInfo.user.id))
+						.returning({ notesBalance: users.notesBalance });
+
+					oldBalance = updatedUser.notesBalance + awardedNotes;
+					newBalance = updatedUser.notesBalance;
+
+					await tx.insert(notesLedger).values({
+						userId: shipInfo.user.id,
+						delta: -awardedNotes,
+						reason: 'ship_approved_undo',
+						refId: shipId,
+					});
+				}
+			}
+
+			await tx
+				.update(ships)
+				.set({ status: 'PENDING', feedback: null })
+				.where(eq(ships.id, shipId));
+
+			await recordAuditLog(tx, {
 				actorUserId: locals.user!.id,
 				category: 'SHIP_REVIEW',
 				entityType: 'ship',
 				entityId: shipId,
 				changeType: 'undo_review',
-				data: { previousStatus: ship.status, awardedNotes },
-			}),
-		];
+				data: {
+					previousStatus: shipInfo.ship.status,
+					awardedNotes,
+					revertedCommittedSeconds:
+						shipInfo.ship.status === 'APPROVED' ? shipInfo.ship.seconds : 0,
+				},
+			});
 
-		if (ship.status === 'APPROVED' && awardedNotes !== 0) {
-			updates.push(
-				db
-					.update(users)
-					.set({ notesBalance: sql`${users.notesBalance} - ${awardedNotes}` })
-					.where(eq(users.id, projectInfo.user.id)),
-				db.insert(notesLedger).values({
-					userId: projectInfo.user.id,
-					delta: -awardedNotes,
-					reason: 'ship_approved',
-					refId: shipId,
-				}),
-				sendUpdatedBalance(
-					projectInfo.user.slackId,
-					projectInfo.user.notesBalance,
-					projectInfo.user.notesBalance - awardedNotes,
-				),
-			);
+			return {
+				notFound: false as const,
+				slackId: shipInfo.user.slackId,
+				oldBalance,
+				newBalance,
+			};
+		});
+
+		if (outcome.notFound) {
+			return fail(404, { error: 'Ship not found or already pending' });
 		}
 
-		await Promise.all(updates);
+		if (outcome.oldBalance !== null && outcome.newBalance !== null) {
+			await sendUpdatedBalance(outcome.slackId, outcome.oldBalance, outcome.newBalance);
+		}
 	},
 };

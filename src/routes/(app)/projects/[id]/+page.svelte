@@ -15,12 +15,16 @@
 	let hoursText: string = $state('LOADING');
 	let editing: boolean = $state(false);
 	let canShip: boolean = $derived(
-		data.pendingShips.length == 0 &&
+		data.shipsAllowed &&
+			data.pendingShips.length == 0 &&
 			data.shippableSeconds >= 3600 &&
 			validUrl(data.project?.demoUrl ?? null) &&
 			validUrl(data.project?.githubUrl ?? null) &&
 			data.project?.hackatimeProjects.length != 0 &&
 			!editing,
+	);
+	let showShipButton: boolean = $derived(
+		data.shipsAllowed && data.pendingShips.length == 0 && !editing,
 	);
 
 	let draft = $state({ ...data.project });
@@ -177,8 +181,13 @@
 					<button class="{styleButton} " onclick={startEdit} popovertarget="editProject"
 						>Edit</button
 					>
-					{#if canShip}
-						<button class={styleButton} popovertarget="shipProject">Ship</button>
+					{#if showShipButton}
+						<button
+							class={styleButton}
+							popovertarget={canShip ? 'shipProject' : undefined}
+							disabled={!canShip}
+							class:opacity-50={!canShip}
+						>Ship</button>
 					{:else if data.pendingShips.length > 0}
 						<button class={styleButton} popovertarget="cancelShip">Cancel Ship</button>
 					{/if}
@@ -219,6 +228,48 @@
 		{/if}
 	</div>
 </div>
+
+<!-- TODO: Show ship history once restyling is done -->
+{#if isOwner && data.shipHistory.length > 0 && false}
+	<div class="mx-auto mb-10 max-w-2xl px-4 font-jua text-text">
+		<h2 class="mb-4 text-center text-2xl">Ship History</h2>
+		{#each data.shipHistory as ship}
+			{@const feedback = data.shipFeedback.filter((r) => r.shipId === ship.id)}
+			<div class="mb-4 rounded-xl border-4 border-[#8B81FF] bg-[#1C2C44] p-4">
+				<div class="flex items-center justify-between">
+					<span class="text-lg text-light">{formatHours(ship.seconds)}</span>
+					<span
+						class:text-green-400={ship.status === 'APPROVED'}
+						class:text-red-400={ship.status === 'REJECTED'}
+						class:text-yellow-400={ship.status === 'PENDING' ||
+							ship.status === 'REVIEWER_APPROVED'}
+					>
+						{ship.status === 'REVIEWER_APPROVED' || ship.status === 'PENDING'
+							? 'IN REVIEW'
+							: ship.status}
+					</span>
+				</div>
+				<p class="text-xs text-light/50">
+					{new Date(ship.submittedAt).toLocaleDateString()}
+				</p>
+				{#each feedback as review}
+					<div class="mt-2 border-t border-light/20 pt-2">
+						<p class="text-sm text-light/90">
+							{#if review.type === 'APPROVAL' || review.type === 'HQ_APPROVAL'}
+								<span class="text-green-400">Approved:</span>
+							{:else if review.type === 'REJECTION'}
+								<span class="text-red-400">Rejected:</span>
+							{:else}
+								<span class="text-light/70">Comment:</span>
+							{/if}
+							{review.userComment}
+						</p>
+					</div>
+				{/each}
+			</div>
+		{/each}
+	</div>
+{/if}
 
 <!--
 	<div class="h-screen p-10">

@@ -1,25 +1,14 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { formatHours, formatProjectCategory } from '$lib';
-	import { styleAdminPopover, styleButton, styleInput } from '$lib/styles.js';
+	import { styleButton, styleInput } from '$lib/styles.js';
 
 	let { data }: { data: PageData } = $props();
-	const payoutMults = $derived(data.payoutMults);
 	const isOrg = $derived(data.roles?.includes('ORGANIZER') ?? false);
 	type ShipRow = PageData['pendingShips'][number];
 	type DeletedShipRow = PageData['deletedShips'][number];
 
-	const hourMult = 60 * 60;
-
-	let currentSeconds = $state(0);
-	let notesMult = $state(0);
-	let notesPayout = $derived(Math.ceil((currentSeconds * notesMult) / hourMult));
-	let activeShipId = $state('');
-	let activeUserId = $state('');
-	let orgMultMode = $state(false);
 	let projectSearch = $state('');
-	let approvePopover: HTMLElement | undefined = $state();
-	let rejectPopover: HTMLElement | undefined = $state();
 
 	function matchesQuery(shipInfo: ShipRow, query: string) {
 		return [
@@ -58,102 +47,27 @@
 	let filteredPendingShips = $derived.by(() => {
 		const query = projectSearch.trim().toLowerCase();
 		if (!query) return data.pendingShips;
-
 		return data.pendingShips.filter((shipInfo) => matchesQuery(shipInfo, query));
+	});
+
+	let filteredReviewerApprovedShips = $derived.by(() => {
+		const query = projectSearch.trim().toLowerCase();
+		if (!query) return data.reviewerApprovedShips;
+		return data.reviewerApprovedShips.filter((shipInfo) => matchesQuery(shipInfo, query));
 	});
 
 	let filteredReviewedShips = $derived.by(() => {
 		const query = projectSearch.trim().toLowerCase();
 		if (!query) return data.reviewedShips;
-
 		return data.reviewedShips.filter((shipInfo) => matchesQuery(shipInfo, query));
 	});
 
 	let filteredDeletedShips = $derived.by(() => {
 		const query = projectSearch.trim().toLowerCase();
 		if (!query) return data.deletedShips;
-
 		return data.deletedShips.filter((shipInfo) => matchesDeletedQuery(shipInfo, query));
 	});
-
-	$effect(() => {
-		if (!notesMult) {
-			notesMult = payoutMults.reviewer[0];
-		}
-	});
 </script>
-
-<div bind:this={approvePopover} class={styleAdminPopover} popover id="confirm-approve">
-	<form action="?/approve" method="POST" class="space-y-4">
-		<input type="hidden" name="shipId" value={activeShipId} />
-		<input type="hidden" name="userId" value={activeUserId} />
-		<input type="hidden" name="shipSeconds" value={currentSeconds} />
-		<div class="flex justify-between font-jua">
-			<span>{formatHours(currentSeconds)}</span>
-			<span>x</span>
-			<span>{notesMult}</span>
-			<span>=</span>
-			<span>{notesPayout}</span>
-		</div>
-		<input
-			type="range"
-			name="payoutMult"
-			class="w-full"
-			step="0.2"
-			bind:value={notesMult}
-			min={orgMultMode ? payoutMults.organizer[0] : payoutMults.reviewer[0]}
-			max={orgMultMode ? payoutMults.organizer[1] : payoutMults.reviewer[1]}
-		/>
-		{#if isOrg}
-			<label class="block cursor-pointer font-jua">
-				<input type="checkbox" bind:checked={orgMultMode} />
-				Organizer Payout
-			</label>
-		{/if}
-		<textarea
-			required
-			name="feedback"
-			class="{styleInput} w-full font-jua text-text"
-			placeholder="Feedback"
-		></textarea>
-		<div class="flex gap-3 pt-2">
-			<button
-				type="button"
-				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				onclick={() => approvePopover?.hidePopover()}>Cancel</button
-			>
-			<input
-				type="submit"
-				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				value="Confirm"
-			/>
-		</div>
-	</form>
-</div>
-
-<div bind:this={rejectPopover} class={styleAdminPopover} popover id="confirm-reject">
-	<form action="?/reject" method="POST" class="space-y-4">
-		<input type="hidden" name="shipId" value={activeShipId} />
-		<textarea
-			required
-			name="feedback"
-			class="{styleInput} w-full font-jua text-text"
-			placeholder="Feedback"
-		></textarea>
-		<div class="flex gap-3">
-			<button
-				type="button"
-				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				onclick={() => rejectPopover?.hidePopover()}>Cancel</button
-			>
-			<input
-				type="submit"
-				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				value="Confirm"
-			/>
-		</div>
-	</form>
-</div>
 
 <div class="p-10 pb-40 font-jua text-text">
 	<div class="mb-6">
@@ -165,37 +79,29 @@
 		/>
 	</div>
 	<div class="space-y-10">
+		<!-- Pending Reviews -->
 		<div>
-			<p class="mb-3 text-2xl">Pending Reviews</p>
+			<p class="mb-3 text-2xl">Pending Reviews ({filteredPendingShips.length})</p>
 			<table class="admin-table w-full bg-accent-purple">
 				<thead class="font-jua text-text">
 					<tr>
-						<th>Project</th>
+						<th>Ship</th>
 						<th>User</th>
 						<th>Title</th>
 						<th>Category</th>
 						<th>Hackatime</th>
-						<th>Joe</th>
-						<th>GitHub</th>
-						<th>Demo</th>
 						<th>Time</th>
-						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody class="font-jua text-text">
 					{#each filteredPendingShips as shipInfo}
-						<tr>
-							<td>{shipInfo.ship.projectId}</td>
-							<td>
-								<a href="/user/{shipInfo.user.id}">
-									{shipInfo.user.username}
-								</a>
-							</td>
-							<td>
-								<a href="/projects/{shipInfo.project.id}">
-									{shipInfo.project.title}
-								</a>
-							</td>
+						<tr
+							class="clickable-row"
+							onclick={() => window.open(`/admin/ships/${shipInfo.project.id}`, '_blank')}
+						>
+							<td>#{shipInfo.ship.id}</td>
+							<td>{shipInfo.user.username}</td>
+							<td>{shipInfo.project.title}</td>
 							<td>{formatProjectCategory(shipInfo.project.category)}</td>
 							<td>
 								{#if shipInfo.project.hackatimeProjects.length}
@@ -206,80 +112,74 @@
 									<span class="text-text/60">None</span>
 								{/if}
 							</td>
-							<td>
-								<a
-									href="https://joe.fraud.hackclub.com/billy/overview?u={shipInfo.user.username}"
-									target="_blank"
-									rel="noopener noreferrer"
-								>
-									Joe Stats
-								</a>
-							</td>
-							<td>
-								<a href={shipInfo.project.githubUrl} target="_blank" rel="noopener noreferrer">
-									Github
-								</a>
-							</td>
-							<td>
-								<a href={shipInfo.project.demoUrl} target="_blank" rel="noopener noreferrer">
-									Demo
-								</a>
-							</td>
 							<td>{formatHours(shipInfo.ship.seconds)}</td>
-							<td>
-								<div class="flex flex-wrap gap-2">
-									<button
-										class="{styleButton} bg-text px-4 py-1 text-lg text-light"
-										onclick={() => {
-											activeUserId = String(shipInfo.user.id);
-											activeShipId = String(shipInfo.ship.id);
-											currentSeconds = shipInfo.ship.seconds;
-										}}
-										popovertarget="confirm-approve">Approve</button
-									>
-									<button
-										class="{styleButton} bg-text px-4 py-1 text-lg text-light"
-										popovertarget="confirm-reject"
-										onclick={() => (activeShipId = String(shipInfo.ship.id))}>Reject</button
-									>
-								</div>
-							</td>
 						</tr>
 					{/each}
 				</tbody>
 			</table>
 		</div>
 
+		<!-- Awaiting HQ Approval -->
+		{#if filteredReviewerApprovedShips.length > 0}
+			<div>
+				<p class="mb-3 text-2xl">Awaiting HQ Approval ({filteredReviewerApprovedShips.length})</p>
+				<table class="admin-table w-full bg-accent-purple/80">
+					<thead class="font-jua text-text">
+						<tr>
+							<th>Ship</th>
+							<th>User</th>
+							<th>Title</th>
+							<th>Time</th>
+							<th>Status</th>
+						</tr>
+					</thead>
+					<tbody class="font-jua text-text">
+						{#each filteredReviewerApprovedShips as shipInfo}
+							<tr
+								class="clickable-row"
+								onclick={() => window.open(`/admin/ships/${shipInfo.project.id}`, '_blank')}
+							>
+								<td>#{shipInfo.ship.id}</td>
+								<td>{shipInfo.user.username}</td>
+								<td>{shipInfo.project.title}</td>
+								<td>{formatHours(shipInfo.ship.seconds)}</td>
+								<td><span class="text-yellow-700">AWAITING HQ</span></td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+
+		<!-- Reviewed Ships -->
 		<div>
 			<p class="mb-3 text-2xl">Reviewed Ships</p>
 			<table class="admin-table w-full bg-accent-purple">
 				<thead class="font-jua text-text">
 					<tr>
-						<th>Project</th>
+						<th>Ship</th>
 						<th>User</th>
 						<th>Title</th>
 						<th>Status</th>
-						<th>Hackatime</th>
-						<th>Joe</th>
 						<th>Time</th>
 						<th>Feedback</th>
-						<th>Actions</th>
+						{#if isOrg}
+							<th>Actions</th>
+						{/if}
 					</tr>
 				</thead>
 				<tbody class="font-jua text-text">
 					{#each filteredReviewedShips as shipInfo}
-						<tr>
-							<td>{shipInfo.ship.projectId}</td>
-							<td>
-								<a href="/user/{shipInfo.user.id}">
-									{shipInfo.user.username}
-								</a>
-							</td>
-							<td>
-								<a href="/projects/{shipInfo.project.id}">
-									{shipInfo.project.title}
-								</a>
-							</td>
+						<tr
+							class="clickable-row"
+							onclick={(e) => {
+								if ((e.target as HTMLElement).closest('form, button')) return;
+								window.open(`/admin/ships/${shipInfo.project.id}`, '_blank');
+							}}
+						>
+							<td>#{shipInfo.ship.id}</td>
+							<td>{shipInfo.user.username}</td>
+							<td>{shipInfo.project.title}</td>
 							<td>
 								<span
 									class:text-accent-red={shipInfo.ship.status === 'REJECTED'}
@@ -288,40 +188,25 @@
 									{shipInfo.ship.status}
 								</span>
 							</td>
-							<td>
-								{#if shipInfo.project.hackatimeProjects.length}
-									<div class="max-w-52 text-sm">
-										{shipInfo.project.hackatimeProjects.join(', ')}
-									</div>
-								{:else}
-									<span class="text-text/60">None</span>
-								{/if}
-							</td>
-							<td>
-								<a
-									href="https://joe.fraud.hackclub.com/billy/overview?u={shipInfo.user.username}"
-									target="_blank"
-									rel="noopener noreferrer"
-								>
-									Joe Stats
-								</a>
-							</td>
 							<td>{formatHours(shipInfo.ship.seconds)}</td>
 							<td>{shipInfo.ship.feedback ?? 'None'}</td>
-							<td>
-								<form action="?/undoReview" method="POST">
-									<input type="hidden" name="shipId" value={shipInfo.ship.id} />
-									<button class="{styleButton} bg-text px-4 py-1 text-lg text-light" type="submit">
-										Undo review
-									</button>
-								</form>
-							</td>
+							{#if isOrg}
+								<td>
+									<form action="?/undoReview" method="POST">
+										<input type="hidden" name="shipId" value={shipInfo.ship.id} />
+										<button class="{styleButton} bg-text px-4 py-1 text-lg text-light" type="submit">
+											Undo
+										</button>
+									</form>
+								</td>
+							{/if}
 						</tr>
 					{/each}
 				</tbody>
 			</table>
 		</div>
 
+		<!-- Deleted Ships -->
 		<div>
 			<p class="mb-3 text-2xl">Deleted Ships</p>
 			<table class="admin-table w-full bg-accent-purple/70">
@@ -392,5 +277,11 @@
 	}
 	a {
 		text-decoration: underline;
+	}
+	.clickable-row {
+		cursor: pointer;
+	}
+	.clickable-row:hover {
+		background-color: rgba(0, 0, 0, 0.05);
 	}
 </style>

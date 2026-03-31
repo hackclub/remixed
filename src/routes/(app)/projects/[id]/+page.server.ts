@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
-import { projects, ships, users } from '$lib/server/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { projects, shipReviews, ships, users } from '$lib/server/db/schema';
+import { and, eq, inArray, desc } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { decrypt } from '$lib/server/crypto';
 import { fail, isValidationError } from '@sveltejs/kit';
@@ -8,6 +8,7 @@ import { isProjectCategory, validUrl, type ProjectCategory } from '$lib';
 import { getProjects } from '$lib/server/hackatimeProjects';
 import sanitizeHtml from 'sanitize-html';
 import { marked } from 'marked';
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const projectId = Number(params.id);
@@ -28,17 +29,36 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	]);
 	const project = projectInfo.projects;
 	const user = projectInfo.users;
-	const pendingShips = projectShips.filter((s) => s.status == 'PENDING');
+	const pendingShips = projectShips.filter(
+		(s) => s.status == 'PENDING' || s.status == 'REVIEWER_APPROVED',
+	);
 
-	const shippedSeconds = projectShips
-		.filter((p) => p.status == 'APPROVED')
-		.reduce((sum, s) => sum + s.seconds, 0);
-	const shippableSeconds = project.hackatimeSeconds ? project.hackatimeSeconds - shippedSeconds : 0;
+	const shippableSeconds = project.hackatimeSeconds
+		? project.hackatimeSeconds - project.committedSeconds
+		: 0;
 
 	const dirty = await marked(project.description ?? '');
 	const descriptionHtml = sanitizeHtml(dirty, {
 		allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
 	});
+
+	const isOwner = locals.user?.id === project.userId;
+
+	let shipHistory: typeof projectShips = [];
+	let shipFeedback: (typeof shipReviews.$inferSelect)[] = [];
+
+	if (isOwner && projectShips.length > 0) {
+		shipHistory = projectShips
+			.filter((s) => s.status !== 'CANCELLED')
+			.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
+
+		const allShipIds = projectShips.map((s) => s.id);
+		shipFeedback = await db
+			.select()
+			.from(shipReviews)
+			.where(and(inArray(shipReviews.shipId, allShipIds), eq(shipReviews.isInternal, false)))
+			.orderBy(shipReviews.createdAt);
+	}
 
 	return {
 		project,
@@ -47,6 +67,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		user,
 		pendingShips,
 		currentUserId: locals.user?.id,
+		shipHistory,
+		shipFeedback,
+		shipsAllowed: env.SHIPS_ALLOWED === 'true',
 	};
 };
 
@@ -99,6 +122,7 @@ export const actions: Actions = {
 			.where(eq(projects.id, projectId));
 	},
 	ship: async ({ locals, params }) => {
+		if (env.SHIPS_ALLOWED !== 'true') return fail(403, { error: 'Shipping is not enabled' });
 		if (!locals.user) return fail(401, { error: 'Unauthorized' });
 		const projectId = Number(params.id);
 		const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
@@ -112,16 +136,18 @@ export const actions: Actions = {
 		}
 
 		const projectShips = await db.select().from(ships).where(eq(ships.projectId, projectId));
-		if (projectShips.some((p) => p.status == 'PENDING')) return fail(400, 'Already shipped');
+		if (projectShips.some((p) => p.status == 'PENDING' || p.status == 'REVIEWER_APPROVED'))
+			return fail(400, 'Already shipped');
 
-		const shippedSeconds = projectShips
-			.filter((p) => p.status == 'APPROVED')
-			.reduce((sum, s) => sum + s.seconds, 0);
-		const newSeconds = project.hackatimeSeconds! - shippedSeconds;
+		const newSeconds = project.hackatimeSeconds! - project.committedSeconds;
 
 		if (newSeconds < 3600) return fail(400, 'Must have at least an hour before shipping');
 
-		await db.insert(ships).values({ projectId, seconds: newSeconds });
+		await db.insert(ships).values({
+			projectId,
+			seconds: newSeconds,
+			capturedSeconds: project.hackatimeSeconds!,
+		});
 	},
 	cancelShip: async ({ locals, params }) => {
 		if (!locals.user) return fail(401, { error: 'Unauthorized' });
@@ -133,6 +159,11 @@ export const actions: Actions = {
 		await db
 			.update(ships)
 			.set({ status: 'CANCELLED' })
-			.where(and(eq(ships.status, 'PENDING'), eq(ships.projectId, project.id)));
+			.where(
+				and(
+					inArray(ships.status, ['PENDING', 'REVIEWER_APPROVED']),
+					eq(ships.projectId, project.id),
+				),
+			);
 	},
 };
