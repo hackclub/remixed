@@ -12,8 +12,12 @@
 	let userComment = $state('');
 	let internalComment = $state('');
 
+	let backfillJustification = $state('');
+	let backfillShipId = $state('');
+
 	let approvePopover: HTMLElement | undefined = $state();
 	let rejectPopover: HTMLElement | undefined = $state();
+	let backfillPopover: HTMLElement | undefined = $state();
 
 	type ShipRow = (typeof data.ships)[number];
 
@@ -109,6 +113,35 @@
 	</form>
 </div>
 
+<!-- Backfill Airtable popover -->
+<div bind:this={backfillPopover} class="{styleAdminPopover} font-jua" popover id="backfill-airtable">
+	<form action="?/backfillAirtable" method="POST" class="space-y-4">
+		<input type="hidden" name="shipId" value={backfillShipId} />
+		<p class="text-lg">Send legacy ship #{backfillShipId} to Airtable</p>
+		<label class="block">
+			<span class="text-sm">Hours justification (required)</span>
+			<textarea
+				required
+				name="justification"
+				bind:value={backfillJustification}
+				class="{styleInput} w-full font-jua text-text"
+				placeholder="e.g. Legacy approval, backfilled to Airtable"
+			></textarea>
+		</label>
+		<div class="flex gap-3 pt-2">
+			<button
+				type="button"
+				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
+				onclick={() => backfillPopover?.hidePopover()}>Cancel</button
+			>
+			<button
+				type="submit"
+				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
+			>Send to Airtable</button>
+		</div>
+	</form>
+</div>
+
 <div class="p-10 pb-40 font-jua text-text">
 	<p class="mb-6 text-2xl">HQ Review Queue ({data.ships.length})</p>
 	{#if data.ships.length === 0}
@@ -195,6 +228,83 @@
 				{/each}
 			</tbody>
 		</table>
+	{/if}
+
+	{#if data.legacyApprovedShips.length > 0}
+		<div class="mt-10">
+			<p class="mb-3 text-2xl">Legacy Approved Ships ({data.legacyApprovedShips.length})</p>
+			<p class="mb-4 text-sm text-text/60">
+				These ships were approved before the Airtable integration. Send them individually or all at once.
+			</p>
+			<form action="?/backfillAirtable" method="POST" class="mb-4">
+				<table class="admin-table w-full bg-accent-purple/80">
+					<thead class="font-jua text-text">
+						<tr>
+							<th>Ship</th>
+							<th>User</th>
+							<th>Title</th>
+							<th>GitHub</th>
+							<th>Demo</th>
+							<th>Time</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody class="font-jua text-text">
+						{#each data.legacyApprovedShips as shipInfo}
+							<tr>
+								<td>#{shipInfo.ship.id}</td>
+								<td>
+									<a href="/user/{shipInfo.user.id}" class="underline">
+										{shipInfo.user.username}
+									</a>
+								</td>
+								<td>
+									<a href="/projects/{shipInfo.project.id}" class="underline">
+										{shipInfo.project.title}
+									</a>
+								</td>
+								<td>
+									{#if shipInfo.project.githubUrl}
+										<a
+											href={shipInfo.project.githubUrl}
+											target="_blank"
+											rel="noopener noreferrer"
+											class="underline">GitHub</a
+										>
+									{:else}
+										<span class="text-text/50">None</span>
+									{/if}
+								</td>
+								<td>
+									{#if shipInfo.project.demoUrl}
+										<a
+											href={shipInfo.project.demoUrl}
+											target="_blank"
+											rel="noopener noreferrer"
+											class="underline">Demo</a
+										>
+									{:else}
+										<span class="text-text/50">None</span>
+									{/if}
+								</td>
+								<td>{formatHours(shipInfo.ship.seconds)}</td>
+								<td>
+									<button
+										class="{styleButton} bg-text px-4 py-1 text-lg text-light"
+										type="button"
+										onclick={() => {
+											backfillShipId = String(shipInfo.ship.id);
+											backfillJustification = 'Legacy approval, backfilled to Airtable';
+										}}
+										popovertarget="backfill-airtable"
+									>Backfill</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</form>
+		</div>
 	{/if}
 </div>
 
