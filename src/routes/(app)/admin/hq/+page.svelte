@@ -68,17 +68,16 @@
 				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
 				onclick={() => approvePopover?.hidePopover()}>Cancel</button
 			>
-			<input
+			<button
 				type="submit"
 				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				value="Final Approve"
-			/>
+			>Final Approve</button>
 		</div>
 	</form>
 </div>
 
 <!-- HQ Reject popover -->
-<div bind:this={rejectPopover} class={styleAdminPopover} popover id="hq-reject">
+<div bind:this={rejectPopover} class="{styleAdminPopover} font-jua" popover id="hq-reject">
 	<form action="?/hqReject" method="POST" class="space-y-4">
 		<input type="hidden" name="shipId" value={activeShipId} />
 		<label class="block">
@@ -96,11 +95,10 @@
 				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
 				onclick={() => rejectPopover?.hidePopover()}>Cancel</button
 			>
-			<input
+			<button
 				type="submit"
 				class="{styleButton} min-w-0 flex-1 bg-text px-4 py-2 text-lg text-light"
-				value="Return to Queue"
-			/>
+			>Return to Queue</button>
 		</div>
 	</form>
 </div>
