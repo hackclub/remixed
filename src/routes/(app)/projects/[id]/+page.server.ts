@@ -159,6 +159,11 @@ export const actions: Actions = {
 		await db
 			.update(ships)
 			.set({ status: 'CANCELLED' })
-			.where(and(eq(ships.status, 'PENDING'), eq(ships.projectId, project.id)));
+			.where(
+				and(
+					inArray(ships.status, ['PENDING', 'REVIEWER_APPROVED']),
+					eq(ships.projectId, project.id),
+				),
+			);
 	},
 };

@@ -9,6 +9,8 @@
 	let activeShipSeconds = $state(0);
 	let adjustedHours = $state(0);
 	let notesPayout = $derived(Math.ceil(adjustedHours * NOTES_PER_HOUR));
+	let userComment = $state('');
+	let internalComment = $state('');
 
 	let approvePopover: HTMLElement | undefined = $state();
 	let rejectPopover: HTMLElement | undefined = $state();
@@ -21,11 +23,13 @@
 		adjustedHours =
 			shipInfo.approval?.review.adjustedHours ??
 			parseFloat((shipInfo.ship.seconds / 3600).toFixed(1));
+		userComment = shipInfo.approval?.review.userComment ?? '';
+		internalComment = shipInfo.approval?.review.internalComment ?? '';
 	}
 </script>
 
 <!-- HQ Approve popover -->
-<div bind:this={approvePopover} class={styleAdminPopover} popover id="hq-approve">
+<div bind:this={approvePopover} class="{styleAdminPopover} font-jua" popover id="hq-approve">
 	<form action="?/hqApprove" method="POST" class="space-y-4">
 		<input type="hidden" name="shipId" value={activeShipId} />
 		<p class="text-lg">Ship time: {formatHours(activeShipSeconds)}</p>
@@ -49,6 +53,7 @@
 			<textarea
 				required
 				name="userComment"
+				bind:value={userComment}
 				class="{styleInput} w-full font-jua text-text"
 				placeholder="Visible to the shipper"
 			></textarea>
@@ -58,6 +63,7 @@
 			<textarea
 				required
 				name="internalComment"
+				bind:value={internalComment}
 				class="{styleInput} w-full font-jua text-text"
 				placeholder="Used as Airtable hours justification"
 			></textarea>
