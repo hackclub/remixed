@@ -363,7 +363,7 @@
 		<div class="relative z-10 flex w-full flex-col gap-8 pt-10 sm:pt-12 lg:w-[400px] lg:gap-11 lg:pt-16 lg:pr-16">
 			<!-- Description -->
 			<div
-				class="prose max-h-[280px] overflow-y-auto text-left font-jua text-xl leading-normal tracking-tight text-[#f2e2ff] prose-a:text-secondary prose-strong:text-[#f2e2ff] sm:max-h-[320px] sm:text-2xl lg:max-h-[360px] lg:text-right"
+				class="description-scroll prose max-h-[55vh] overflow-y-auto text-left font-jua text-xl leading-normal tracking-tight text-[#f2e2ff] prose-a:text-secondary prose-strong:text-[#f2e2ff] sm:text-2xl lg:text-right"
 			>
 				{@html data.descriptionHtml}
 			</div>
@@ -464,5 +464,23 @@
 	}
 	.skew-btn:hover {
 		transform: translateX(12px);
+	}
+
+	.description-scroll {
+		scrollbar-width: thin;
+		scrollbar-color: #8b81ff transparent;
+	}
+	.description-scroll::-webkit-scrollbar {
+		width: 6px;
+	}
+	.description-scroll::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.description-scroll::-webkit-scrollbar-thumb {
+		background: #8b81ff;
+		border-radius: 3px;
+	}
+	.description-scroll::-webkit-scrollbar-thumb:hover {
+		background: #a59bff;
 	}
 </style>
