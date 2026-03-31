@@ -20,6 +20,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				users: {
 					id: users.id,
 					username: users.username,
+					avatarUrl: users.avatarUrl,
 				},
 			})
 			.from(projects)
