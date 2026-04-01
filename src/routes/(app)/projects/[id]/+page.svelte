@@ -202,7 +202,7 @@
 			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="screenshotFile">Screenshot</label>
 			<p class="mb-2 text-lg text-[#E2BEFF]">Upload a screenshot of your project. Required before shipping.</p>
 			{#if draft.coverArt}
-				<img src={draft.coverArt} alt="Current screenshot" class="mb-3 h-32 w-auto rounded-xl object-cover" />
+				<img src={draft.coverArt} alt="Current screenshot" class="mb-3 h-32 w-full rounded-xl object-cover object-center" onerror={(e: any) => (e.currentTarget.src = '/404.jpg')} />
 			{/if}
 			<input
 				type="file"
