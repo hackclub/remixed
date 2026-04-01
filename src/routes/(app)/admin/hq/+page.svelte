@@ -297,7 +297,7 @@
 		<div class="mt-10">
 			<p class="mb-3 text-2xl">Legacy Approved Ships ({data.legacyApprovedShips.length})</p>
 			<p class="mb-4 text-sm text-text/60">
-				These ships were approved before the Airtable integration. Send them individually or all at once.
+				Approved ships that can be synced (or re-synced) to Airtable. Use re-sync if a previous sync failed.
 			</p>
 			<form action="?/backfillAirtable" method="POST" class="mb-4">
 				<table class="admin-table w-full bg-accent-purple/80">
@@ -309,6 +309,7 @@
 							<th>GitHub</th>
 							<th>Demo</th>
 							<th>Time</th>
+							<th>Synced</th>
 							<th>Actions</th>
 						</tr>
 					</thead>
@@ -352,16 +353,25 @@
 								</td>
 								<td>{formatHours(shipInfo.ship.seconds)}</td>
 								<td>
+									{#if shipInfo.airtableSynced}
+										<span class="text-green-400">Yes</span>
+									{:else}
+										<span class="text-text/50">No</span>
+									{/if}
+								</td>
+								<td>
 									<div class="flex flex-wrap gap-2">
 										<button
 											class="{styleButton} bg-text px-4 py-1 text-lg text-light"
 											type="button"
 											onclick={() => {
 												backfillShipId = String(shipInfo.ship.id);
-												backfillJustification = 'Legacy approval, backfilled to Airtable';
+												backfillJustification = shipInfo.airtableSynced
+													? 'Re-sync to Airtable (previous sync may have failed)'
+													: 'Legacy approval, backfilled to Airtable';
 											}}
 											popovertarget="backfill-airtable"
-										>Backfill</button>
+										>{shipInfo.airtableSynced ? 'Re-sync' : 'Backfill'}</button>
 										<button
 											class="{styleButton} bg-text px-4 py-1 text-lg text-red-400"
 											type="button"
