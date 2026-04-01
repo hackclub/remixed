@@ -36,7 +36,12 @@ export function decrypt(ciphertext: string): string {
 	return decipher.update(encrypted) + decipher.final('utf8');
 }
 
+// Bump this to invalidate all existing sessions and force re-login.
+const SESSION_VERSION = 2;
+
 export function signSession(text: string): string {
-	const signature = createHmac('sha256', getSessionSecret()).update(text).digest('hex');
+	const signature = createHmac('sha256', getSessionSecret())
+		.update(`v${SESSION_VERSION}:${text}`)
+		.digest('hex');
 	return signature;
 }

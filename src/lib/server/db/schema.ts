@@ -51,6 +51,13 @@ export const users = pgTable('users', {
 	email: text('email'),
 	firstName: text('first_name'),
 	lastName: text('last_name'),
+	birthday: text('birthday'),
+	addressLine1: text('address_line_1'),
+	addressLine2: text('address_line_2'),
+	city: text('city'),
+	state: text('state'),
+	country: text('country'),
+	zipCode: text('zipcode'),
 });
 
 export const projects = pgTable('projects', {

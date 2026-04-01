@@ -60,6 +60,8 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 		let userId = existingUser?.id;
 		const alreadyLinkedHackatime = Boolean(existingUser?.accessToken);
 
+		const primaryAddress = hcaProfile.addresses?.find((a) => a.primary) ?? hcaProfile.addresses?.[0];
+
 		if (existingUser) {
 			await db
 				.update(users)
@@ -71,6 +73,13 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 					email: hcaProfile.email ?? existingUser.email,
 					firstName: hcaProfile.first_name ?? existingUser.firstName,
 					lastName: hcaProfile.last_name ?? existingUser.lastName,
+					birthday: hcaProfile.birthday ?? existingUser.birthday,
+					addressLine1: primaryAddress?.line_1 ?? existingUser.addressLine1,
+					addressLine2: primaryAddress?.line_2 ?? existingUser.addressLine2,
+					city: primaryAddress?.city ?? existingUser.city,
+					state: primaryAddress?.state ?? existingUser.state,
+					country: primaryAddress?.country ?? existingUser.country,
+					zipCode: primaryAddress?.postal_code ?? existingUser.zipCode,
 				})
 				.where(eq(users.id, existingUser.id));
 		} else {
@@ -85,6 +94,13 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 					email: hcaProfile.email ?? null,
 					firstName: hcaProfile.first_name ?? null,
 					lastName: hcaProfile.last_name ?? null,
+					birthday: hcaProfile.birthday ?? null,
+					addressLine1: primaryAddress?.line_1 ?? null,
+					addressLine2: primaryAddress?.line_2 ?? null,
+					city: primaryAddress?.city ?? null,
+					state: primaryAddress?.state ?? null,
+					country: primaryAddress?.country ?? null,
+					zipCode: primaryAddress?.postal_code ?? null,
 				})
 				.returning({ id: users.id });
 
