@@ -16,7 +16,10 @@ import { sendMessage } from '$lib/server/slack/send_message';
 import { sendReviewDM } from '$lib/server/slack/review_message';
 import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
 import { createAirtableShipRecord, extractGithubUsername } from '$lib/server/airtable';
+import { decrypt } from '$lib/server/crypto';
 import { NOTES_PER_HOUR } from '$lib';
+
+const decryptOrNull = (val: string | null) => (val ? decrypt(val) : null);
 
 export const load: PageServerLoad = async () => {
 	const pendingHqShips = await db
@@ -220,13 +223,13 @@ export const actions: Actions = {
 				screenshot: shipInfo.project.coverArt,
 				description: shipInfo.project.description,
 				githubUsername: extractGithubUsername(shipInfo.project.githubUrl),
-				addressLine1: shipInfo.user.addressLine1,
-				addressLine2: shipInfo.user.addressLine2,
-				city: shipInfo.user.city,
-				state: shipInfo.user.state,
-				country: shipInfo.user.country,
-				zipCode: shipInfo.user.zipCode,
-				birthday: shipInfo.user.birthday,
+				addressLine1: decryptOrNull(shipInfo.user.addressLine1),
+				addressLine2: decryptOrNull(shipInfo.user.addressLine2),
+				city: decryptOrNull(shipInfo.user.city),
+				state: decryptOrNull(shipInfo.user.state),
+				country: decryptOrNull(shipInfo.user.country),
+				zipCode: decryptOrNull(shipInfo.user.zipCode),
+				birthday: decryptOrNull(shipInfo.user.birthday),
 				overrideHoursSpent: adjustedHours,
 				overrideHoursJustification: internalComment,
 			}),
@@ -294,13 +297,13 @@ export const actions: Actions = {
 			screenshot: shipInfo.project.coverArt,
 			description: shipInfo.project.description,
 			githubUsername: extractGithubUsername(shipInfo.project.githubUrl),
-			addressLine1: shipInfo.user.addressLine1,
-			addressLine2: shipInfo.user.addressLine2,
-			city: shipInfo.user.city,
-			state: shipInfo.user.state,
-			country: shipInfo.user.country,
-			zipCode: shipInfo.user.zipCode,
-			birthday: shipInfo.user.birthday,
+			addressLine1: decryptOrNull(shipInfo.user.addressLine1),
+			addressLine2: decryptOrNull(shipInfo.user.addressLine2),
+			city: decryptOrNull(shipInfo.user.city),
+			state: decryptOrNull(shipInfo.user.state),
+			country: decryptOrNull(shipInfo.user.country),
+			zipCode: decryptOrNull(shipInfo.user.zipCode),
+			birthday: decryptOrNull(shipInfo.user.birthday),
 			overrideHoursSpent: hours,
 			overrideHoursJustification: justification,
 		});
