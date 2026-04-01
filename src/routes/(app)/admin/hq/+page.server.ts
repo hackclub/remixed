@@ -80,9 +80,10 @@ export const load: PageServerLoad = async () => {
 			: [],
 	);
 
-	const legacyApprovedShips = allApprovedShips.filter(
-		(s) => !hqApprovalShipIds.has(s.ship.id),
-	);
+	const legacyApprovedShips = allApprovedShips.map((s) => ({
+		...s,
+		airtableSynced: hqApprovalShipIds.has(s.ship.id),
+	}));
 
 	return {
 		ships: pendingHqShips.map((s) => ({
@@ -254,7 +255,9 @@ export const actions: Actions = {
 			return fail(400, { error: 'Ship not found or not approved' });
 		}
 
-		// Check it doesn't already have an HQ_APPROVAL review
+		const hours = parseFloat((shipInfo.ship.seconds / 3600).toFixed(1));
+
+		// Only create the HQ_APPROVAL review record if one doesn't already exist
 		const existing = await db
 			.select({ id: shipReviews.id })
 			.from(shipReviews)
@@ -262,20 +265,16 @@ export const actions: Actions = {
 				and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'HQ_APPROVAL')),
 			);
 
-		if (existing.length > 0) {
-			return fail(400, { error: 'Ship already has an HQ approval record' });
+		if (existing.length === 0) {
+			await db.insert(shipReviews).values({
+				shipId,
+				reviewerId: locals.user!.id,
+				type: 'HQ_APPROVAL',
+				userComment: 'Backfilled from legacy approval',
+				internalComment: justification,
+				adjustedHours: hours,
+			});
 		}
-
-		const hours = parseFloat((shipInfo.ship.seconds / 3600).toFixed(1));
-
-		await db.insert(shipReviews).values({
-			shipId,
-			reviewerId: locals.user!.id,
-			type: 'HQ_APPROVAL',
-			userComment: 'Backfilled from legacy approval',
-			internalComment: justification,
-			adjustedHours: hours,
-		});
 
 		await recordAuditLog(db, {
 			actorUserId: locals.user!.id,
