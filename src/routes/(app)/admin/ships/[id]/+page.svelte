@@ -208,7 +208,7 @@
 				src={data.project.coverArt}
 				alt="Project screenshot"
 				class="w-full object-cover"
-				onerror={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+				onerror={(e: any) => (e.currentTarget.src = '/404.jpg')}
 			/>
 		</div>
 	{/if}

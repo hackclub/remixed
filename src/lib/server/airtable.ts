@@ -36,7 +36,7 @@ export async function createAirtableShipRecord(record: AirtableShipRecord): Prom
 	if (record.firstName) fields['First Name'] = record.firstName;
 	if (record.lastName) fields['Last Name'] = record.lastName;
 	if (record.email) fields['Email'] = record.email;
-	if (record.screenshot) fields['Screenshot'] = record.screenshot;
+	if (record.screenshot) fields['Screenshot'] = [{ url: record.screenshot }];
 	if (record.description) fields['Description'] = record.description;
 	if (record.githubUsername) fields['GitHub Username'] = record.githubUsername;
 	if (record.addressLine1) fields['Address (Line 1)'] = record.addressLine1;

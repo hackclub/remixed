@@ -129,6 +129,9 @@ export const actions: Actions = {
 		const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
 
 		if (!project || project.userId != locals.user.id) return fail(403, { error: 'Forbidden' });
+		if (!project.coverArt) {
+			return fail(400, 'A screenshot is required before shipping');
+		}
 		if (!validUrl(project.githubUrl) || !validUrl(project.demoUrl)) {
 			return fail(400, 'Github and Demo URLs required');
 		}
