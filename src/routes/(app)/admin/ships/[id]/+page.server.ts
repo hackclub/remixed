@@ -18,6 +18,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				username: users.username,
 				slackId: users.slackId,
 				avatarUrl: users.avatarUrl,
+				hcaId: users.hcaId,
 			},
 		})
 		.from(projects)
