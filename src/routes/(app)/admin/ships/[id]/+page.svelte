@@ -242,14 +242,12 @@
 			href="/projects/{data.project.id}"
 			class="{styleButton} bg-text px-6 py-2 text-lg text-light">Project Page</a
 		>
-		{#if data.user.hcaId}
-			<a
-				href="https://joe.fraud.hackclub.com/profile/{data.user.hcaId}"
-				target="_blank"
-				rel="noopener noreferrer"
-				class="{styleButton} bg-text px-6 py-2 text-lg text-light">Joe</a
-			>
-		{/if}
+		<a
+			href="https://joe.fraud.hackclub.com/profile/{data.user.slackId}"
+			target="_blank"
+			rel="noopener noreferrer"
+			class="{styleButton} bg-text px-6 py-2 text-lg text-light">Joe</a
+		>
 	</div>
 
 	<!-- 7. Review Timeline -->
