@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
 	import { formatHours, NOTES_PER_HOUR } from '$lib';
 	import { styleAdminPopover, styleButton, styleInput } from '$lib/styles.js';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let activeShipId = $state('');
 	let activeShipSeconds = $state(0);
@@ -265,6 +265,33 @@
 			</tbody>
 		</table>
 	{/if}
+
+	<!-- Screenshot backfill -->
+	<div class="mt-10">
+		<p class="mb-2 text-2xl">Backfill Screenshots to R2</p>
+		<p class="mb-4 text-sm text-text/60">
+			Uploads all project screenshots that are still stored as raw external URLs to our R2 bucket.
+			Run once after enabling R2 storage.
+		</p>
+		<form action="?/backfillScreenshots" method="POST">
+			<button type="submit" class="{styleButton} bg-text px-6 py-2 text-lg text-light">
+				Run Screenshot Backfill
+			</button>
+		</form>
+		{#if form && 'backfillResult' in form && form.backfillResult}
+			{@const r = form.backfillResult}
+			<div class="mt-4 rounded-xl border border-text/20 bg-accent-purple/20 p-4 text-sm font-jua">
+				<p>Total to migrate: {r.total}</p>
+				<p class="text-green-400">Succeeded: {r.succeeded}</p>
+				{#if r.failed > 0}
+					<p class="text-red-400">Failed: {r.failed}</p>
+					{#each r.errors as err}
+						<p class="text-red-300 text-xs">{err}</p>
+					{/each}
+				{/if}
+			</div>
+		{/if}
+	</div>
 
 	{#if data.legacyApprovedShips.length > 0}
 		<div class="mt-10">

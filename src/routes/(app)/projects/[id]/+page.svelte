@@ -18,8 +18,41 @@
 			validUrl(data.project?.demoUrl ?? null) &&
 			validUrl(data.project?.githubUrl ?? null) &&
 			data.project?.hackatimeProjects.length != 0 &&
+			!!data.project?.coverArt &&
 			!editing,
 	);
+
+	let screenshotUploading: boolean = $state(false);
+	let screenshotError: string | null = $state(null);
+
+	async function handleScreenshotChange(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+
+		screenshotError = null;
+		screenshotUploading = true;
+		try {
+			const fd = new FormData();
+			fd.append('file', file);
+			const resp = await fetch('/api/upload', {
+				method: 'POST',
+				headers: { 'x-project-id': String(data.project!.id) },
+				body: fd,
+			});
+			if (!resp.ok) {
+				const msg = await resp.text();
+				screenshotError = msg || 'Upload failed';
+				return;
+			}
+			const { url } = await resp.json();
+			draft.coverArt = url;
+		} catch {
+			screenshotError = 'Upload failed — please try again';
+		} finally {
+			screenshotUploading = false;
+		}
+	}
 	let showShipButton: boolean = $derived(
 		data.shipsAllowed && data.pendingShips.length == 0 && !editing,
 	);
@@ -166,15 +199,27 @@
 		</div>
 
 		<div class="mt-6">
-			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="coverArt">Cover Art URL</label>
-			<p class="mb-2 text-lg text-[#E2BEFF]">A link to your project's cover image.</p>
+			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="screenshotFile">Screenshot</label>
+			<p class="mb-2 text-lg text-[#E2BEFF]">Upload a screenshot of your project. Required before shipping.</p>
+			{#if draft.coverArt}
+				<img src={draft.coverArt} alt="Current screenshot" class="mb-3 h-32 w-auto rounded-xl object-cover" />
+			{/if}
 			<input
-				type="url"
-				id="coverArt"
-				name="coverArt"
-				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 font-mono text-sm text-[#E2BEFF] outline-none"
-				bind:value={draft.coverArt}
+				type="file"
+				id="screenshotFile"
+				accept="image/*"
+				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 text-lg text-[#E2BEFF] outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-[#8B81FF] file:px-4 file:py-2 file:text-white"
+				disabled={screenshotUploading}
+				onchange={handleScreenshotChange}
 			/>
+			{#if screenshotUploading}
+				<p class="mt-2 text-lg text-[#E2BEFF]">Uploading…</p>
+			{/if}
+			{#if screenshotError}
+				<p class="mt-2 text-lg text-red-400">{screenshotError}</p>
+			{/if}
+			<!-- hidden field carries the R2 URL to the server action -->
+			<input type="hidden" name="coverArt" value={draft.coverArt ?? ''} />
 		</div>
 
 		<div class="mt-6">

@@ -11,11 +11,12 @@ import {
 	shopItems,
 	users,
 } from '$lib/server/db/schema';
-import { and, eq, inArray, desc, sql } from 'drizzle-orm';
+import { and, eq, inArray, desc, sql, isNotNull } from 'drizzle-orm';
 import { sendMessage } from '$lib/server/slack/send_message';
 import { sendReviewDM } from '$lib/server/slack/review_message';
 import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
 import { createAirtableShipRecord, extractGithubUsername } from '$lib/server/airtable';
+import { uploadToS3, getPublicUrl } from '$lib/server/s3';
 import { NOTES_PER_HOUR } from '$lib';
 
 export const load: PageServerLoad = async () => {
@@ -446,6 +447,63 @@ export const actions: Actions = {
 		}
 
 		await sendMessage(shipInfo.user.slackId, message);
+	},
+	backfillScreenshots: async ({ locals }) => {
+		if (!locals.user) return fail(401, { error: 'Unauthorized' });
+
+		// Fetch all projects that have a cover art URL not already on our R2 bucket
+		const allProjects = await db
+			.select({ id: projects.id, coverArt: projects.coverArt })
+			.from(projects)
+			.where(isNotNull(projects.coverArt));
+
+		const { env } = await import('$env/dynamic/private');
+		const publicUrlBase = env.S3_PUBLIC_URL ?? '';
+
+		const toMigrate = allProjects.filter(
+			(p) => p.coverArt && !p.coverArt.startsWith(publicUrlBase),
+		);
+
+		let succeeded = 0;
+		let failed = 0;
+		const errors: string[] = [];
+
+		for (const project of toMigrate) {
+			const rawUrl = project.coverArt!;
+			try {
+				const resp = await fetch(rawUrl);
+				if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+				const contentType = resp.headers.get('content-type') ?? 'image/jpeg';
+				const extMap: Record<string, string> = {
+					'image/jpeg': 'jpg',
+					'image/png': 'png',
+					'image/gif': 'gif',
+					'image/webp': 'webp',
+					'image/avif': 'avif',
+				};
+				const baseType = contentType.split(';')[0].trim();
+				const ext = extMap[baseType] ?? 'jpg';
+				const key = `screenshots/${project.id}-backfill.${ext}`;
+
+				const bytes = new Uint8Array(await resp.arrayBuffer());
+				await uploadToS3(key, bytes, baseType);
+				const newUrl = getPublicUrl(key);
+
+				await db
+					.update(projects)
+					.set({ coverArt: newUrl })
+					.where(eq(projects.id, project.id));
+
+				succeeded++;
+			} catch (err) {
+				failed++;
+				errors.push(`Project ${project.id}: ${err}`);
+				console.error(`Screenshot backfill failed for project ${project.id}:`, err);
+			}
+		}
+
+		return { backfillResult: { total: toMigrate.length, succeeded, failed, errors } };
 	},
 	hqReject: async ({ request, locals }) => {
 		const data = await request.formData();
