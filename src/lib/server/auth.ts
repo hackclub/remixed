@@ -6,9 +6,23 @@ import { signSession } from './crypto';
 
 const DEFAULT_HCA_BASE_URL = 'https://auth.hackclub.com';
 const HACKATIME_BASE_URL = 'https://hackatime.hackclub.com';
-const HCA_SCOPES = ['openid', 'email', 'name', 'slack_id', 'verification_status'];
+const HCA_SCOPES = ['openid', 'email', 'name', 'slack_id', 'verification_status', 'birthdate', 'address'];
 
 type AuthProvider = 'hca' | 'hackatime';
+
+type HcaAddress = {
+	id: string;
+	first_name?: string;
+	last_name?: string;
+	line_1?: string;
+	line_2?: string;
+	city?: string;
+	state?: string;
+	postal_code?: string;
+	country?: string;
+	phone_number?: string;
+	primary?: boolean;
+};
 
 type HcaProfile = {
 	id: string;
@@ -16,6 +30,8 @@ type HcaProfile = {
 	first_name?: string;
 	last_name?: string;
 	slack_id?: string;
+	birthday?: string;
+	addresses?: HcaAddress[];
 };
 
 type RawHcaProfile = HcaProfile & {
@@ -186,6 +202,8 @@ export async function fetchHcaProfile(accessToken: string): Promise<HcaProfile> 
 		first_name: profile.first_name,
 		last_name: profile.last_name,
 		slack_id: profile.slack_id,
+		birthday: profile.birthday,
+		addresses: profile.addresses,
 	};
 }
 

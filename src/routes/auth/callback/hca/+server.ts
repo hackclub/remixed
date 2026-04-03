@@ -11,6 +11,7 @@ import {
 	fetchSlackIdentity,
 	hcaCallbackUrl,
 } from '$lib/server/auth';
+import { encrypt } from '$lib/server/crypto';
 
 function fallbackUsername(
 	firstName: string | undefined,
@@ -60,6 +61,10 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 		let userId = existingUser?.id;
 		const alreadyLinkedHackatime = Boolean(existingUser?.accessToken);
 
+		const primaryAddress = hcaProfile.addresses?.find((a) => a.primary) ?? hcaProfile.addresses?.[0];
+		const encryptOrKeep = (val: string | undefined | null, existing: string | null | undefined) =>
+			val ? encrypt(val) : (existing ?? null);
+
 		if (existingUser) {
 			await db
 				.update(users)
@@ -71,9 +76,18 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 					email: hcaProfile.email ?? existingUser.email,
 					firstName: hcaProfile.first_name ?? existingUser.firstName,
 					lastName: hcaProfile.last_name ?? existingUser.lastName,
+					birthday: encryptOrKeep(hcaProfile.birthday, existingUser.birthday),
+					addressLine1: encryptOrKeep(primaryAddress?.line_1, existingUser.addressLine1),
+					addressLine2: encryptOrKeep(primaryAddress?.line_2, existingUser.addressLine2),
+					city: encryptOrKeep(primaryAddress?.city, existingUser.city),
+					state: encryptOrKeep(primaryAddress?.state, existingUser.state),
+					country: encryptOrKeep(primaryAddress?.country, existingUser.country),
+					zipCode: encryptOrKeep(primaryAddress?.postal_code, existingUser.zipCode),
 				})
 				.where(eq(users.id, existingUser.id));
 		} else {
+			const encryptOrNull = (val: string | undefined | null) => (val ? encrypt(val) : null);
+
 			const [user] = await db
 				.insert(users)
 				.values({
@@ -85,6 +99,13 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 					email: hcaProfile.email ?? null,
 					firstName: hcaProfile.first_name ?? null,
 					lastName: hcaProfile.last_name ?? null,
+					birthday: encryptOrNull(hcaProfile.birthday),
+					addressLine1: encryptOrNull(primaryAddress?.line_1),
+					addressLine2: encryptOrNull(primaryAddress?.line_2),
+					city: encryptOrNull(primaryAddress?.city),
+					state: encryptOrNull(primaryAddress?.state),
+					country: encryptOrNull(primaryAddress?.country),
+					zipCode: encryptOrNull(primaryAddress?.postal_code),
 				})
 				.returning({ id: users.id });
 

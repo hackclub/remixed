@@ -43,6 +43,13 @@
       "when": 1774887000000,
       "tag": "0005_backfill_committed_seconds",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1775071060357,
+      "tag": "0006_nostalgic_prima",
+      "breakpoints": true
     }
   ]
 }
