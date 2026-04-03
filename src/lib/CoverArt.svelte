@@ -4,7 +4,7 @@
 
 <img
 	src={src ?? '/404.jpg'}
-	class={className}
+	class="bg-black {className}"
 	onerror={(e: any) => (e.currentTarget.src = '/404.jpg')}
 	alt="cover"
 />
