@@ -95,7 +95,7 @@ export const actions: Actions = {
 		}
 
 		const maxHours = shipInfo.ship.seconds / 3600;
-		if (adjustedHours <= 0 || adjustedHours > maxHours + 0.01) {
+		if (adjustedHours <= 0 || adjustedHours > maxHours + 0.1) {
 			return fail(400, { error: `Hours must be between 0 and ${maxHours.toFixed(1)}` });
 		}
 
@@ -277,7 +277,7 @@ export const actions: Actions = {
 
 		if (adjustedHours !== undefined) {
 			const maxHours = reviewInfo.ship.seconds / 3600;
-			if (!Number.isFinite(adjustedHours) || adjustedHours <= 0 || adjustedHours > maxHours + 0.01) {
+			if (!Number.isFinite(adjustedHours) || adjustedHours <= 0 || adjustedHours > maxHours + 0.1) {
 				return fail(400, { error: `Hours must be between 0 and ${maxHours.toFixed(1)}` });
 			}
 		}
