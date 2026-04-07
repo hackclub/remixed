@@ -17,6 +17,9 @@ export type ReviewTypePub =
 	| 'HQ_REJECTION';
 
 export const NOTES_PER_HOUR = 10;
+export const MIN_NOTES_PER_HOUR = 10;
+export const MAX_NOTES_PER_HOUR = 25;
+export const NOTE_VALUE_USD = 0.32;
 
 export function formatHours(seconds: number) {
 	const minutes = seconds / 60.0;

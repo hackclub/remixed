@@ -5,7 +5,7 @@ import { db } from '$lib/server/db';
 import { projects, shipReviews, ships, users } from '$lib/server/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { sendReviewDM, editReviewDM } from '$lib/server/slack/review_message';
-import { NOTES_PER_HOUR } from '$lib';
+import { NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR } from '$lib';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const projectId = Number(params.id);
@@ -71,8 +71,13 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const shipId = Number(data.get('shipId'));
 		const adjustedHours = Number(data.get('adjustedHours'));
+		const notesPerHour = Number(data.get('notesPerHour') ?? NOTES_PER_HOUR);
 		const userComment = (data.get('userComment') as string).trim();
 		const internalComment = (data.get('internalComment') as string).trim();
+
+		if (!Number.isFinite(notesPerHour) || notesPerHour < MIN_NOTES_PER_HOUR || notesPerHour > MAX_NOTES_PER_HOUR) {
+			return fail(400, { error: `Notes per hour must be between ${MIN_NOTES_PER_HOUR} and ${MAX_NOTES_PER_HOUR}` });
+		}
 
 		if (!userComment || !internalComment) {
 			return fail(400, { error: 'Both user and internal comments are required' });
@@ -106,6 +111,7 @@ export const actions: Actions = {
 				userComment,
 				internalComment,
 				adjustedHours,
+				notesPerHour,
 			}),
 			recordAuditLog(db, {
 				actorUserId: locals.user!.id,
@@ -115,7 +121,8 @@ export const actions: Actions = {
 				changeType: 'reviewer_approve',
 				data: {
 					adjustedHours,
-					notesPayout: Math.ceil(adjustedHours * NOTES_PER_HOUR),
+					notesPerHour,
+					notesPayout: Math.ceil(adjustedHours * notesPerHour),
 					userComment,
 					internalComment,
 				},

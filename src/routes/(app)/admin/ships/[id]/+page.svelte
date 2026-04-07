@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { formatHours, NOTES_PER_HOUR } from '$lib';
+	import { formatHours, NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR, NOTE_VALUE_USD } from '$lib';
 	import { styleAdminPopover, styleButton, styleInput } from '$lib/styles.js';
 
 	let { data }: { data: PageData } = $props();
@@ -12,7 +12,9 @@
 	let adjustedHours = $state(
 		pendingShip ? parseFloat((pendingShip.seconds / 3600).toFixed(1)) : 0,
 	);
-	let notesPayout = $derived(Math.ceil(adjustedHours * NOTES_PER_HOUR));
+	let notesPerHour = $state(NOTES_PER_HOUR);
+	let notesPayout = $derived(Math.ceil(adjustedHours * notesPerHour));
+	let hourlyRate = $derived((notesPerHour * NOTE_VALUE_USD).toFixed(2));
 	let isComment = $derived(reviewMode === 'ship_comment' || reviewMode === 'internal_comment');
 	let reviewFormAction = $derived(
 		isComment ? '?/comment' : reviewMode === 'rejection' ? '?/reject' : '?/approve',
@@ -302,8 +304,9 @@
 										{reviewTypeLabel(r.review.type)}
 									</span>
 									{#if r.review.adjustedHours}
+										{@const rate = r.review.notesPerHour ?? NOTES_PER_HOUR}
 										<span class="text-sm text-text/60">
-											({r.review.adjustedHours}h &middot; {Math.ceil(r.review.adjustedHours * NOTES_PER_HOUR)} notes)
+											({r.review.adjustedHours}h &middot; {Math.ceil(r.review.adjustedHours * rate)} notes @ {rate}/h)
 										</span>
 									{/if}
 									{#if r.review.isInternal}
@@ -383,8 +386,35 @@
 							class="{styleInput} w-full border-2 border-text text-text"
 						/>
 					</label>
+					<label class="block">
+						<span class="text-sm text-text/60">Notes per Hour — ${hourlyRate}/hr</span>
+						<div class="flex items-center gap-3">
+							<input
+								type="range"
+								name="notesPerHour"
+								min={MIN_NOTES_PER_HOUR}
+								max={MAX_NOTES_PER_HOUR}
+								step="1"
+								bind:value={notesPerHour}
+								class="flex-1"
+							/>
+							<input
+								type="number"
+								min={MIN_NOTES_PER_HOUR}
+								max={MAX_NOTES_PER_HOUR}
+								step="1"
+								bind:value={notesPerHour}
+								class="{styleInput} w-20 border-2 border-text text-text"
+							/>
+						</div>
+					</label>
+					{#if notesPerHour * NOTE_VALUE_USD > 5}
+						<p class="text-sm font-bold text-black">
+							This goes over the regular program payout amount! If in doubt - ask in the channel!
+						</p>
+					{/if}
 					<p class="text-sm text-text/50">
-						Payout: {notesPayout} notes ({adjustedHours}h &times; {NOTES_PER_HOUR} notes/h)
+						Payout: {notesPayout} notes ({adjustedHours}h &times; {notesPerHour} notes/h)
 					</p>
 				{/if}
 
