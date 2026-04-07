@@ -1,6 +1,7 @@
 import { decrypt } from '$lib/server/crypto';
 import { db } from '$lib/server/db';
 import { projects } from '$lib/server/db/schema';
+import { env } from '$env/dynamic/private';
 import { eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
@@ -16,22 +17,27 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const accessToken = decrypt(locals.user!.accessToken);
 	let hackatimeSeconds: null | number = null;
 	if (project.hackatimeProjects.length != 0) {
+		const query = new URLSearchParams();
+		if (env.HACKATIME_START_DATE) {
+			query.set('start', env.HACKATIME_START_DATE);
+		}
+		const today = new Date().toISOString().split('T')[0];
+		query.set('end', today);
+
 		const hackatimeUrl =
-			'https://hackatime.hackclub.com/api/v1/authenticated/projects?' +
-			new URLSearchParams({ start: '2026-03-07', projects: project.hackatimeProjects.join(',') });
-		hackatimeSeconds = await fetch(hackatimeUrl, {
+			'https://hackatime.hackclub.com/api/summary?' + query.toString();
+		const resp = await fetch(hackatimeUrl, {
 			method: 'GET',
 			headers: {
 				Authorization: `Bearer ${accessToken}`,
-				'Content-Type': 'application/x-www-form-urlencoded',
 			},
-		})
-			.then((r) => r.json())
-			.then((resp) =>
-				resp.projects
-					.map((proj: any) => proj.total_seconds)
-					.reduce((a: number, b: number) => a + b, 0),
-			);
+		}).then((r) => r.json());
+
+		const targetProjects = new Set(project.hackatimeProjects);
+		hackatimeSeconds = (resp.projects ?? [])
+			.filter((p: any) => targetProjects.has(p.name))
+			.map((p: any) => p.total_seconds)
+			.reduce((a: number, b: number) => a + b, 0);
 	}
 
 	await db.update(projects).set({ hackatimeSeconds }).where(eq(projects.id, projectId));
