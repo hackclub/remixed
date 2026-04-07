@@ -50,6 +50,13 @@
       "when": 1775071060357,
       "tag": "0006_nostalgic_prima",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1775247194602,
+      "tag": "0007_next_enchantress",
+      "breakpoints": true
     }
   ]
 }

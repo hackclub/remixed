@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
-	import { formatHours, NOTES_PER_HOUR } from '$lib';
+	import { formatHours, NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR, NOTE_VALUE_USD } from '$lib';
 	import { styleAdminPopover, styleButton, styleInput } from '$lib/styles.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -8,7 +8,9 @@
 	let activeShipId = $state('');
 	let activeShipSeconds = $state(0);
 	let adjustedHours = $state(0);
-	let notesPayout = $derived(Math.ceil(adjustedHours * NOTES_PER_HOUR));
+	let notesPerHour = $state(NOTES_PER_HOUR);
+	let notesPayout = $derived(Math.ceil(adjustedHours * notesPerHour));
+	let hourlyRate = $derived((notesPerHour * NOTE_VALUE_USD).toFixed(2));
 	let userComment = $state('');
 	let internalComment = $state('');
 
@@ -30,6 +32,7 @@
 		adjustedHours =
 			shipInfo.approval?.review.adjustedHours ??
 			parseFloat((shipInfo.ship.seconds / 3600).toFixed(1));
+		notesPerHour = shipInfo.approval?.review.notesPerHour ?? NOTES_PER_HOUR;
 		userComment = shipInfo.approval?.review.userComment ?? '';
 		internalComment = shipInfo.approval?.review.internalComment ?? '';
 	}
@@ -52,8 +55,35 @@
 				class="{styleInput} w-full font-jua text-text"
 			/>
 		</label>
+		<label class="block">
+			<span class="text-sm">Notes per Hour — ${hourlyRate}/hr</span>
+			<div class="flex items-center gap-3">
+				<input
+					type="range"
+					name="notesPerHour"
+					min={MIN_NOTES_PER_HOUR}
+					max={MAX_NOTES_PER_HOUR}
+					step="1"
+					bind:value={notesPerHour}
+					class="flex-1"
+				/>
+				<input
+					type="number"
+					min={MIN_NOTES_PER_HOUR}
+					max={MAX_NOTES_PER_HOUR}
+					step="1"
+					bind:value={notesPerHour}
+					class="{styleInput} w-20 font-jua text-text"
+				/>
+			</div>
+		</label>
+		{#if notesPerHour * NOTE_VALUE_USD > 5}
+			<p class="text-sm font-bold text-black">
+				This goes over the regular program payout amount! If in doubt - ask in the channel!
+			</p>
+		{/if}
 		<p class="text-sm">
-			Payout: {notesPayout} notes ({adjustedHours}h x {NOTES_PER_HOUR} notes/h)
+			Payout: {notesPayout} notes ({adjustedHours}h x {notesPerHour} notes/h)
 		</p>
 		<label class="block">
 			<span class="text-sm">Comment for shipper (required)</span>
@@ -242,7 +272,13 @@
 						</td>
 						<td>{formatHours(shipInfo.ship.seconds)}</td>
 						<td>{shipInfo.approval?.reviewer.username ?? 'N/A'}</td>
-						<td>{shipInfo.approval?.review.adjustedHours ?? 'N/A'}h</td>
+						<td>
+							{shipInfo.approval?.review.adjustedHours ?? 'N/A'}h
+							{#if shipInfo.approval?.review.adjustedHours != null}
+								{@const rate = shipInfo.approval?.review.notesPerHour ?? NOTES_PER_HOUR}
+								<span class="text-xs text-text/50">@ ${(rate * NOTE_VALUE_USD).toFixed(2)}/hr</span>
+							{/if}
+						</td>
 						<td class="max-w-xs truncate">
 							{shipInfo.approval?.review.internalComment ?? 'None'}
 						</td>

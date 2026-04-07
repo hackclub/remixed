@@ -18,7 +18,7 @@ import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
 import { createAirtableShipRecord, extractGithubUsername } from '$lib/server/airtable';
 import { decrypt } from '$lib/server/crypto';
 import { uploadToS3, getPublicUrl } from '$lib/server/s3';
-import { NOTES_PER_HOUR } from '$lib';
+import { NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR } from '$lib';
 
 const decryptOrNull = (val: string | null) => (val ? decrypt(val) : null);
 
@@ -104,11 +104,16 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const shipId = Number(data.get('shipId'));
 		const adjustedHours = Number(data.get('adjustedHours'));
+		const notesPerHour = Number(data.get('notesPerHour') ?? NOTES_PER_HOUR);
 		const userComment = (data.get('userComment') as string).trim();
 		const internalComment = (data.get('internalComment') as string).trim();
 
 		if (!Number.isFinite(shipId) || shipId <= 0) {
 			return fail(400, { error: 'Invalid ship id' });
+		}
+
+		if (!Number.isFinite(notesPerHour) || notesPerHour < MIN_NOTES_PER_HOUR || notesPerHour > MAX_NOTES_PER_HOUR) {
+			return fail(400, { error: `Notes per hour must be between ${MIN_NOTES_PER_HOUR} and ${MAX_NOTES_PER_HOUR}` });
 		}
 
 		if (!userComment || !internalComment) {
@@ -131,7 +136,7 @@ export const actions: Actions = {
 			return fail(400, { error: `Hours must be between 0 and ${maxHours.toFixed(1)}` });
 		}
 
-		const notesPayout = Math.ceil(adjustedHours * NOTES_PER_HOUR);
+		const notesPayout = Math.ceil(adjustedHours * notesPerHour);
 
 		const outcome = await db.transaction(async (tx) => {
 			const [approvedShip] = await tx
@@ -153,6 +158,7 @@ export const actions: Actions = {
 					userComment,
 					internalComment,
 					adjustedHours,
+					notesPerHour,
 					slackMessageTs: null,
 					slackChannelId: null,
 				})
@@ -182,7 +188,7 @@ export const actions: Actions = {
 					entityType: 'ship',
 					entityId: shipId,
 					changeType: 'hq_approve',
-					data: { adjustedHours, notesPayout, userComment, internalComment },
+					data: { adjustedHours, notesPerHour, notesPayout, userComment, internalComment },
 				}),
 			]);
 

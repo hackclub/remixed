@@ -102,6 +102,7 @@ export const shipReviews = pgTable('ship_reviews', {
 	internalComment: text('internal_comment'),
 	isInternal: boolean('is_internal').notNull().default(false),
 	adjustedHours: real('adjusted_hours'),
+	notesPerHour: integer('notes_per_hour'),
 	slackMessageTs: text('slack_message_ts'),
 	slackChannelId: text('slack_channel_id'),
 	createdAt: timestamp('created_at').notNull().defaultNow(),

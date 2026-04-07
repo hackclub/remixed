@@ -1,0 +1,1 @@
+ALTER TABLE "ship_reviews" ADD COLUMN "notes_per_hour" integer;
