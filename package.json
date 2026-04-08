@@ -39,7 +39,7 @@
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.1021.0",
-		"drizzle-orm": "^0.45.1",
+		"drizzle-orm": "^0.45.2",
 		"marked": "^17.0.4",
 		"postgres": "^3.4.8",
 		"posthog-js": "^1.363.3",
