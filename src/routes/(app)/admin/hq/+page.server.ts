@@ -18,7 +18,7 @@ import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
 import { createAirtableShipRecord, extractGithubUsername } from '$lib/server/airtable';
 import { decrypt } from '$lib/server/crypto';
 import { uploadToS3, getPublicUrl } from '$lib/server/s3';
-import { NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR } from '$lib';
+import { NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR, formatHours } from '$lib';
 
 const decryptOrNull = (val: string | null) => (val ? decrypt(val) : null);
 
@@ -219,6 +219,36 @@ export const actions: Actions = {
 				.where(eq(shipReviews.id, outcome.reviewId));
 		}
 
+		// Build enriched hour justification for Airtable
+		const totalShipTime = formatHours(shipInfo.ship.seconds);
+		const adjustedTime = `${Math.floor(adjustedHours)}h ${Math.round((adjustedHours % 1) * 60)}m`;
+		const shipDate = shipInfo.ship.submittedAt.toISOString().slice(0, 10);
+		const reviewDate = new Date().toISOString().slice(0, 10);
+		const hackatimeProjectsList = shipInfo.project.hackatimeProjects.join(', ') || 'None';
+
+		// Find the initial reviewer
+		const [initialReview] = await db
+			.select({ reviewer: { username: users.username } })
+			.from(shipReviews)
+			.innerJoin(users, eq(shipReviews.reviewerId, users.id))
+			.where(and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'APPROVAL')))
+			.orderBy(desc(shipReviews.createdAt))
+			.limit(1);
+
+		const reviewerName = initialReview?.reviewer.username ?? 'Unknown';
+		const hqReviewerName = locals.user!.username;
+
+		const enrichedJustification = [
+			`This user tracked ${totalShipTime} on Hackatime. This was adjusted to ${adjustedTime} after review.`,
+			'',
+			internalComment,
+			'',
+			`Project was submitted by ${shipInfo.user.username} on ${shipDate}`,
+			`The Hackatime projects submitted were: ${hackatimeProjectsList} and included time from 2026-03-07 to ${shipDate}`,
+			`Project was reviewed by ${reviewerName} on ${reviewDate}.`,
+			`Project was HQ approved by ${hqReviewerName} on ${reviewDate}.`,
+		].join('\n');
+
 		await Promise.all([
 			sendUpdatedBalance(shipInfo.user.slackId, outcome.oldBalance, outcome.newBalance),
 			createAirtableShipRecord({
@@ -238,7 +268,7 @@ export const actions: Actions = {
 				zipCode: decryptOrNull(shipInfo.user.zipCode),
 				birthday: decryptOrNull(shipInfo.user.birthday),
 				overrideHoursSpent: adjustedHours,
-				overrideHoursJustification: internalComment,
+				overrideHoursJustification: enrichedJustification,
 			}),
 		]);
 	},
