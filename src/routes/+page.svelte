@@ -117,6 +117,7 @@
 </svelte:head>
 
 <div class="fixed h-screen w-screen bg-accent-purple"></div>
+<div class="pointer-events-none fixed inset-0 z-10 border-[32px] border-[#1B2A42]"></div>
 <div
 	class="relative flex h-screen w-screen items-center justify-center overflow-x-clip bg-accent-purple"
 >
@@ -145,7 +146,7 @@
 		>
 			<div class="rounded-xl bg-text px-8 py-2 md:px-16">
 				<div class="relative font-jua text-xl md:text-3xl">
-					<span class="text-stroke text-stroke-1 bg-linear-to-r from-[#6EF5FB] to-[#938BEC] p-1">
+					<span class="text-stroke text-stroke-2 bg-linear-to-r from-[#6EF5FB] to-[#938BEC] p-1">
 						join now!
 					</span>
 					<span
@@ -203,9 +204,10 @@
 	</div>
 </div>
 
-<div class="relative -mt-110 flex justify-center overflow-x-clip pb-40 md:pb-56">
+<div class="relative z-20 -mt-110 flex justify-center overflow-x-clip pb-40 md:pb-56">
+	<div class="absolute top-[28rem] z-[1] h-full w-full bg-accent-purple"></div>
 	<div
-		class="absolute left-1/2 z-6 w-[calc(100vw+16rem)] -translate-x-1/2 rotate-12 overflow-hidden bg-text p-4"
+		class="absolute left-1/2 z-[20] w-[calc(100vw+16rem)] -translate-x-1/2 rotate-12 overflow-hidden bg-text p-4"
 	>
 		<div class="strip-marquee" aria-label={STRIP_LABEL}>
 			<div class="strip-marquee__segment">
@@ -216,7 +218,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="relative top-2 z-5 flex w-[calc(100vw+16rem)] rotate-12 justify-center gap-8 pt-32">
+	<div class="relative top-2 z-5 flex w-[calc(100vw+16rem)] -translate-x-8 px-8 rotate-12 justify-center gap-8 overflow-y-clip pt-32">
 		<img
 			src="/landing/dots-marquee-left.png"
 			alt="dots"
@@ -229,7 +231,7 @@
 		/>
 		<div class="absolute top-16 h-full w-full bg-accent-purple"></div>
 		<div class="">
-			<BoldText class="z-3 mx-auto flex! font-jua text-4xl" stroke="2">
+			<BoldText class="z-3 mx-auto flex! font-jua text-4xl -rotate-2" stroke="2">
 				Ship your project, and get all sorts of cool stuff!
 			</BoldText>
 			<div class="flex justify-center">
@@ -250,7 +252,7 @@
 	</div>
 </div>
 
-<div class="relative z-5 -mt-48 w-full md:-mt-72">
+<div class="relative z-20 -mt-48 w-full md:-mt-72">
 	<img
 		src="/landing/faq-bg.png"
 		alt="bg"
@@ -320,7 +322,7 @@
 
 	<div class="relative z-8 w-full overflow-x-clip bg-text">
 		<div
-			class="absolute -top-24 left-1/2 h-48 w-[calc(100vw+16rem)] -translate-x-1/2 -rotate-6 bg-text"
+			class="absolute -top-24 left-1/2 h-48 w-[calc(100vw+16rem)] -translate-x-1/2 rotate-[356deg] bg-text"
 		></div>
 		<div class="relative mx-auto max-w-5xl p-16 pt-28 pb-32">
 			<h1 class="mb-8 font-jua text-4xl text-light">
