@@ -168,19 +168,19 @@
 				img="/landing/crunch_pink.png"
 				h2="PATHWAY #1"
 				h1="Rhythm Game"
-				class="relative top-4 rotate-6"
+				class="relative top-4 rotate-6 hover:rotate-12 hover:scale-110"
 			/>
 			<CrunchCard
 				img="/landing/crunch_green_spotify.png"
 				h2="PATHWAY #2"
 				h1="Audio Editor"
-				class="relative -top-4 -rotate-6"
+				class="relative -top-4 -rotate-6 hover:rotate-0 hover:scale-110"
 			/>
 			<CrunchCard
 				img="/landing/crunch_pink.png"
 				h2="PATHWAY #3"
 				h1="Music Player"
-				class=" relative rotate-6"
+				class="relative rotate-6 hover:rotate-12 hover:scale-110"
 			/>
 		</div>
 
@@ -192,7 +192,7 @@
 				img="/landing/crunch_green_spotify.png"
 				h2="WILDCARD"
 				h1="Anything else!"
-				class="relative"
+				class="relative hover:scale-110"
 			/>
 		</div>
 	</div>

@@ -13,7 +13,7 @@
 
 <div
 	style={styleName}
-	class="{className} w-max min-w-50 rounded-2xl bg-linear-to-br from-secondary to-[#53C1D7] p-1 shadow-xl"
+	class="{className} w-max min-w-50 rounded-2xl bg-linear-to-br from-secondary to-[#53C1D7] p-1 shadow-xl transition-transform duration-300 ease-[cubic-bezier(0.05,0,0,1)]"
 >
 	<div class="relative flex flex-col justify-center rounded-xl bg-text p-4 pt-20">
 		{#if normalizeImage}
