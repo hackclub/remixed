@@ -253,12 +253,14 @@
 </div>
 
 <div class="relative z-20 -mt-48 w-full md:-mt-72">
-	<img
-		src="/landing/faq-bg.png"
-		alt="bg"
-		class="absolute inset-0 h-full w-full scale-x-[-1] object-cover object-top"
-	/>
-	<div class="relative z-8 mx-auto max-w-5xl p-8 pt-64 pb-48">
+	<div class="relative w-full">
+		<img
+			src="/landing/faq-bg.png"
+			alt="bg"
+			class="absolute inset-0 h-full w-full scale-x-[-1] object-cover object-top"
+		/>
+		<div class="faq-notes-overlay absolute inset-0"></div>
+		<div class="relative z-8 mx-auto max-w-5xl p-8 pt-64 pb-48">
 		<BoldText class="font-jua text-9xl" stroke="4">FAQ</BoldText>
 		<BoldText class="mb-8 flex! font-jua text-4xl" stroke="2">
 			(Frequently Asked Questions)
@@ -319,6 +321,7 @@
 			</FAQCard>
 		</div>
 	</div>
+	</div>
 
 	<div class="relative z-8 w-full overflow-x-clip bg-text">
 		<div
@@ -376,6 +379,38 @@
 		.strip-marquee {
 			animation: none;
 			transform: translateX(0);
+		}
+	}
+
+	.faq-notes-overlay {
+		pointer-events: none;
+		z-index: 1;
+		opacity: 0.2;
+		background-image: url('/landing/note-tile.png'), url('/landing/note-tile.png');
+		background-repeat: repeat, repeat;
+		background-size: 115px 230px, 115px 230px;
+		background-position: 0 0, 57px 115px;
+		animation: faq-notes-diagonal 30s linear infinite;
+		will-change: background-position;
+		mask-image: url('/landing/faq-bg.png');
+		mask-size: cover;
+		mask-position: top center;
+		mask-repeat: no-repeat;
+		transform: scaleX(-1);
+	}
+
+	@keyframes faq-notes-diagonal {
+		from {
+			background-position: 0 0, 57px 115px;
+		}
+		to {
+			background-position: 115px 230px, 172px 345px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.faq-notes-overlay {
+			animation: none;
 		}
 	}
 
