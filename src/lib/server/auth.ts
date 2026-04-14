@@ -6,7 +6,14 @@ import { signSession } from './crypto';
 
 const DEFAULT_HCA_BASE_URL = 'https://auth.hackclub.com';
 const HACKATIME_BASE_URL = 'https://hackatime.hackclub.com';
-const HCA_SCOPES = ['openid', 'email', 'name', 'slack_id', 'verification_status', 'birthdate', 'address'];
+const HCA_SCOPES = [
+	'openid',
+	'email',
+	'name',
+	'slack_id',
+	'verification_status',
+	...(env.ASCPIXI_BYPASS == 'true' ? [] : ['birthdate', 'address']),
+];
 
 type AuthProvider = 'hca' | 'hackatime';
 
