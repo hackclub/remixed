@@ -12,6 +12,7 @@ import {
 	hackatimeCallbackUrl,
 } from '$lib/server/auth';
 import { isRedirect } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ url, cookies, locals }) => {
 	if (!locals.user) {
@@ -35,7 +36,10 @@ export const load: PageServerLoad = async ({ url, cookies, locals }) => {
 		const accessToken = await exchangeHackatimeCode(code, hackatimeCallbackUrl(url));
 		const hackatimeInfo = await fetchHackatimeProfile(accessToken);
 
-		if (!hackatimeInfo.slack_id || hackatimeInfo.slack_id !== locals.user.slackId) {
+		if (
+			!(env.ASCPIXI_BYPASS == 'true') &&
+			(!hackatimeInfo.slack_id || hackatimeInfo.slack_id !== locals.user.slackId)
+		) {
 			throw redirect(303, '/auth/hackatime?error=hackatime_mismatch');
 		}
 
