@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { projects } from './db/schema';
 import { env } from '$env/dynamic/private';
+import { HackatimeClient } from './hackatime';
 
 export async function getProjects(userId: number, accessToken: string) {
 	const userProjects = await db
@@ -9,23 +10,12 @@ export async function getProjects(userId: number, accessToken: string) {
 		.from(projects)
 		.where(eq(projects.userId, userId));
 
-	const query = new URLSearchParams();
-	if (env.HACKATIME_START_DATE) {
-		query.set('start', env.HACKATIME_START_DATE);
-	}
+	const hackatime = new HackatimeClient(accessToken);
+	const { projects: allHackatimeProjects } = await hackatime.getProjects(
+		env.HACKATIME_START_DATE ? { start: env.HACKATIME_START_DATE } : undefined,
+	);
 
-	const allHackatimeProjects = await fetch(
-		`https://hackatime.hackclub.com/api/v1/authenticated/projects?${query.toString()}`,
-		{
-			method: 'GET',
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-		},
-	).then((r) => r.json());
-
-	return allHackatimeProjects.projects.map((p: any) => {
+	return allHackatimeProjects.map((p) => {
 		const claimedBy = userProjects.find((up) => up.hackatimeProjects.includes(p.name));
 		return {
 			name: p.name,

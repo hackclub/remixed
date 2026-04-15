@@ -3,6 +3,8 @@ import { env as publicEnv } from '$env/dynamic/public';
 import type { Cookies } from '@sveltejs/kit';
 import { randomBytes } from 'crypto';
 import { signSession } from './crypto';
+import { HackatimeClient } from './hackatime';
+import type { HackatimeProfile } from './hackatime';
 
 const DEFAULT_HCA_BASE_URL = 'https://auth.hackclub.com';
 const HACKATIME_BASE_URL = 'https://hackatime.hackclub.com';
@@ -48,9 +50,6 @@ type RawHcaProfile = HcaProfile & {
 	};
 };
 
-type HackatimeProfile = {
-	slack_id?: string;
-};
 
 type SlackProfileResponse = {
 	ok?: boolean;
@@ -214,49 +213,13 @@ export async function fetchHcaProfile(accessToken: string): Promise<HcaProfile> 
 	};
 }
 
-export async function exchangeHackatimeCode(code: string, redirectUri: string) {
-	if (!publicEnv.PUBLIC_HACKATIME_OAUTH_UID || !env.HACKATIME_OAUTH_SECRET) {
-		throw new Error('Hackatime credentials are not configured');
-	}
-
-	const response = await fetch(`${HACKATIME_BASE_URL}/oauth/token`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded',
-		},
-		body: new URLSearchParams({
-			client_id: publicEnv.PUBLIC_HACKATIME_OAUTH_UID,
-			client_secret: env.HACKATIME_OAUTH_SECRET,
-			code,
-			redirect_uri: redirectUri,
-			grant_type: 'authorization_code',
-		}).toString(),
-	});
-
-	if (!response.ok) {
-		throw new Error(`Hackatime token exchange failed with ${response.status}`);
-	}
-
-	const tokenResponse = await response.json();
-	if (!tokenResponse.access_token || typeof tokenResponse.access_token !== 'string') {
-		throw new Error('Hackatime token exchange returned no access token');
-	}
-
-	return tokenResponse.access_token;
+export async function exchangeHackatimeCode(code: string, redirectUri: string): Promise<string> {
+	return HackatimeClient.exchangeCode(code, redirectUri);
 }
 
 export async function fetchHackatimeProfile(accessToken: string): Promise<HackatimeProfile> {
-	const response = await fetch(`${HACKATIME_BASE_URL}/api/v1/authenticated/me`, {
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-		},
-	});
-
-	if (!response.ok) {
-		throw new Error(`Hackatime profile request failed with ${response.status}`);
-	}
-
-	return response.json();
+	const hackatime = new HackatimeClient(accessToken);
+	return hackatime.getProfile();
 }
 
 export async function fetchSlackIdentity(
