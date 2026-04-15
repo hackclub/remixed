@@ -7,9 +7,12 @@ type SlackMessageResponse = {
 };
 
 export async function sendMessage(
-	slackId: string,
+	slackId: string | undefined,
 	message: string,
 ): Promise<SlackMessageResponse> {
+	if (!slackId) {
+		return { ok: false };
+	}
 	const resp = await fetch('https://slack.com/api/chat.postMessage', {
 		method: 'POST',
 		body: JSON.stringify({ channel: slackId, text: message }),

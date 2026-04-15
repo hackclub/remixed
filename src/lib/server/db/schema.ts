@@ -126,6 +126,7 @@ export const shopItems = pgTable('shop_items', {
 	description: text('description'),
 	cost: integer('cost').notNull(),
 	imageUrl: text('imageUrl'),
+	categories: text('categories').array().default([]),
 });
 
 export const deletedProjects = pgTable('deleted_projects', {
@@ -173,6 +174,7 @@ export const deletedShopItems = pgTable('deleted_shop_items', {
 	description: text('description'),
 	cost: integer('cost').notNull(),
 	imageUrl: text('image_url'),
+	categories: text('categories').array().default([]),
 	deletedAt: timestamp('deleted_at').notNull().defaultNow(),
 	deletedByUserId: integer('deleted_by_user_id')
 		.notNull()

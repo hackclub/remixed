@@ -9,6 +9,7 @@
 		cost: number;
 		description: string;
 		imageUrl: string;
+		categories: string[];
 	};
 
 	let { data, form }: { data: PageData; form?: ActionData } = $props();
@@ -26,6 +27,7 @@
 			cost: 0,
 			description: '',
 			imageUrl: '',
+			categories: [],
 		};
 	}
 
@@ -37,6 +39,7 @@
 			cost: item.cost,
 			description: item.description ?? '',
 			imageUrl: item.imageUrl ?? '',
+			categories: item.categories ?? [],
 		};
 	}
 
@@ -47,6 +50,7 @@
 			cost: item.cost,
 			description: item.description ?? '',
 			imageUrl: item.imageUrl ?? '',
+			categories: item.categories ?? [],
 		};
 		requestAnimationFrame(() => deleteItemPopover?.showPopover());
 	}
@@ -85,6 +89,15 @@
 				bind:value={activeItem.description}
 				class="{styleInput} w-full font-jua text-text"
 			></textarea>
+			<label for="categories" class="block font-jua text-2xl text-light">Categories</label>
+			<input
+				type="text"
+				id="categories"
+				name="categories"
+				class="{styleInput} w-full font-jua text-text"
+				placeholder="Comma seperated (ex. 'Risk of Rain, Peak, Plushie')"
+				bind:value={activeItem.categories}
+			/>
 			<label for="imageUrl" class="block font-jua text-2xl text-light">Image URL</label>
 			<input
 				type="url"
@@ -154,6 +167,7 @@
 				<th>Name</th>
 				<th>Cost</th>
 				<th>Description</th>
+				<th>Categories</th>
 				<th>Image</th>
 				<th>Actions</th>
 			</tr>
@@ -170,6 +184,9 @@
 					</td>
 					<td class="h-20">
 						{item.description}
+					</td>
+					<td>
+						{item.categories?.join(', ')}
 					</td>
 					<td>
 						<img src={item.imageUrl} alt="shop item" class="w-30" />

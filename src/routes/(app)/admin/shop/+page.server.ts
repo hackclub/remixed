@@ -31,6 +31,7 @@ export const actions: Actions = {
 		let id = Number(data.get('itemId'));
 		const name = (data.get('name') as string).trim();
 		const description = (data.get('description') as string).trim();
+		const categories = (data.get('categories') as string).split(',').map((c) => c.trim());
 		const cost = Number(data.get('cost'));
 		const imageUrl = (data.get('imageUrl') as string).trim();
 		const [prevItem] = (await db.select().from(shopItems).where(eq(shopItems.id, id))) ?? null;
@@ -43,12 +44,12 @@ export const actions: Actions = {
 		if (id == -1) {
 			[newItem] = await db
 				.insert(shopItems)
-				.values({ name, description, cost, imageUrl })
+				.values({ name, description, cost, imageUrl, categories })
 				.returning();
 		} else {
 			[newItem] = await db
 				.update(shopItems)
-				.set({ name, description, cost, imageUrl })
+				.set({ name, description, cost, imageUrl, categories })
 				.where(eq(shopItems.id, id))
 				.returning();
 		}
@@ -95,6 +96,7 @@ export const actions: Actions = {
 				description: item.description,
 				cost: item.cost,
 				imageUrl: item.imageUrl,
+				categories: item.categories,
 				deletedAt,
 				deletedByUserId: locals.user!.id,
 			});
