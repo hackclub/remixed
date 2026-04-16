@@ -57,6 +57,13 @@
       "when": 1775247194602,
       "tag": "0007_next_enchantress",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1776350557256,
+      "tag": "0008_shop_categories",
+      "breakpoints": true
     }
   ]
 }
