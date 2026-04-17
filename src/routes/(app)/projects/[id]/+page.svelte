@@ -63,8 +63,42 @@
 
 	const isOwner = data.currentUserId == data.project?.userId;
 
+	const CATEGORY_META: Record<string, { img: string; pathway: string; displayLabel: string }> = {
+		RHYTHM_GAME:  { img: '/landing/crunch_magenta.png', pathway: 'Pathway #1', displayLabel: 'rhythm game'   },
+		AUDIO_EDITOR: { img: '/landing/crunch_yellow.png',  pathway: 'Pathway #2', displayLabel: 'audio editor'  },
+		MUSIC_PLAYER: { img: '/landing/crunch_pink.png',    pathway: 'Pathway #3', displayLabel: 'music player'  },
+		WILDCARD:     { img: '/landing/crunch_sparkly.png', pathway: 'Wildcard',   displayLabel: 'anything else' },
+	};
+	const CATEGORY_ORDER = ['RHYTHM_GAME', 'AUDIO_EDITOR', 'MUSIC_PLAYER', 'WILDCARD'];
+	const CATEGORY_ROTATIONS: Record<string, number> = {
+		RHYTHM_GAME: -3, AUDIO_EDITOR: 2, MUSIC_PLAYER: -2, WILDCARD: 3,
+	};
+	const sortedCategories = [...PROJECT_CATEGORY_OPTIONS].sort(
+		(a, b) => CATEGORY_ORDER.indexOf(a.value) - CATEGORY_ORDER.indexOf(b.value)
+	);
+
+	function formatTime(seconds: number): string {
+		if (seconds < 60) return '<1 min';
+		const hours = Math.floor(seconds / 3600);
+		const minutes = Math.floor((seconds % 3600) / 60);
+		if (hours === 0) return `${minutes}m`;
+		if (minutes === 0) return `${hours}h`;
+		return `${hours}h ${minutes}m`;
+	}
+
+	let editOpen = $state(false);
+	let editVisible = $state(false);
+	let editSelectedCategory = $state(draft.category ?? PROJECT_CATEGORY_OPTIONS[0].value);
+	let editSelectedIndex = $derived(sortedCategories.findIndex(c => c.value === editSelectedCategory));
+	let editHoveredIndex = $state(-1);
+	let editSelectedHackatimeProjects = $state([...(data.project?.hackatimeProjects ?? [])]);
+
 	function startEdit() {
+		editSelectedCategory = draft.category ?? PROJECT_CATEGORY_OPTIONS[0].value;
+		editSelectedHackatimeProjects = [...(draft.hackatimeProjects ?? [])];
 		editing = true;
+		editOpen = true;
+		requestAnimationFrame(() => (editVisible = true));
 		if (hackatimeProjects == null) {
 			fetch('/api/hackatime')
 				.then((resp) => resp.json())
@@ -72,9 +106,17 @@
 		}
 	}
 
+	function closeEdit() {
+		editVisible = false;
+		setTimeout(() => {
+			editOpen = false;
+			editing = false;
+			draft = { ...data.project };
+		}, 300);
+	}
+
 	function cancelEdit() {
-		draft = { ...data.project };
-		editing = false;
+		closeEdit();
 	}
 
 	onMount(() => {
@@ -120,151 +162,196 @@
 	</form>
 </div>
 
-<div
-	class="fixed top-1/2 left-1/2 max-h-[90vh] w-full max-w-4xl -translate-1/2 overflow-y-auto rounded-[2rem] border-4 border-[#8B81FF] bg-text px-6 py-8 font-jua text-light shadow-2xl/30 sm:px-10 sm:py-10"
-	popover
-	id="editProject"
->
-	<form method="POST" action="?/update" class="flex flex-col">
-		<h1 class="text-left text-4xl text-[#E2BEFF] text-shadow-flat sm:text-5xl">
-			Edit project
-		</h1>
-		<p class="mt-1 mb-8 text-left text-lg text-[#E2BEFF]">
-			Update your project details below.
-		</p>
+{#if editOpen}
+    <!-- Backdrop -->
+    <div
+        class="fixed inset-0 z-40 bg-[#0d1a2d]/75 backdrop-blur-sm transition-opacity duration-300"
+        style="opacity: {editVisible ? 1 : 0}"
+        onclick={closeEdit}
+        role="presentation"
+    ></div>
 
-		<div>
-			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="title">Title</label>
-			<p class="mb-2 text-lg text-[#E2BEFF]">Give your project a cool name!</p>
-			<input
-				type="text"
-				id="title"
-				name="title"
-				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 text-xl text-[#E2BEFF] outline-none"
-				bind:value={draft.title}
-				required
-			/>
-		</div>
+    <!-- Modal scroll container -->
+    <div
+        class="fixed inset-0 z-50 overflow-y-auto project-scroll"
+        onclick={(e) => { if (e.target === e.currentTarget) closeEdit(); }}
+    >
+        <div class="flex min-h-full items-start justify-center px-4 py-12 pb-24">
+            <!-- Modal panel -->
+            <div
+                class="w-full max-w-4xl transition-all duration-300"
+                style="opacity: {editVisible ? 1 : 0}; transform: translateY({editVisible ? '0' : '2rem'})"
+            >
+                <form method="POST" action="?/update" class="flex flex-col gap-4 font-jua">
+                    <!-- Header Banner -->
+                    <div class="relative overflow-hidden rounded-[2rem] border-4 border-[#8B81FF] bg-text px-8 py-7 shadow-2xl/30 sm:px-14 sm:py-9">
+                        <div class="pointer-events-none absolute inset-0 opacity-5" style="background-image: repeating-linear-gradient(0deg, #fff 0px, #fff 1px, transparent 1px, transparent 32px), repeating-linear-gradient(90deg, #fff 0px, #fff 1px, transparent 1px, transparent 32px);"></div>
+                        <div class="relative flex items-center gap-6">
+                            <div class="hidden flex-col gap-1.5 sm:flex" aria-hidden="true">
+                                <div class="h-3 w-3 rounded-full bg-secondary shadow-sm"></div>
+                                <div class="h-3 w-3 rounded-full bg-accent-purple shadow-sm"></div>
+                                <div class="h-3 w-3 rounded-full bg-primary shadow-sm"></div>
+                                <div class="h-3 w-3 rounded-full bg-accent-red shadow-sm"></div>
+                            </div>
+                            <div class="flex-1">
+                                <h1 class="font-daydream text-2xl text-[#E2BEFF] text-shadow-flat sm:text-4xl">Edit Project</h1>
+                                <p class="mt-1 text-sm text-[#E2BEFF]/60 sm:text-base">All changes take effect on save.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onclick={closeEdit}
+                                class="flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-[#E2BEFF]/20 text-2xl text-[#E2BEFF]/60 transition-colors hover:border-[#E2BEFF]/50 hover:text-[#E2BEFF]"
+                                aria-label="Close"
+                            >×</button>
+                        </div>
+                    </div>
 
-		<div class="mt-6">
-			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="description">Description</label>
-			<p class="mb-2 text-lg text-[#E2BEFF]">Describe what your project is in detail.</p>
-			<textarea
-				id="description"
-				name="description"
-				rows="6"
-				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 text-xl text-[#E2BEFF] outline-none"
-				bind:value={draft.description}
-			></textarea>
-		</div>
+                    <!-- Step 01 — Title -->
+                    <div class="rounded-[1.5rem] border-4 border-secondary/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-secondary sm:px-8">
+                        <div class="mb-3 flex items-center gap-3">
+                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-text">01</div>
+                            <label class="text-2xl text-[#E2BEFF]" for="edit-title">Title</label>
+                            <span class="ml-auto text-xs tracking-widest text-accent-red uppercase">Required</span>
+                        </div>
+                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Give your project a cool name!</p>
+                        <input type="text" id="edit-title" name="title" class="w-full rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 text-xl text-[#E2BEFF] outline-none transition-colors focus:border-secondary" bind:value={draft.title} required />
+                    </div>
 
-		<div class="mt-6">
-			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="hackatimeProjects">Hackatime Projects</label>
-			<p class="mb-2 text-lg text-[#E2BEFF]">Use Ctrl+Click to select multiple!</p>
-			<select
-				multiple
-				id="hackatimeProjects"
-				name="hackatimeProjects"
-				class="min-h-52 w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 text-xl text-[#E2BEFF] outline-none"
-			>
-				{#if hackatimeProjects && hackatimeProjects.length > 0}
-					{#each hackatimeProjects as proj}
-						{#if proj.claimedBy == null || proj.claimedBy == data.project!.id}
-							<option selected={proj.claimedBy == data.project!.id} value={proj.name}>
-								{proj.name}
-							</option>
-						{:else}
-							<option disabled value={proj.name}>{proj.name}</option>
-						{/if}
-					{/each}
-				{:else}
-					<option disabled value="none">No Projects Found</option>
-				{/if}
-			</select>
-		</div>
+                    <!-- Step 02 — Description -->
+                    <div class="rounded-[1.5rem] border-4 border-accent-purple/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-accent-purple sm:px-8">
+                        <div class="mb-3 flex items-center gap-3">
+                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-purple text-xs font-bold text-text">02</div>
+                            <label class="text-2xl text-[#E2BEFF]" for="edit-description">Description</label>
+                            <span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase">Optional</span>
+                        </div>
+                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Describe what your project is in detail.</p>
+                        <textarea id="edit-description" name="description" rows="5" class="w-full resize-none rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 text-xl text-[#E2BEFF] outline-none transition-colors focus:border-accent-purple" bind:value={draft.description}></textarea>
+                    </div>
 
-		<div class="mt-6">
-			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="category">Category</label>
-			<p class="mb-2 text-lg text-[#E2BEFF]">What kind of project are ya making?</p>
-			<select
-				name="category"
-				id="category"
-				bind:value={draft.category}
-				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 text-xl text-[#E2BEFF] outline-none"
-			>
-				{#each PROJECT_CATEGORY_OPTIONS as option}
-					<option value={option.value}>{option.label}</option>
-				{/each}
-			</select>
-		</div>
+                    <!-- Step 03 — Category -->
+                    <div class="rounded-[1.5rem] border-4 border-primary/40 bg-text px-6 py-8 shadow-xl/20 sm:px-8 sm:pb-12">
+                        <div class="mb-3 flex items-center gap-3">
+                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-text">03</div>
+                            <span class="text-2xl text-[#E2BEFF]">Category</span>
+                        </div>
+                        <p class="mb-16 text-sm text-[#E2BEFF]/60">What kind of project are ya making?</p>
+                        <div class="flex justify-center overflow-visible">
+                            {#each sortedCategories as option, i}
+                                {@const meta = CATEGORY_META[option.value]}
+                                {@const selected = editSelectedCategory === option.value}
+                                {@const hovered = editHoveredIndex === i && !selected}
+                                {@const rot = selected ? 0 : CATEGORY_ROTATIONS[option.value]}
+                                {@const txSelected = i < editSelectedIndex ? -28 : i > editSelectedIndex ? 28 : 0}
+                                {@const txHover = !selected && editHoveredIndex !== -1 ? (i < editHoveredIndex ? -14 : i > editHoveredIndex ? 14 : 0) : 0}
+                                {@const tx = txSelected + txHover}
+                                {@const ty = hovered ? -10 : 0}
+                                {@const scale = selected ? 1.06 : hovered ? 1.04 : 1}
+                                <label
+                                    class="w-44 cursor-pointer flex-shrink-0"
+                                    style="transform: rotate({rot}deg) translate({tx}px, {ty}px) scale({scale}); margin-left: {i === 0 ? '0' : '-18px'}; z-index: {selected ? 10 : hovered ? 9 : i}; transition: transform 0.25s ease;"
+                                    onmouseenter={() => editHoveredIndex = i}
+                                    onmouseleave={() => editHoveredIndex = -1}
+                                >
+                                    <input type="radio" name="category" value={option.value} class="sr-only" bind:group={editSelectedCategory} />
+                                    <div class="rounded-2xl p-1 transition-colors duration-200 drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)] {selected ? 'bg-linear-to-br from-primary to-[#8FD82A]' : 'bg-linear-to-br from-secondary to-[#53C1D7]'}">
+                                        <div class="relative flex flex-col items-center justify-center rounded-xl bg-text px-5 pb-5 pt-24">
+                                            <div class="pointer-events-none absolute -top-24 left-1/2 flex h-44 w-4/5 -translate-x-1/2 items-end justify-center">
+                                                <img src={meta.img} alt={meta.displayLabel} class="h-full w-full object-contain object-bottom" />
+                                            </div>
+                                            <p class="text-center text-base tracking-widest text-[#E2BEFF]/50 uppercase leading-none">{meta.pathway}</p>
+                                            <BoldText class="text-center! font-jua text-2xl leading-tight">{meta.displayLabel}</BoldText>
+                                        </div>
+                                    </div>
+                                </label>
+                            {/each}
+                        </div>
+                    </div>
 
-		<div class="mt-6">
-			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="screenshotFile">Screenshot</label>
-			<p class="mb-2 text-lg text-[#E2BEFF]">Upload a screenshot of your project. Required before shipping.</p>
-			{#if draft.coverArt}
-				<img src={draft.coverArt} alt="Current screenshot" class="mb-3 h-32 w-full rounded-xl object-cover object-center" onerror={(e: any) => (e.currentTarget.src = '/404.jpg')} />
-			{/if}
-			<input
-				type="file"
-				id="screenshotFile"
-				accept="image/*"
-				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 text-lg text-[#E2BEFF] outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-[#8B81FF] file:px-4 file:py-2 file:text-white"
-				disabled={screenshotUploading}
-				onchange={handleScreenshotChange}
-			/>
-			{#if screenshotUploading}
-				<p class="mt-2 text-lg text-[#E2BEFF]">Uploading…</p>
-			{/if}
-			{#if screenshotError}
-				<p class="mt-2 text-lg text-red-400">{screenshotError}</p>
-			{/if}
-			<!-- hidden field carries the R2 URL to the server action -->
-			<input type="hidden" name="coverArt" value={draft.coverArt ?? ''} />
-		</div>
+                    <!-- Step 04 — Hackatime Projects -->
+                    <div class="rounded-[1.5rem] border-4 border-accent-red/40 bg-text px-6 py-5 shadow-xl/20 sm:px-8">
+                        <div class="mb-3 flex items-center gap-3">
+                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-red text-xs font-bold text-text">04</div>
+                            <span class="text-2xl text-[#E2BEFF]">Hackatime Projects</span>
+                        </div>
+                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Select all projects that count towards this submission.</p>
+                        <div class="project-scroll max-h-72 overflow-y-auto rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] p-2">
+                            {#if hackatimeProjects === null}
+                                <p class="px-4 py-6 text-center text-[#E2BEFF]/40">Loading...</p>
+                            {:else if hackatimeProjects.filter((p: any) => p.claimedBy == null || p.claimedBy == data.project!.id).length > 0}
+                                {#each hackatimeProjects.filter((p: any) => p.claimedBy == null || p.claimedBy == data.project!.id) as proj}
+                                    <label class="group relative flex cursor-pointer items-center gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-[#E2BEFF]/5 has-[:checked]:bg-primary/10">
+                                        <input type="checkbox" name="hackatimeProjects" value={(proj as any).name} bind:group={editSelectedHackatimeProjects} class="peer sr-only" />
+                                        <div class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 border-[#8B81FF]/50 bg-[#0d0f1a] transition-all peer-checked:border-primary peer-checked:bg-primary">
+                                            <svg class="h-3 w-3 text-text opacity-0 transition-opacity group-has-[:checked]:opacity-100" viewBox="0 0 12 10" fill="none" aria-hidden="true">
+                                                <path d="M1.5 5l3 3.5 6-8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </div>
+                                        <span class="flex-1 text-lg text-[#E2BEFF]">{(proj as any).name}</span>
+                                        {#if (proj as any).totalSeconds > 0}
+                                            <span class="font-mono text-sm text-[#E2BEFF]/40">{formatTime((proj as any).totalSeconds)}</span>
+                                        {/if}
+                                    </label>
+                                {/each}
+                            {:else}
+                                <p class="px-4 py-6 text-center text-[#E2BEFF]/40">No projects found</p>
+                            {/if}
+                        </div>
+                    </div>
 
-		<div class="mt-6">
-			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="githubUrl">Repository URL</label>
-			<p class="mb-2 text-lg text-[#E2BEFF]">Link to your project's source code.</p>
-			<input
-				type="url"
-				id="githubUrl"
-				name="githubUrl"
-				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 font-mono text-sm text-[#E2BEFF] outline-none"
-				bind:value={draft.githubUrl}
-			/>
-		</div>
+                    <!-- Step 05 — Screenshot -->
+                    <div class="rounded-[1.5rem] border-4 border-[#8B81FF]/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-[#8B81FF] sm:px-8">
+                        <div class="mb-3 flex items-center gap-3">
+                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#8B81FF] text-xs font-bold text-text">05</div>
+                            <label class="text-2xl text-[#E2BEFF]" for="edit-screenshotFile">Screenshot</label>
+                            <span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase">Optional</span>
+                        </div>
+                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Upload a screenshot of your project. Required before shipping.</p>
+                        {#if draft.coverArt}
+                            <img src={draft.coverArt} alt="Current screenshot" class="mb-3 h-32 w-full rounded-xl object-cover object-center" onerror={(e: any) => (e.currentTarget.src = '/404.jpg')} />
+                        {/if}
+                        <input type="file" id="edit-screenshotFile" accept="image/*" class="w-full rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 text-lg text-[#E2BEFF] outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-[#8B81FF]/30 file:px-4 file:py-2 file:font-jua file:text-[#E2BEFF]" disabled={screenshotUploading} onchange={handleScreenshotChange} />
+                        {#if screenshotUploading}<p class="mt-2 text-sm text-[#E2BEFF]/60">Uploading…</p>{/if}
+                        {#if screenshotError}<p class="mt-2 text-sm text-accent-red">{screenshotError}</p>{/if}
+                        <input type="hidden" name="coverArt" value={draft.coverArt ?? ''} />
+                    </div>
 
-		<div class="mt-6">
-			<label class="mb-0 block text-2xl text-[#E2BEFF]" for="demoUrl">Demo URL</label>
-			<p class="mb-2 text-lg text-[#E2BEFF]">Link to a live demo of your project.</p>
-			<input
-				type="url"
-				id="demoUrl"
-				name="demoUrl"
-				class="w-full rounded-2xl border-4 border-[#8B81FF] bg-text px-5 py-4 font-mono text-sm text-[#E2BEFF] outline-none"
-				bind:value={draft.demoUrl}
-			/>
-		</div>
+                    <!-- Step 06 — Repository URL -->
+                    <div class="rounded-[1.5rem] border-4 border-secondary/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-secondary sm:px-8">
+                        <div class="mb-3 flex items-center gap-3">
+                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-text">06</div>
+                            <label class="text-2xl text-[#E2BEFF]" for="edit-githubUrl">Repository URL</label>
+                            <span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase">Optional</span>
+                        </div>
+                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Link to your project's source code.</p>
+                        <input type="url" id="edit-githubUrl" name="githubUrl" class="w-full rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 font-mono text-sm text-[#E2BEFF] outline-none transition-colors focus:border-secondary" bind:value={draft.githubUrl} />
+                    </div>
 
-		<button
-			type="submit"
-			class="relative top-0 mx-auto mt-8 w-max cursor-pointer rounded-2xl bg-linear-to-r from-secondary to-[#54C1D7] p-1 shadow-none transition-all hover:-top-1 hover:shadow-lg/30 active:top-1 active:shadow-none"
-		>
-			<div class="rounded-xl bg-text px-16 py-2">
-				<div class="relative text-3xl">
-					<span class="text-stroke text-stroke-1 bg-linear-to-r from-[#6EF5FB] to-[#938BEC] p-1">
-						save changes
-					</span>
-					<span
-						class="absolute top-0 left-0 bg-linear-to-b from-[#3E236D] to-[#42518E] bg-clip-text p-1 pt-0 text-transparent"
-					>
-						save changes
-					</span>
-				</div>
-			</div>
-		</button>
-	</form>
-</div>
+                    <!-- Step 07 — Demo URL -->
+                    <div class="rounded-[1.5rem] border-4 border-accent-purple/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-accent-purple sm:px-8">
+                        <div class="mb-3 flex items-center gap-3">
+                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-purple text-xs font-bold text-text">07</div>
+                            <label class="text-2xl text-[#E2BEFF]" for="edit-demoUrl">Demo URL</label>
+                            <span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase">Optional</span>
+                        </div>
+                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Link to a live demo of your project.</p>
+                        <input type="url" id="edit-demoUrl" name="demoUrl" class="w-full rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 font-mono text-sm text-[#E2BEFF] outline-none transition-colors focus:border-accent-purple" bind:value={draft.demoUrl} />
+                    </div>
+
+                    <!-- Save button -->
+                    <div class="flex justify-center pb-4">
+                        <button type="submit" class="hover-effect-shadow inline-flex cursor-pointer items-center gap-3 rounded-xl border-4 border-[#8B81FF] bg-text px-10 py-2 text-center text-2xl text-[#E2BEFF]">
+                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                                <circle cx="14" cy="14" r="13" fill="#E2BEFF"/>
+                                <text x="14" y="14" text-anchor="middle" dominant-baseline="central" font-family="Jua" font-size="16" fill="#1B2A42">A</text>
+                            </svg>
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{/if}
 
 <!-- Main Layout -->
 <div class="relative flex min-h-screen w-full flex-col overflow-hidden pb-0 lg:flex-row lg:gap-4 lg:pb-32">
@@ -423,18 +510,9 @@
 			<!-- Action Buttons -->
 			{#if isOwner}
 				<div class="flex w-full items-center gap-1">
-					{#if editing}
-						<button
-							class="flex h-[48px] grow cursor-pointer items-center justify-center gap-4 rounded-[20px] border-4 border-[#8b81ff] bg-[#1c2c44] px-4 shadow-md font-jua text-xl tracking-tight text-[#f2e2ff] lg:h-[53px] lg:text-2xl"
-							onclick={cancelEdit}
-						>
-							Cancel
-						</button>
-					{/if}
 					<button
 						class="flex h-[48px] grow cursor-pointer items-center justify-center gap-4 rounded-[20px] border-4 border-[#8b81ff] bg-[#1c2c44] px-4 shadow-md hover-effect-shadow font-jua text-xl tracking-tight text-[#f2e2ff] lg:h-[53px] lg:text-2xl"
 						onclick={startEdit}
-						popovertarget="editProject"
 					>
 						<img src="/project/icon-edit.svg" alt="" class="h-5 w-5" />
 						Edit

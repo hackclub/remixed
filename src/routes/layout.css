@@ -98,7 +98,7 @@ html {
 
 html,
 body {
-	overflow-x: hidden;
+	overflow-x: clip;
 }
 
 /* ── Scroll-reveal animations ────────────────────────────────────────── */
@@ -130,6 +130,30 @@ body {
 .block-reveal.revealed {
 	opacity: 1;
 	transform: translateY(0);
+}
+
+/* ── Project list scrollbar ──────────────────────────────────────────── */
+
+.project-scroll {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(139, 129, 255, 0.35) transparent;
+}
+
+.project-scroll::-webkit-scrollbar {
+	width: 6px;
+}
+
+.project-scroll::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.project-scroll::-webkit-scrollbar-thumb {
+	background: rgba(139, 129, 255, 0.35);
+	border-radius: 999px;
+}
+
+.project-scroll::-webkit-scrollbar-thumb:hover {
+	background: rgba(139, 129, 255, 0.65);
 }
 
 @media (prefers-reduced-motion: reduce) {

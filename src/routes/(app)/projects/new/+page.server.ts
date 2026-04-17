@@ -15,9 +15,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const projects = await getProjects(locals.user.id, accessToken);
 
 	return {
-		projects: projects.map((proj: any) => {
-			return { name: proj.name, claimed: proj.claimedBy != null };
-		}),
+		projects: projects
+			.filter((proj: any) => proj.claimedBy == null)
+			.map((proj: any) => {
+				return { name: proj.name, totalSeconds: proj.totalSeconds };
+			}),
 	};
 };
 
