@@ -100,3 +100,43 @@ html,
 body {
 	overflow-x: hidden;
 }
+
+/* ── Scroll-reveal animations ────────────────────────────────────────── */
+
+.word-reveal {
+	display: inline-block;
+	opacity: 0;
+	transform: translateY(0.5rem);
+	transition:
+		opacity 0.65s ease,
+		transform 0.65s ease;
+	transition-delay: calc(var(--word-i, 0) * var(--word-stagger, 40ms));
+}
+
+.word-reveal.revealed {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+.block-reveal {
+	opacity: 0;
+	transform: translateY(1rem);
+	transition:
+		opacity 0.65s ease,
+		transform 0.65s ease;
+	transition-delay: calc(var(--block-i, 0) * var(--block-stagger, 75ms));
+}
+
+.block-reveal.revealed {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.word-reveal,
+	.block-reveal {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+}

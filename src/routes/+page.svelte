@@ -2,6 +2,8 @@
 	import CrunchCard from '$lib/CrunchCard.svelte';
 	import BoldText from '$lib/BoldText.svelte';
 	import FAQCard from '$lib/FAQCard.svelte';
+	import AnimatedSentence from '$lib/AnimatedSentence.svelte';
+	import { blockReveal, wordReveal } from '$lib/actions/reveal.js';
 	import { onMount } from 'svelte';
 
 	let { data } = $props();
@@ -160,40 +162,54 @@
 </div>
 <div class="relative pb-150">
 	<div class="relative z-2">
-		<BoldText class="mx-auto flex! w-full font-jua text-3xl" stroke="2">
-			Choose a pathway and, get music-related goodies!
-		</BoldText>
+		<AnimatedSentence
+			text="Choose a pathway and, get music-related goodies!"
+			stroke="2"
+			class="mx-auto w-full font-jua text-3xl justify-center"
+			style="--word-stagger: 70ms"
+		/>
 		<div class="mt-24 flex justify-center gap-16 p-16">
-			<CrunchCard
-				img="/landing/crunch_pink.png"
-				h2="PATHWAY #1"
-				h1="Rhythm Game"
-				class="relative top-4 rotate-6 hover:rotate-12 hover:scale-110"
-			/>
-			<CrunchCard
-				img="/landing/crunch_green_spotify.png"
-				h2="PATHWAY #2"
-				h1="Audio Editor"
-				class="relative -top-4 -rotate-6 hover:rotate-0 hover:scale-110"
-			/>
-			<CrunchCard
-				img="/landing/crunch_pink.png"
-				h2="PATHWAY #3"
-				h1="Music Player"
-				class="relative rotate-6 hover:rotate-12 hover:scale-110"
-			/>
+			<div use:blockReveal={0} style="--block-stagger: 150ms">
+				<CrunchCard
+					img="/landing/crunch_pink.png"
+					h2="PATHWAY #1"
+					h1="Rhythm Game"
+					class="relative top-4 rotate-6 hover:rotate-12 hover:scale-110"
+				/>
+			</div>
+			<div use:blockReveal={1} style="--block-stagger: 150ms">
+				<CrunchCard
+					img="/landing/crunch_green_spotify.png"
+					h2="PATHWAY #2"
+					h1="Audio Editor"
+					class="relative -top-4 -rotate-6 hover:rotate-0 hover:scale-110"
+				/>
+			</div>
+			<div use:blockReveal={2} style="--block-stagger: 150ms">
+				<CrunchCard
+					img="/landing/crunch_pink.png"
+					h2="PATHWAY #3"
+					h1="Music Player"
+					class="relative rotate-6 hover:rotate-12 hover:scale-110"
+				/>
+			</div>
 		</div>
 
-		<BoldText class="mx-auto flex! w-full font-jua text-3xl" stroke="2">
-			...or make something completely different, as long as it’s about music!
-		</BoldText>
+		<AnimatedSentence
+			text="...or make something completely different, as long as it’s about music!"
+			stroke="2"
+			class="mx-auto w-full font-jua text-3xl justify-center"
+			style="--word-stagger: 70ms"
+		/>
 		<div class="mt-36 flex justify-center">
-			<CrunchCard
-				img="/landing/crunch_green_spotify.png"
-				h2="WILDCARD"
-				h1="Anything else!"
-				class="relative hover:scale-110"
-			/>
+			<div use:blockReveal={0}>
+				<CrunchCard
+					img="/landing/crunch_green_spotify.png"
+					h2="WILDCARD"
+					h1="Anything else!"
+					class="relative hover:scale-110"
+				/>
+			</div>
 		</div>
 	</div>
 	<div class="absolute -top-40 z-0 h-full w-full">
@@ -231,9 +247,11 @@
 		/>
 		<div class="absolute top-16 h-full w-full bg-accent-purple"></div>
 		<div class="">
-			<BoldText class="z-3 mx-auto flex! font-jua text-4xl -rotate-2" stroke="2">
-				Ship your project, and get all sorts of cool stuff!
-			</BoldText>
+			<AnimatedSentence
+				text="Ship your project, and get all sorts of cool stuff!"
+				stroke="2"
+				class="relative z-3 w-full justify-center font-jua text-4xl -rotate-2"
+			/>
 			<div class="flex justify-center">
 				<div class="marquee relative z-6 mt-48 flex h-100 w-screen justify-start">
 					{#each marqueeItems as item}
@@ -261,64 +279,74 @@
 		/>
 		<div class="faq-notes-overlay absolute inset-0"></div>
 		<div class="relative z-8 mx-auto max-w-5xl p-8 pt-64 pb-48">
-		<BoldText class="font-jua text-9xl" stroke="4">FAQ</BoldText>
-		<BoldText class="mb-8 flex! font-jua text-4xl" stroke="2">
-			(Frequently Asked Questions)
-		</BoldText>
+		<AnimatedSentence text="FAQ" stroke="4" class="w-full font-jua text-9xl" />
+		<AnimatedSentence
+			text="(Frequently Asked Questions)"
+			stroke="2"
+			class="mb-8 w-full font-jua text-4xl"
+		/>
 		<div class="flex flex-row flex-wrap gap-8">
-			<FAQCard title="Who is eligible?">
-				<p class="font-jua text-xl text-light">
-					Remixed is eligible for highschoolers! You need to be 13-18 years old to participate.
-				</p>
-			</FAQCard>
-			<FAQCard title="How do I track my time?">
-				<p class="font-jua text-xl text-light">
-					We use our very own <a
-						href="https://hackatime.hackclub.com/"
-						class="text-[#81E2E1] underline decoration-wavy decoration-2">Hackatime</a
-					>
-					and
-					<a
-						href="https://lapse.hackclub.com/"
-						class="text-[#81E2E1] underline decoration-wavy decoration-2">Lapse</a
-					> to track your time! The more time you spend, the more notes you get.
-				</p>
-			</FAQCard>
-			<FAQCard title="Is this legit?">
-				<p class="font-jua text-xl text-light">
-					Yep! Hack Club has ran many different programs before, partnering with
-					<a
-						href="https://www.amd.com/en.html"
-						class="text-[#81E2E1] underline decoration-wavy decoration-2"
-					>
-						AMD
-					</a>,
-					<a
-						href="https://opensauce.com/"
-						class="text-[#81E2E1] underline decoration-wavy decoration-2"
-					>
-						Open Sauce
-					</a>,
-					<a
-						href="https://github.com/"
-						class="text-[#81E2E1] underline decoration-wavy decoration-2"
-					>
-						GitHub
-					</a>, and
-					<a
-						href="https://hackclub.com/philanthropy/"
-						class="text-[#81E2E1] underline decoration-wavy decoration-2"
-					>
-						many more
-					</a>.
-				</p>
-			</FAQCard>
-			<FAQCard title="When does this end?">
-				<p class="font-jua text-xl text-light">
-					April 30th, 2026! You will have a couple of weeks to redeem your prizes after it ends,
-					though.
-				</p>
-			</FAQCard>
+			<div use:blockReveal={0}>
+				<FAQCard title="Who is eligible?">
+					<p class="font-jua text-xl text-light" use:wordReveal>
+						Remixed is eligible for highschoolers! You need to be 13-18 years old to participate.
+					</p>
+				</FAQCard>
+			</div>
+			<div use:blockReveal={1}>
+				<FAQCard title="How do I track my time?">
+					<p class="font-jua text-xl text-light">
+						We use our very own <a
+							href="https://hackatime.hackclub.com/"
+							class="text-[#81E2E1]">Hackatime</a
+						>
+						and
+						<a
+							href="https://lapse.hackclub.com/"
+							class="text-[#81E2E1]">Lapse</a
+						> to track your time! The more time you spend, the more notes you get.
+					</p>
+				</FAQCard>
+			</div>
+			<div use:blockReveal={2}>
+				<FAQCard title="Is this legit?">
+					<p class="font-jua text-xl text-light">
+						Yep! Hack Club has ran many different programs before, partnering with
+						<a
+							href="https://www.amd.com/en.html"
+							class="text-[#81E2E1]"
+						>
+							AMD
+						</a>,
+						<a
+							href="https://opensauce.com/"
+							class="text-[#81E2E1]"
+						>
+							Open Sauce
+						</a>,
+						<a
+							href="https://github.com/"
+							class="text-[#81E2E1]"
+						>
+							GitHub
+						</a>, and
+						<a
+							href="https://hackclub.com/philanthropy/"
+							class="text-[#81E2E1]"
+						>
+							many more
+						</a>.
+					</p>
+				</FAQCard>
+			</div>
+			<div use:blockReveal={3}>
+				<FAQCard title="When does this end?">
+					<p class="font-jua text-xl text-light">
+						April 30th, 2026! You will have a couple of weeks to redeem your prizes after it ends,
+						though.
+					</p>
+				</FAQCard>
+			</div>
 		</div>
 	</div>
 	</div>
@@ -328,7 +356,7 @@
 			class="absolute -top-24 left-1/2 h-48 w-[calc(100vw+16rem)] -translate-x-1/2 rotate-[356deg] bg-text"
 		></div>
 		<div class="relative mx-auto max-w-5xl p-16 pt-28 pb-32">
-			<h1 class="mb-8 font-jua text-4xl text-light">
+			<h1 class="mb-8 font-jua text-4xl text-light" use:wordReveal>
 				A project by
 				<BoldText stroke="2">Hack Club</BoldText>, built by
 				<BoldText stroke="2">kc</BoldText>,
@@ -337,7 +365,7 @@
 				<BoldText stroke="2">ascpixi</BoldText>, and
 				<BoldText stroke="2">Shuflduf</BoldText>.
 			</h1>
-			<p class="font-jua text-xl text-light">
+			<p class="font-jua text-xl text-light" style="--word-stagger: 15ms" use:wordReveal>
 				Hack Club is a 501(c)(3) nonprofit and network of 60k+ technical high schoolers. We believe
 				you learn best by building so we're creating community and providing grants so you can make
 				awesome projects. In the past few years, we've partnered with GitHub to run Summer of
