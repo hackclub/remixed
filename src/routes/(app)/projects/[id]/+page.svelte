@@ -309,7 +309,7 @@
                         {#if draft.coverArt}
                             <img src={draft.coverArt} alt="Current screenshot" class="mb-3 h-32 w-full rounded-xl object-cover object-center" onerror={(e: any) => (e.currentTarget.src = '/404.jpg')} />
                         {/if}
-                        <input type="file" id="edit-screenshotFile" accept="image/*" class="w-full rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 text-lg text-[#E2BEFF] outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-[#8B81FF]/30 file:px-4 file:py-2 file:font-jua file:text-[#E2BEFF]" disabled={screenshotUploading} onchange={handleScreenshotChange} />
+                        <input type="file" id="edit-screenshotFile" accept="image/*" class="w-full cursor-pointer rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 text-lg text-[#E2BEFF] outline-none file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-[#8B81FF]/30 file:px-4 file:py-2 file:font-jua file:text-[#E2BEFF]" disabled={screenshotUploading} onchange={handleScreenshotChange} />
                         {#if screenshotUploading}<p class="mt-2 text-sm text-[#E2BEFF]/60">Uploading…</p>{/if}
                         {#if screenshotError}<p class="mt-2 text-sm text-accent-red">{screenshotError}</p>{/if}
                         <input type="hidden" name="coverArt" value={draft.coverArt ?? ''} />
