@@ -492,11 +492,18 @@
 		<!-- Mobile: solid background -->
 		<div class="absolute inset-0 bg-[#1c2c44] lg:hidden"></div>
 		<!-- Desktop: tilted SVG panel -->
-		<img
-			src="/project/right-panel-bg.svg"
-			alt=""
+		<svg preserveAspectRatio="none" overflow="visible" viewBox="0 0 779.186 1007.73" fill="none" xmlns="http://www.w3.org/2000/svg"
 			class="pointer-events-none absolute -top-24 -right-32 hidden h-[120vh] w-[900px] -rotate-3 select-none lg:block"
-		/>
+			style="filter: drop-shadow(-16px -16px 0px #083f91)"
+			aria-hidden="true">
+			<path d="M138.716 51.6958L779.186 16L612.865 956.205L16 1007.73L138.716 51.6958Z" fill="url(#paint0_linear_0_9)"/>
+			<defs>
+				<linearGradient id="paint0_linear_0_9" x1="-72.7156" y1="282.29" x2="1409.96" y2="282.29" gradientUnits="userSpaceOnUse">
+					<stop stop-color="#1D3047"/>
+					<stop offset="1" stop-color="#1B2A42"/>
+				</linearGradient>
+			</defs>
+		</svg>
 
 		<!-- Right content overlay -->
 		<div class="relative z-10 flex w-full flex-col gap-8 pt-10 sm:pt-12 lg:w-[400px] lg:gap-11 lg:pt-16 lg:pr-16">
