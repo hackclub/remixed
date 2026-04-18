@@ -36,14 +36,14 @@
 		<div
 			class="absolute top-0 right-0 z-4 h-full w-24 origin-bottom-right scale-y-110 rotate-24 bg-text"
 		></div>
-		<div class="relative z-5 flex w-screen justify-between pl-12">
-			<div>
+		<div class="relative z-5 flex items-center gap-4 pl-12">
+			<div class="flex-1">
 				{#if titleRich}
 					{@render titleRich()}
 				{:else}
 					<BoldText class="text-5xl" stroke="2">{title}</BoldText>
 				{/if}
-				<p class="text-xl text-light">
+				<p class="font-jua text-xl text-light">
 					{#if subtitleRich}
 						{@render subtitleRich()}
 					{:else}
@@ -53,9 +53,7 @@
 			</div>
 
 			{#if description}
-				<div
-					class="absolute right-8 h-full w-md overflow-y-auto text-right font-jua text-lg text-light"
-				>
+				<div class="flex shrink-0 items-center gap-3 font-jua">
 					{@render description()}
 				</div>
 			{/if}
@@ -69,9 +67,11 @@
 		<div
 			class="absolute top-0 right-0 z-4 h-full w-24 origin-bottom-right scale-y-110 rotate-24 bg-[#083F91]"
 		></div>
-		<div class="invisible relative z-5 select-none">
-			<BoldText class="text-5xl" stroke="2">{title}</BoldText>
-			<p class="text-xl text-light">{subtitle}</p>
+		<div class="invisible relative z-5 flex items-center gap-4 pl-12 select-none">
+			<div class="flex-1">
+				<BoldText class="text-5xl" stroke="2">{title}</BoldText>
+				<p class="font-jua text-xl">{subtitle}</p>
+			</div>
 		</div>
 	</div>
 {/if}

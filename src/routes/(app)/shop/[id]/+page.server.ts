@@ -2,8 +2,8 @@ import { db } from '$lib/server/db';
 import { notesLedger, orders, shopItems, users } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
-import { error, fail } from '@sveltejs/kit';
-import { encrypt } from '$lib/server/crypto';
+import { error, fail, redirect } from '@sveltejs/kit';
+import { decrypt, encrypt } from '$lib/server/crypto';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const itemId = Number(params.id);
@@ -13,11 +13,25 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		throw error(404, 'Shop item not found');
 	}
 
-	return { item, balance: locals.user?.notesBalance };
+	const user = locals.user;
+	const address = user
+		? {
+				fullName: [user.firstName, user.lastName].filter(Boolean).join(' ') || null,
+				email: user.email ?? null,
+				addressLine1: user.addressLine1 ? decrypt(user.addressLine1) : null,
+				addressLine2: user.addressLine2 ? decrypt(user.addressLine2) : null,
+				city: user.city ? decrypt(user.city) : null,
+				state: user.state ? decrypt(user.state) : null,
+				country: user.country ? decrypt(user.country) : null,
+				zipCode: user.zipCode ? decrypt(user.zipCode) : null,
+			}
+		: null;
+
+	return { item, balance: locals.user?.notesBalance, address };
 };
 
 export const actions: Actions = {
-	placeOrder: async ({ locals, params, request }) => {
+	placeOrder: async ({ locals, params }) => {
 		if (!locals.user) {
 			return fail(401, { error: 'Unauthorized' });
 		}
@@ -30,19 +44,15 @@ export const actions: Actions = {
 
 		if (locals.user.notesBalance < item.cost) return fail(400, { error: 'Too Expensive' });
 
-		const data = await request.formData();
-		const userId = locals.user.id;
-		const addressLine1 = encrypt((data.get('addressLine1') as string).trim());
-		const addressLine2 =
-			(data.get('addressLine2') as string).trim().length > 0
-				? encrypt((data.get('addressLine2') as string).trim())
-				: null;
-		const zipCode = encrypt((data.get('zipCode') as string).trim());
-		const city = encrypt((data.get('city') as string).trim());
-		const state = encrypt((data.get('state') as string).trim());
-		const country = encrypt((data.get('country') as string).trim());
-		const email = encrypt((data.get('email') as string).trim());
-		const fullName = encrypt((data.get('fullName') as string).trim());
+		const user = locals.user;
+
+		if (!user.addressLine1 || !user.city || !user.state || !user.country || !user.zipCode) {
+			return fail(400, { error: 'No shipping address on file' });
+		}
+
+		const userId = user.id;
+		const fullName = encrypt([user.firstName, user.lastName].filter(Boolean).join(' '));
+		const email = encrypt(user.email ?? '');
 
 		const [orderInfo] = await db
 			.insert(orders)
@@ -51,14 +61,15 @@ export const actions: Actions = {
 				itemId,
 				fullName,
 				email,
-				addressLine1,
-				addressLine2,
-				city,
-				state,
-				country,
-				zipCode,
+				addressLine1: user.addressLine1,
+				addressLine2: user.addressLine2 ?? null,
+				city: user.city,
+				state: user.state,
+				country: user.country,
+				zipCode: user.zipCode,
 			})
 			.returning();
+
 		await Promise.all([
 			db
 				.update(users)
@@ -68,5 +79,7 @@ export const actions: Actions = {
 				.insert(notesLedger)
 				.values({ userId, delta: -item.cost, reason: 'purchase_item', refId: orderInfo.id }),
 		]);
+
+		throw redirect(303, '/shop/orders');
 	},
 };
