@@ -165,7 +165,7 @@
 		<AnimatedSentence
 			text="Choose a pathway and, get music-related goodies!"
 			stroke="2"
-			class="mx-auto w-full font-jua text-3xl justify-center"
+			class="mx-auto w-full justify-center font-jua text-3xl"
 			style="--word-stagger: 70ms"
 		/>
 		<div class="mt-24 flex justify-center gap-16 p-16">
@@ -174,7 +174,8 @@
 					img="/landing/crunch_pink.png"
 					h2="PATHWAY #1"
 					h1="Rhythm Game"
-					class="relative top-4 rotate-6 hover:rotate-12 hover:scale-110"
+					class="relative top-4 rotate-6 hover:scale-110 hover:rotate-12"
+					guideLink="https://github.com/jollyroger182/rhythm-tutorial-godot"
 				/>
 			</div>
 			<div use:blockReveal={1} style="--block-stagger: 150ms">
@@ -182,7 +183,7 @@
 					img="/landing/crunch_green_spotify.png"
 					h2="PATHWAY #2"
 					h1="Audio Editor"
-					class="relative -top-4 -rotate-6 hover:rotate-0 hover:scale-110"
+					class="relative -top-4 -rotate-6 hover:scale-110 hover:rotate-0"
 				/>
 			</div>
 			<div use:blockReveal={2} style="--block-stagger: 150ms">
@@ -190,7 +191,7 @@
 					img="/landing/crunch_pink.png"
 					h2="PATHWAY #3"
 					h1="Music Player"
-					class="relative rotate-6 hover:rotate-12 hover:scale-110"
+					class="relative rotate-6 hover:scale-110 hover:rotate-12"
 				/>
 			</div>
 		</div>
@@ -198,7 +199,7 @@
 		<AnimatedSentence
 			text="...or make something completely different, as long as it’s about music!"
 			stroke="2"
-			class="mx-auto w-full font-jua text-3xl justify-center"
+			class="mx-auto w-full justify-center font-jua text-3xl"
 			style="--word-stagger: 70ms"
 		/>
 		<div class="mt-36 flex justify-center">
@@ -234,7 +235,9 @@
 			</div>
 		</div>
 	</div>
-	<div class="relative top-2 z-5 flex w-[calc(100vw+16rem)] -translate-x-8 px-8 rotate-12 justify-center gap-8 overflow-y-clip pt-32">
+	<div
+		class="relative top-2 z-5 flex w-[calc(100vw+16rem)] -translate-x-8 rotate-12 justify-center gap-8 overflow-y-clip px-8 pt-32"
+	>
 		<img
 			src="/landing/dots-marquee-left.png"
 			alt="dots"
@@ -250,7 +253,7 @@
 			<AnimatedSentence
 				text="Ship your project, and get all sorts of cool stuff!"
 				stroke="2"
-				class="relative z-3 w-full justify-center font-jua text-4xl -rotate-2"
+				class="relative z-3 w-full -rotate-2 justify-center font-jua text-4xl"
 			/>
 			<div class="flex justify-center">
 				<div class="marquee relative z-6 mt-48 flex h-100 w-screen justify-start">
@@ -279,76 +282,53 @@
 		/>
 		<div class="faq-notes-overlay absolute inset-0"></div>
 		<div class="relative z-8 mx-auto max-w-5xl p-8 pt-64 pb-48">
-		<AnimatedSentence text="FAQ" stroke="4" class="w-full font-jua text-9xl" />
-		<AnimatedSentence
-			text="(Frequently Asked Questions)"
-			stroke="2"
-			class="mb-8 w-full font-jua text-4xl"
-		/>
-		<div class="flex flex-row flex-wrap gap-8">
-			<div use:blockReveal={0}>
-				<FAQCard title="Who is eligible?">
-					<p class="font-jua text-xl text-light" use:wordReveal>
-						Remixed is eligible for highschoolers! You need to be 13-18 years old to participate.
-					</p>
-				</FAQCard>
-			</div>
-			<div use:blockReveal={1}>
-				<FAQCard title="How do I track my time?">
-					<p class="font-jua text-xl text-light">
-						We use our very own <a
-							href="https://hackatime.hackclub.com/"
-							class="text-[#81E2E1]">Hackatime</a
-						>
-						and
-						<a
-							href="https://lapse.hackclub.com/"
-							class="text-[#81E2E1]">Lapse</a
-						> to track your time! The more time you spend, the more notes you get.
-					</p>
-				</FAQCard>
-			</div>
-			<div use:blockReveal={2}>
-				<FAQCard title="Is this legit?">
-					<p class="font-jua text-xl text-light">
-						Yep! Hack Club has ran many different programs before, partnering with
-						<a
-							href="https://www.amd.com/en.html"
-							class="text-[#81E2E1]"
-						>
-							AMD
-						</a>,
-						<a
-							href="https://opensauce.com/"
-							class="text-[#81E2E1]"
-						>
-							Open Sauce
-						</a>,
-						<a
-							href="https://github.com/"
-							class="text-[#81E2E1]"
-						>
-							GitHub
-						</a>, and
-						<a
-							href="https://hackclub.com/philanthropy/"
-							class="text-[#81E2E1]"
-						>
-							many more
-						</a>.
-					</p>
-				</FAQCard>
-			</div>
-			<div use:blockReveal={3}>
-				<FAQCard title="When does this end?">
-					<p class="font-jua text-xl text-light">
-						April 30th, 2026! You will have a couple of weeks to redeem your prizes after it ends,
-						though.
-					</p>
-				</FAQCard>
+			<AnimatedSentence text="FAQ" stroke="4" class="w-full font-jua text-9xl" />
+			<AnimatedSentence
+				text="(Frequently Asked Questions)"
+				stroke="2"
+				class="mb-8 w-full font-jua text-4xl"
+			/>
+			<div class="flex flex-row flex-wrap gap-8">
+				<div use:blockReveal={0}>
+					<FAQCard title="Who is eligible?">
+						<p class="font-jua text-xl text-light" use:wordReveal>
+							Remixed is eligible for highschoolers! You need to be 13-18 years old to participate.
+						</p>
+					</FAQCard>
+				</div>
+				<div use:blockReveal={1}>
+					<FAQCard title="How do I track my time?">
+						<p class="font-jua text-xl text-light">
+							We use our very own <a href="https://hackatime.hackclub.com/" class="text-[#81E2E1]"
+								>Hackatime</a
+							>
+							and
+							<a href="https://lapse.hackclub.com/" class="text-[#81E2E1]">Lapse</a> to track your time!
+							The more time you spend, the more notes you get.
+						</p>
+					</FAQCard>
+				</div>
+				<div use:blockReveal={2}>
+					<FAQCard title="Is this legit?">
+						<p class="font-jua text-xl text-light">
+							Yep! Hack Club has ran many different programs before, partnering with
+							<a href="https://www.amd.com/en.html" class="text-[#81E2E1]"> AMD </a>,
+							<a href="https://opensauce.com/" class="text-[#81E2E1]"> Open Sauce </a>,
+							<a href="https://github.com/" class="text-[#81E2E1]"> GitHub </a>, and
+							<a href="https://hackclub.com/philanthropy/" class="text-[#81E2E1]"> many more </a>.
+						</p>
+					</FAQCard>
+				</div>
+				<div use:blockReveal={3}>
+					<FAQCard title="When does this end?">
+						<p class="font-jua text-xl text-light">
+							April 30th, 2026! You will have a couple of weeks to redeem your prizes after it ends,
+							though.
+						</p>
+					</FAQCard>
+				</div>
 			</div>
 		</div>
-	</div>
 	</div>
 
 	<div class="relative z-8 w-full overflow-x-clip bg-text">
@@ -416,8 +396,12 @@
 		opacity: 0.2;
 		background-image: url('/landing/note-tile.png'), url('/landing/note-tile.png');
 		background-repeat: repeat, repeat;
-		background-size: 115px 230px, 115px 230px;
-		background-position: 0 0, 57px 115px;
+		background-size:
+			115px 230px,
+			115px 230px;
+		background-position:
+			0 0,
+			57px 115px;
 		animation: faq-notes-diagonal 30s linear infinite;
 		will-change: background-position;
 		mask-image: url('/landing/faq-bg.png');
@@ -429,10 +413,14 @@
 
 	@keyframes faq-notes-diagonal {
 		from {
-			background-position: 0 0, 57px 115px;
+			background-position:
+				0 0,
+				57px 115px;
 		}
 		to {
-			background-position: 115px 230px, 172px 345px;
+			background-position:
+				115px 230px,
+				172px 345px;
 		}
 	}
 

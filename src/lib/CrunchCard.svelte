@@ -8,6 +8,7 @@
 		class: className = '',
 		style: styleName = '',
 		normalizeImage = false,
+		guideLink = '',
 	} = $props();
 </script>
 
@@ -31,5 +32,22 @@
 		{/if}
 		<BoldText class="text-md mx-auto flex! font-jua">{h2}</BoldText>
 		<BoldText class="mx-auto flex! font-jua text-2xl">{h1}</BoldText>
+		{#if guideLink}
+			<a
+				href={guideLink}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="text-md relative mt-2 text-center font-jua"
+			>
+				<span class="text-stroke text-stroke-1 bg-linear-to-r from-[#6EF5FB] to-[#938BEC] p-1">
+					(View Guide)
+				</span>
+				<span
+					class="absolute top-0 left-1/2 w-max -translate-x-1/2 bg-linear-to-b from-[#3E236D] to-[#42518E] bg-clip-text p-1 pt-0 text-transparent"
+				>
+					(View Guide)
+				</span>
+			</a>
+		{/if}
 	</div>
 </div>
