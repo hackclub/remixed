@@ -201,7 +201,10 @@
 					<tr>
 						<td class="font-mono text-xs">{user.id}</td>
 						<td>
-							<a href="/user/{user.id}" class="link link-hover">{user.username}</a>
+							<div class="flex items-center gap-2">
+								<img src={user.avatarUrl ?? '/404.jpg'} alt={user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+								<a href="/user/{user.id}" class="link link-hover">{user.username}</a>
+							</div>
 						</td>
 						<td>
 							<a

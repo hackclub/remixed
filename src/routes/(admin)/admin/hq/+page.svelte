@@ -278,9 +278,12 @@
 								</a>
 							</td>
 							<td>
-								<a href="/user/{shipInfo.user.id}" class="link link-hover">
-									{shipInfo.user.username}
-								</a>
+								<div class="flex items-center gap-2">
+									<img src={shipInfo.user.avatarUrl ?? '/404.jpg'} alt={shipInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+									<a href="/user/{shipInfo.user.id}" class="link link-hover">
+										{shipInfo.user.username}
+									</a>
+								</div>
 							</td>
 							<td>
 								<a href="/projects/{shipInfo.project.id}" class="link link-hover">
@@ -404,9 +407,12 @@
 							<tr>
 								<td class="font-mono text-xs">#{shipInfo.ship.id}</td>
 								<td>
-									<a href="/user/{shipInfo.user.id}" class="link link-hover">
-										{shipInfo.user.username}
-									</a>
+									<div class="flex items-center gap-2">
+										<img src={shipInfo.user.avatarUrl ?? '/404.jpg'} alt={shipInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+										<a href="/user/{shipInfo.user.id}" class="link link-hover">
+											{shipInfo.user.username}
+										</a>
+									</div>
 								</td>
 								<td>
 									<a href="/projects/{shipInfo.project.id}" class="link link-hover">

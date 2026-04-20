@@ -106,7 +106,12 @@
 							onclick={() => window.open(`/admin/ships/${shipInfo.project.id}`, '_blank')}
 						>
 							<td class="font-mono text-xs">#{shipInfo.ship.id}</td>
-							<td>{shipInfo.user.username}</td>
+							<td>
+								<div class="flex items-center gap-2">
+									<img src={shipInfo.user.avatarUrl ?? '/404.jpg'} alt={shipInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+									{shipInfo.user.username}
+								</div>
+							</td>
 							<td>{shipInfo.project.title}</td>
 							<td>{formatProjectCategory(shipInfo.project.category)}</td>
 							<td>
@@ -153,7 +158,12 @@
 								onclick={() => window.open(`/admin/ships/${shipInfo.project.id}`, '_blank')}
 							>
 								<td class="font-mono text-xs">#{shipInfo.ship.id}</td>
-								<td>{shipInfo.user.username}</td>
+								<td>
+									<div class="flex items-center gap-2">
+										<img src={shipInfo.user.avatarUrl ?? '/404.jpg'} alt={shipInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+										{shipInfo.user.username}
+									</div>
+								</td>
 								<td>{shipInfo.project.title}</td>
 								<td>{formatHours(shipInfo.ship.seconds)}</td>
 								<td><span class="badge badge-warning badge-sm">Awaiting HQ</span></td>
@@ -193,7 +203,12 @@
 							}}
 						>
 							<td class="font-mono text-xs">#{shipInfo.ship.id}</td>
-							<td>{shipInfo.user.username}</td>
+							<td>
+								<div class="flex items-center gap-2">
+									<img src={shipInfo.user.avatarUrl ?? '/404.jpg'} alt={shipInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+									{shipInfo.user.username}
+								</div>
+							</td>
 							<td>{shipInfo.project.title}</td>
 							<td>
 								{#if shipInfo.ship.status === 'APPROVED'}

@@ -122,9 +122,12 @@
 						<tr>
 							<td class="font-mono text-xs">{orderInfo.order.id}</td>
 							<td>
-								<a href="/user/{orderInfo.user.id}" class="link link-hover">
-									{orderInfo.user.username}
-								</a>
+								<div class="flex items-center gap-2">
+									<img src={orderInfo.user.avatarUrl ?? '/404.jpg'} alt={orderInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+									<a href="/user/{orderInfo.user.id}" class="link link-hover">
+										{orderInfo.user.username}
+									</a>
+								</div>
 							</td>
 							<td>
 								<div class="flex items-center gap-2">
@@ -187,9 +190,12 @@
 						<tr>
 							<td class="font-mono text-xs">{orderInfo.order.id}</td>
 							<td>
-								<a href="/user/{orderInfo.user.id}" class="link link-hover">
-									{orderInfo.user.username}
-								</a>
+								<div class="flex items-center gap-2">
+									<img src={orderInfo.user.avatarUrl ?? '/404.jpg'} alt={orderInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+									<a href="/user/{orderInfo.user.id}" class="link link-hover">
+										{orderInfo.user.username}
+									</a>
+								</div>
 							</td>
 							<td>
 								<div class="flex items-center gap-2">
