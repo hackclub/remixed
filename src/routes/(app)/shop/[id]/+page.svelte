@@ -167,7 +167,7 @@
 									<p class="text-xl text-accent-red">Not enough notes to purchase this item.</p>
 									{#if data.regionPrice}
 										<p class="text-sm text-[#E2BEFF]/40">
-											You need {data.regionPrice.price - (data.balance ?? 0)} more<span
+											You need {data.regionPrice - (data.balance ?? 0)} more<span
 												style="filter: invert(1) sepia(1) saturate(3) hue-rotate(300deg)"
 												><Note /></span
 											> to unlock this reward.
