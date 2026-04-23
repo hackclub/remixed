@@ -75,8 +75,14 @@ export const actions: Actions = {
 		const userComment = (data.get('userComment') as string).trim();
 		const internalComment = (data.get('internalComment') as string).trim();
 
-		if (!Number.isFinite(notesPerHour) || notesPerHour < MIN_NOTES_PER_HOUR || notesPerHour > MAX_NOTES_PER_HOUR) {
-			return fail(400, { error: `Notes per hour must be between ${MIN_NOTES_PER_HOUR} and ${MAX_NOTES_PER_HOUR}` });
+		if (
+			!Number.isFinite(notesPerHour) ||
+			notesPerHour < MIN_NOTES_PER_HOUR ||
+			notesPerHour > MAX_NOTES_PER_HOUR
+		) {
+			return fail(400, {
+				error: `Notes per hour must be between ${MIN_NOTES_PER_HOUR} and ${MAX_NOTES_PER_HOUR}`,
+			});
 		}
 
 		if (!userComment || !internalComment) {
@@ -292,17 +298,11 @@ export const actions: Actions = {
 			})
 			.where(eq(shipReviews.id, reviewId));
 
-		if (
-			reviewInfo.review.slackMessageTs &&
-			reviewInfo.review.slackChannelId &&
-			userComment
-		) {
+		if (reviewInfo.review.slackMessageTs && reviewInfo.review.slackChannelId && userComment) {
 			const type =
-				reviewInfo.review.type === 'APPROVAL' ||
-				reviewInfo.review.type === 'HQ_APPROVAL'
+				reviewInfo.review.type === 'APPROVAL' || reviewInfo.review.type === 'HQ_APPROVAL'
 					? 'approved'
-					: reviewInfo.review.type === 'REJECTION' ||
-						  reviewInfo.review.type === 'HQ_REJECTION'
+					: reviewInfo.review.type === 'REJECTION' || reviewInfo.review.type === 'HQ_REJECTION'
 						? 'rejected'
 						: 'comment';
 			await editReviewDM(

@@ -29,12 +29,12 @@
 	};
 </script>
 
-<div class="drawer lg:drawer-open min-h-screen bg-base-200">
+<div class="drawer lg:drawer-open bg-base-200 min-h-screen">
 	<input id="admin-drawer" type="checkbox" class="drawer-toggle" />
 
 	<div class="drawer-content flex flex-col">
 		<!-- Mobile navbar -->
-		<div class="navbar bg-base-100 border-b border-base-300 lg:hidden">
+		<div class="navbar bg-base-100 border-base-300 border-b lg:hidden">
 			<div class="flex-none">
 				<label for="admin-drawer" class="btn btn-ghost btn-sm">
 					<svg
@@ -53,7 +53,7 @@
 				</label>
 			</div>
 			<div class="flex-1 px-2">
-				<span class="font-semibold text-sm">Remixed Admin</span>
+				<span class="text-sm font-semibold">Remixed Admin</span>
 			</div>
 		</div>
 
@@ -66,10 +66,12 @@
 	<!-- Sidebar -->
 	<div class="drawer-side z-20">
 		<label for="admin-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-		<aside class="bg-base-100 border-r border-base-300 min-h-screen w-52 flex flex-col rounded-r-2xl">
+		<aside
+			class="bg-base-100 border-base-300 flex min-h-screen w-52 flex-col rounded-r-2xl border-r"
+		>
 			<!-- Navigation -->
 			<nav class="flex-1 p-2 pt-3">
-				<ul class="menu p-0 gap-0.5">
+				<ul class="menu gap-0.5 p-0">
 					<li>
 						<a href="/admin" class:menu-active={page.url.pathname === '/admin'}>
 							<LayoutDashboard size={17} />
@@ -91,13 +93,13 @@
 			</nav>
 
 			<!-- Footer -->
-			<div class="p-3 border-t border-base-300">
-				<a href="/" class="btn btn-ghost btn-sm btn-block justify-start gap-2 font-normal text-xs">
+			<div class="border-base-300 border-t p-3">
+				<a href="/" class="btn btn-ghost btn-sm btn-block justify-start gap-2 text-xs font-normal">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						viewBox="0 0 20 20"
 						fill="currentColor"
-						class="w-4 h-4 shrink-0"
+						class="h-4 w-4 shrink-0"
 					>
 						<path
 							fill-rule="evenodd"

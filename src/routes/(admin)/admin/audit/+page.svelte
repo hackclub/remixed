@@ -47,7 +47,7 @@
 <div class="space-y-4">
 	<div class="flex items-center justify-between">
 		<h1 class="text-xl font-bold">Audit Logs</h1>
-		<span class="text-sm text-base-content/50">{filteredAuditLogs.length} entries</span>
+		<span class="text-base-content/50 text-sm">{filteredAuditLogs.length} entries</span>
 	</div>
 
 	<input
@@ -57,8 +57,8 @@
 		placeholder="Search by actor, category, entity, change type, or JSON data"
 	/>
 
-	<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-		<table class="table table-sm table-zebra">
+	<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border">
+		<table class="table-sm table-zebra table">
 			<thead>
 				<tr>
 					<th>ID</th>
@@ -74,33 +74,48 @@
 				{#each filteredAuditLogs as entry}
 					<tr class="align-top">
 						<td class="font-mono text-xs">{entry.auditLog.id}</td>
-						<td class="text-xs whitespace-nowrap">{new Date(entry.auditLog.createdAt).toLocaleString()}</td>
+						<td class="text-xs whitespace-nowrap"
+							>{new Date(entry.auditLog.createdAt).toLocaleString()}</td
+						>
 						<td>@{entry.actor.username}</td>
 						<td>
-							<span class="badge badge-outline badge-xs">{formatLabel(entry.auditLog.category)}</span>
+							<span class="badge badge-outline badge-xs"
+								>{formatLabel(entry.auditLog.category)}</span
+							>
 						</td>
 						<td>
 							{#if getAuditField(entry, 'entityType') && getAuditField(entry, 'entityId') != null}
 								<div class="text-xs">{formatLabel(String(getAuditField(entry, 'entityType')))}</div>
-								<div class="text-xs text-base-content/50 font-mono">#{getAuditField(entry, 'entityId')}</div>
+								<div class="text-base-content/50 font-mono text-xs">
+									#{getAuditField(entry, 'entityId')}
+								</div>
 							{:else}
 								<span class="text-base-content/30">—</span>
 							{/if}
 						</td>
 						<td>
 							{#if getAuditField(entry, 'changeType')}
-								<span class="text-xs">{formatLabel(String(getAuditField(entry, 'changeType')))}</span>
+								<span class="text-xs"
+									>{formatLabel(String(getAuditField(entry, 'changeType')))}</span
+								>
 							{:else}
 								<span class="text-base-content/30">—</span>
 							{/if}
 						</td>
 						<td>
-							<pre class="max-w-sm overflow-x-auto rounded bg-base-200 p-2 font-mono text-xs whitespace-pre-wrap">{stringifyAuditData(entry)}</pre>
+							<pre
+								class="bg-base-200 max-w-sm overflow-x-auto rounded p-2 font-mono text-xs whitespace-pre-wrap">{stringifyAuditData(
+									entry,
+								)}</pre>
 						</td>
 					</tr>
 				{/each}
 				{#if filteredAuditLogs.length === 0}
-					<tr><td colspan="7" class="text-center text-base-content/40 py-6">No audit log entries found</td></tr>
+					<tr
+						><td colspan="7" class="text-base-content/40 py-6 text-center"
+							>No audit log entries found</td
+						></tr
+					>
 				{/if}
 			</tbody>
 		</table>

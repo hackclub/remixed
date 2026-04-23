@@ -42,9 +42,7 @@ export class HackatimeClient {
 		try {
 			return JSON.parse(text) as T;
 		} catch {
-			console.error(
-				`[Hackatime] Non-JSON response from GET ${url} (${response.status}):\n${text}`,
-			);
+			console.error(`[Hackatime] Non-JSON response from GET ${url} (${response.status}):\n${text}`);
 			throw new Error(`Hackatime returned non-JSON response (${response.status})`);
 		}
 	}
@@ -53,7 +51,10 @@ export class HackatimeClient {
 		return this.get<HackatimeProfile>('/api/v1/authenticated/me');
 	}
 
-	async getProjects(params?: { start?: string; projects?: string }): Promise<HackatimeProjectsResponse> {
+	async getProjects(params?: {
+		start?: string;
+		projects?: string;
+	}): Promise<HackatimeProjectsResponse> {
 		const query: Record<string, string> = {};
 		if (params?.start) query.start = params.start;
 		if (params?.projects) query.projects = params.projects;

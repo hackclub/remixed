@@ -23,9 +23,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			projects: project.hackatimeProjects.join(','),
 		});
 
-		hackatimeSeconds = hackatimeProjects
-			.map((p) => p.total_seconds)
-			.reduce((a, b) => a + b, 0);
+		hackatimeSeconds = hackatimeProjects.map((p) => p.total_seconds).reduce((a, b) => a + b, 0);
 	}
 
 	await db.update(projects).set({ hackatimeSeconds }).where(eq(projects.id, projectId));

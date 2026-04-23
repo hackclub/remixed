@@ -20,7 +20,9 @@
 
 <div class="h-screen w-screen overflow-y-auto pt-28">
 	{#if projectList.length === 0}
-		<div class="mx-auto max-w-4xl px-6 pt-28 pb-40 text-center sm:px-10 lg:px-16 h-[90vh] flex justify-center items-center">
+		<div
+			class="mx-auto flex h-[90vh] max-w-4xl items-center justify-center px-6 pt-28 pb-40 text-center sm:px-10 lg:px-16"
+		>
 			<p class="font-jua text-3xl text-text">No projects yet! Go ship the first one!</p>
 		</div>
 	{:else}

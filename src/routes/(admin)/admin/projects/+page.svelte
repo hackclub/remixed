@@ -106,35 +106,28 @@
 <!-- Manage project popover -->
 <div
 	bind:this={manageProjectPopover}
-	class="bg-base-200 shadow-2xl rounded-xl border border-base-300 w-[min(96vw,64rem)] max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain"
+	class="bg-base-200 border-base-300 max-h-[calc(100vh-2rem)] w-[min(96vw,64rem)] overflow-y-auto overscroll-contain rounded-xl border shadow-2xl"
 	popover
 	id="manage-project"
 >
 	{#if activeProject}
-		<div class="px-5 py-4 border-b border-base-300">
-			<h3 class="font-semibold text-sm">Edit Project</h3>
+		<div class="border-base-300 border-b px-5 py-4">
+			<h3 class="text-sm font-semibold">Edit Project</h3>
 		</div>
 		<div class="p-5">
-		<form action="?/updateProject" method="POST" class="space-y-3">
+			<form action="?/updateProject" method="POST" class="space-y-3">
 				<input type="hidden" name="projectId" value={activeProject.id} />
 
 				<!-- Stats summary -->
-				<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
-					{#each [
-						{ label: 'Project ID', value: String(activeProject.id) },
-						{ label: 'Owner', value: '@' + activeProject.ownerUsername },
-						{ label: 'Created', value: activeProject.createdAt },
-						{ label: 'Tracked Time', value: formatHours(activeProject.stats.trackedSeconds) },
-						{ label: 'Approved Time', value: formatHours(activeProject.stats.approvedSeconds) },
-						{ label: 'Remaining', value: formatHours(activeProject.stats.remainingSeconds) },
-					] as item}
+				<div class="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+					{#each [{ label: 'Project ID', value: String(activeProject.id) }, { label: 'Owner', value: '@' + activeProject.ownerUsername }, { label: 'Created', value: activeProject.createdAt }, { label: 'Tracked Time', value: formatHours(activeProject.stats.trackedSeconds) }, { label: 'Approved Time', value: formatHours(activeProject.stats.approvedSeconds) }, { label: 'Remaining', value: formatHours(activeProject.stats.remainingSeconds) }] as item}
 						<div class="bg-base-300 rounded-lg p-3">
-							<p class="text-xs text-base-content/50">{item.label}</p>
-							<p class="text-sm font-mono">{item.value}</p>
+							<p class="text-base-content/50 text-xs">{item.label}</p>
+							<p class="font-mono text-sm">{item.value}</p>
 						</div>
 					{/each}
-					<div class="bg-base-300 rounded-lg p-3 col-span-2 sm:col-span-3">
-						<p class="text-xs text-base-content/50">Ships</p>
+					<div class="bg-base-300 col-span-2 rounded-lg p-3 sm:col-span-3">
+						<p class="text-base-content/50 text-xs">Ships</p>
 						<p class="text-sm">
 							{activeProject.stats.shipCount} total &middot; {activeProject.stats.pendingShips} pending
 							&middot; {activeProject.stats.approvedShips} approved &middot; {activeProject.stats
@@ -144,7 +137,7 @@
 				</div>
 
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Owner User ID</legend>
+					<legend class="fieldset-legend text-xs font-normal">Owner User ID</legend>
 					<input
 						type="number"
 						min="1"
@@ -154,7 +147,7 @@
 					/>
 				</fieldset>
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Title</legend>
+					<legend class="fieldset-legend text-xs font-normal">Title</legend>
 					<input
 						type="text"
 						name="title"
@@ -164,32 +157,38 @@
 					/>
 				</fieldset>
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Description</legend>
+					<legend class="fieldset-legend text-xs font-normal">Description</legend>
 					<textarea
 						name="description"
-						class="textarea textarea-bordered textarea-sm w-full min-h-24"
+						class="textarea textarea-bordered textarea-sm min-h-24 w-full"
 						bind:value={activeProject.description}
 					></textarea>
 				</fieldset>
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Category</legend>
-					<select name="category" class="select select-bordered select-sm w-full" bind:value={activeProject.category}>
+					<legend class="fieldset-legend text-xs font-normal">Category</legend>
+					<select
+						name="category"
+						class="select select-bordered select-sm w-full"
+						bind:value={activeProject.category}
+					>
 						{#each PROJECT_CATEGORY_OPTIONS as option}
 							<option value={option.value}>{option.label}</option>
 						{/each}
 					</select>
 				</fieldset>
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Hackatime Projects (one per line)</legend>
+					<legend class="fieldset-legend text-xs font-normal"
+						>Hackatime Projects (one per line)</legend
+					>
 					<textarea
 						name="hackatimeProjects"
-						class="textarea textarea-bordered textarea-sm w-full min-h-20"
+						class="textarea textarea-bordered textarea-sm min-h-20 w-full"
 						bind:value={activeProject.hackatimeProjects}
 						placeholder="One project per line"
 					></textarea>
 				</fieldset>
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Tracked Seconds</legend>
+					<legend class="fieldset-legend text-xs font-normal">Tracked Seconds</legend>
 					<input
 						type="number"
 						min="0"
@@ -199,7 +198,7 @@
 					/>
 				</fieldset>
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Cover Art URL</legend>
+					<legend class="fieldset-legend text-xs font-normal">Cover Art URL</legend>
 					<input
 						type="url"
 						name="coverArt"
@@ -208,7 +207,7 @@
 					/>
 				</fieldset>
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Repository URL</legend>
+					<legend class="fieldset-legend text-xs font-normal">Repository URL</legend>
 					<input
 						type="url"
 						name="githubUrl"
@@ -217,7 +216,7 @@
 					/>
 				</fieldset>
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Demo URL</legend>
+					<legend class="fieldset-legend text-xs font-normal">Demo URL</legend>
 					<input
 						type="url"
 						name="demoUrl"
@@ -241,16 +240,16 @@
 <!-- Delete project popover -->
 <div
 	bind:this={deleteProjectPopover}
-	class="bg-base-200 shadow-2xl rounded-xl border border-base-300 w-[min(90vw,36rem)]"
+	class="bg-base-200 border-base-300 w-[min(90vw,36rem)] rounded-xl border shadow-2xl"
 	popover
 	id="delete-project"
 >
 	{#if activeProject}
-		<div class="px-5 py-4 border-b border-base-300">
-			<h3 class="font-semibold text-sm">Delete {activeProject.title}?</h3>
+		<div class="border-base-300 border-b px-5 py-4">
+			<h3 class="text-sm font-semibold">Delete {activeProject.title}?</h3>
 		</div>
 		<div class="p-5">
-			<p class="text-sm text-base-content/60 mb-4">
+			<p class="text-base-content/60 mb-4 text-sm">
 				This archives the project and all of its ships, removes them from the live tables, and keeps
 				them visible in the deleted section below.
 			</p>
@@ -285,8 +284,8 @@
 		placeholder="Search projects, owners, categories, links, or Hackatime names"
 	/>
 
-	<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-		<table class="table table-sm table-zebra">
+	<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border">
+		<table class="table-sm table-zebra table">
 			<thead>
 				<tr>
 					<th>ID</th>
@@ -305,7 +304,11 @@
 						<td class="font-mono text-xs">{projectInfo.project.id}</td>
 						<td>
 							<div class="flex items-center gap-2">
-								<img src={projectInfo.user.avatarUrl ?? '/404.jpg'} alt={projectInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+								<img
+									src={projectInfo.user.avatarUrl ?? '/404.jpg'}
+									alt={projectInfo.user.username}
+									class="h-6 w-6 shrink-0 rounded-full object-cover"
+								/>
 								<a href="/user/{projectInfo.user.id}" class="link link-hover">
 									{projectInfo.user.username}
 								</a>
@@ -314,7 +317,12 @@
 						<td>
 							<div class="flex items-center gap-2">
 								{#if projectInfo.project.coverArt}
-									<img src={projectInfo.project.coverArt} alt={projectInfo.project.title} class="w-10 h-7 rounded object-cover shrink-0" onerror={(e: any) => e.currentTarget.remove()} />
+									<img
+										src={projectInfo.project.coverArt}
+										alt={projectInfo.project.title}
+										class="h-7 w-10 shrink-0 rounded object-cover"
+										onerror={(e: any) => e.currentTarget.remove()}
+									/>
 								{/if}
 								<a href="/projects/{projectInfo.project.id}" class="link link-hover">
 									{projectInfo.project.title}
@@ -348,7 +356,10 @@
 					</tr>
 				{/each}
 				{#if filteredProjects.length === 0}
-					<tr><td colspan="8" class="text-center text-base-content/40 py-6">No projects found</td></tr>
+					<tr
+						><td colspan="8" class="text-base-content/40 py-6 text-center">No projects found</td
+						></tr
+					>
 				{/if}
 			</tbody>
 		</table>
@@ -356,12 +367,12 @@
 
 	<!-- Deleted Projects -->
 	<section>
-		<h2 class="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-1">
+		<h2 class="text-base-content/70 mb-1 text-sm font-semibold tracking-wide uppercase">
 			Deleted Projects
 		</h2>
-		<p class="text-xs text-base-content/50 mb-3">Archived rows are read-only.</p>
-		<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100 opacity-75">
-			<table class="table table-sm table-zebra">
+		<p class="text-base-content/50 mb-3 text-xs">Archived rows are read-only.</p>
+		<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border opacity-75">
+			<table class="table-sm table-zebra table">
 				<thead>
 					<tr>
 						<th>ID</th>
@@ -389,7 +400,7 @@
 					{/each}
 					{#if filteredDeletedProjects.length === 0}
 						<tr>
-							<td colspan="8" class="text-center text-base-content/40 py-6">No deleted projects</td>
+							<td colspan="8" class="text-base-content/40 py-6 text-center">No deleted projects</td>
 						</tr>
 					{/if}
 				</tbody>

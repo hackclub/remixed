@@ -50,7 +50,6 @@ type RawHcaProfile = HcaProfile & {
 	};
 };
 
-
 type SlackProfileResponse = {
 	ok?: boolean;
 	profile?: {
