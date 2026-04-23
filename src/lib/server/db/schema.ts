@@ -36,6 +36,15 @@ export const reviewTypeEnum = pgEnum('review_type', [
 	'HQ_APPROVAL',
 	'HQ_REJECTION',
 ]);
+export const shopRegionEnum = pgEnum('shop_region', [
+	'US',
+	'EU',
+	'UK',
+	'INDIA',
+	'CANADA',
+	'AUSTRALIA',
+	'REST_OF_WORLD',
+]);
 
 export const users = pgTable('users', {
 	id: serial('id').primaryKey(),
@@ -124,7 +133,7 @@ export const shopItems = pgTable('shop_items', {
 	id: serial('id').primaryKey(),
 	name: text('name').notNull(),
 	description: text('description'),
-	cost: integer('cost').notNull(),
+	regionPrices: json('region_prices').$type<Record<string, number>>().notNull().default({}),
 	imageUrl: text('imageUrl'),
 	categories: text('categories').array().default([]),
 });
@@ -172,7 +181,7 @@ export const deletedShopItems = pgTable('deleted_shop_items', {
 	originalId: integer('original_id').notNull().unique(),
 	name: text('name').notNull(),
 	description: text('description'),
-	cost: integer('cost').notNull(),
+	regionPrices: json('region_prices').$type<Record<string, number>>().notNull(),
 	imageUrl: text('image_url'),
 	categories: text('categories').array().default([]),
 	deletedAt: timestamp('deleted_at').notNull().defaultNow(),
@@ -191,6 +200,7 @@ export const orders = pgTable('orders', {
 		.notNull()
 		.references(() => shopItems.id),
 	status: orderStatusEnum('status').notNull().default('PENDING'),
+	purchasedRegion: shopRegionEnum('purchased_region'),
 	fullName: text('full_name').notNull(),
 	email: text('email').notNull(),
 	addressLine1: text('address_line_1').notNull(),
