@@ -14,9 +14,7 @@
 	type ReviewMode = 'ship_comment' | 'internal_comment' | 'rejection' | 'approval';
 	let reviewMode = $state<ReviewMode>('ship_comment');
 	const pendingShip = data.pendingShip;
-	let adjustedHours = $state(
-		pendingShip ? parseFloat((pendingShip.seconds / 3600).toFixed(1)) : 0,
-	);
+	let adjustedHours = $state(pendingShip ? parseFloat((pendingShip.seconds / 3600).toFixed(1)) : 0);
 	let notesPerHour = $state(NOTES_PER_HOUR);
 	let notesPayout = $derived(Math.ceil(adjustedHours * notesPerHour));
 	let hourlyRate = $derived((notesPerHour * NOTE_VALUE_USD).toFixed(2));
@@ -120,18 +118,18 @@
 <!-- Edit review popover -->
 <div
 	bind:this={editPopover}
-	class="bg-base-200 shadow-2xl rounded-xl border border-base-300 w-[min(90vw,36rem)]"
+	class="bg-base-200 border-base-300 w-[min(90vw,36rem)] rounded-xl border shadow-2xl"
 	popover
 	id="edit-review"
 >
-	<div class="px-5 py-4 border-b border-base-300">
-		<h3 class="font-semibold text-sm">Edit Review</h3>
+	<div class="border-base-300 border-b px-5 py-4">
+		<h3 class="text-sm font-semibold">Edit Review</h3>
 	</div>
-	<form action="?/editReview" method="POST" class="p-5 space-y-3">
+	<form action="?/editReview" method="POST" class="space-y-3 p-5">
 		<input type="hidden" name="reviewId" value={editingReviewId} />
 		{#if editHasHours}
 			<fieldset class="fieldset p-0">
-				<legend class="fieldset-legend font-normal text-xs">Adjusted Hours</legend>
+				<legend class="fieldset-legend text-xs font-normal">Adjusted Hours</legend>
 				<input
 					type="number"
 					name="adjustedHours"
@@ -143,7 +141,7 @@
 			</fieldset>
 		{/if}
 		<fieldset class="fieldset p-0">
-			<legend class="fieldset-legend font-normal text-xs">User Comment</legend>
+			<legend class="fieldset-legend text-xs font-normal">User Comment</legend>
 			<textarea
 				name="userComment"
 				class="textarea textarea-bordered textarea-sm w-full"
@@ -151,7 +149,7 @@
 			></textarea>
 		</fieldset>
 		<fieldset class="fieldset p-0">
-			<legend class="fieldset-legend font-normal text-xs">Internal Comment</legend>
+			<legend class="fieldset-legend text-xs font-normal">Internal Comment</legend>
 			<textarea
 				name="internalComment"
 				class="textarea textarea-bordered textarea-sm w-full"
@@ -169,14 +167,14 @@
 	</form>
 </div>
 
-<div class="max-w-3xl mx-auto space-y-6">
+<div class="mx-auto max-w-3xl space-y-6">
 	<!-- Project header -->
-	<div class="card bg-base-100 border border-base-300">
+	<div class="card bg-base-100 border-base-300 border">
 		<div class="card-body p-5">
 			<div class="flex items-start justify-between gap-4">
 				<div>
 					<h1 class="text-xl font-bold">{data.project.title}</h1>
-					<p class="text-sm text-base-content/60 mt-0.5">
+					<p class="text-base-content/60 mt-0.5 text-sm">
 						by <a href="/user/{data.user.id}" class="link link-hover">@{data.user.username}</a>
 					</p>
 				</div>
@@ -185,7 +183,7 @@
 	</div>
 
 	<!-- Time stats -->
-	<div class="stats stats-horizontal border border-base-300 bg-base-100 w-full shadow-sm">
+	<div class="stats stats-horizontal border-base-300 bg-base-100 w-full border shadow-sm">
 		<div class="stat py-3">
 			<div class="stat-title text-xs">Total project time</div>
 			<div class="stat-value text-lg">{formatHours(totalProjectSeconds)}</div>
@@ -202,9 +200,9 @@
 
 	<!-- Hackatime projects -->
 	{#if data.project.hackatimeProjects.length > 0}
-		<div class="card bg-base-100 border border-base-300">
+		<div class="card bg-base-100 border-base-300 border">
 			<div class="card-body p-4">
-				<p class="text-xs text-base-content/50 mb-2">Hackatime projects</p>
+				<p class="text-base-content/50 mb-2 text-xs">Hackatime projects</p>
 				<div class="flex flex-wrap gap-2">
 					{#each data.project.hackatimeProjects as proj}
 						<span class="badge badge-outline badge-sm">{proj}</span>
@@ -216,7 +214,7 @@
 
 	<!-- Screenshot -->
 	{#if data.project.coverArt}
-		<div class="rounded-box overflow-hidden border border-base-300">
+		<div class="rounded-box border-base-300 overflow-hidden border">
 			<img
 				src={data.project.coverArt}
 				alt="Project screenshot"
@@ -228,9 +226,9 @@
 
 	<!-- Description -->
 	{#if data.project.description}
-		<div class="card bg-base-100 border border-base-300">
+		<div class="card bg-base-100 border-base-300 border">
 			<div class="card-body p-4">
-				<p class="text-xs text-base-content/50 mb-1">Description</p>
+				<p class="text-base-content/50 mb-1 text-xs">Description</p>
 				<p class="text-sm whitespace-pre-wrap">{data.project.description}</p>
 			</div>
 		</div>
@@ -239,12 +237,22 @@
 	<!-- Links -->
 	<div class="flex flex-wrap gap-2">
 		{#if data.project.demoUrl}
-			<a href={data.project.demoUrl} target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline">
+			<a
+				href={data.project.demoUrl}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="btn btn-sm btn-outline"
+			>
 				Demo ↗
 			</a>
 		{/if}
 		{#if data.project.githubUrl}
-			<a href={data.project.githubUrl} target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline">
+			<a
+				href={data.project.githubUrl}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="btn btn-sm btn-outline"
+			>
 				Repository ↗
 			</a>
 		{/if}
@@ -260,36 +268,43 @@
 	</div>
 
 	<!-- Review Timeline -->
-	<div class="card bg-base-100 border border-base-300">
+	<div class="card bg-base-100 border-base-300 border">
 		<div class="card-body p-5">
-			<h2 class="font-semibold mb-5">Review Timeline</h2>
+			<h2 class="mb-5 font-semibold">Review Timeline</h2>
 
 			{#if data.projectShips.length === 0}
-				<p class="text-sm text-base-content/40">No ships yet.</p>
+				<p class="text-base-content/40 text-sm">No ships yet.</p>
 			{:else}
 				<div class="relative">
 					<!-- Vertical stem line -->
-					<div class="absolute left-[0.875rem] top-2 bottom-2 w-px" style="background-color: color-mix(in oklab, var(--color-base-content) 25%, transparent)"></div>
+					<div
+						class="absolute top-2 bottom-2 left-[0.875rem] w-px"
+						style="background-color: color-mix(in oklab, var(--color-base-content) 25%, transparent)"
+					></div>
 
 					{#each data.projectShips as ship}
 						{@const shipRevs = reviewsForShip(ship.id)}
 
 						<!-- Ship submitted event -->
 						<div class="relative flex gap-4 pb-5">
-							<div class="shrink-0 w-7 flex justify-center">
-								<div class="w-3 h-3 rounded-full bg-gray-300 mt-1 z-10 relative"></div>
+							<div class="flex w-7 shrink-0 justify-center">
+								<div class="relative z-10 mt-1 h-3 w-3 rounded-full bg-gray-300"></div>
 							</div>
-							<div class="flex-1 min-w-0">
-								<div class="flex items-center gap-2 flex-wrap">
+							<div class="min-w-0 flex-1">
+								<div class="flex flex-wrap items-center gap-2">
 									<img
 										src={data.user.avatarUrl ?? '/404.jpg'}
 										alt={data.user.username}
-										class="w-5 h-5 rounded-full object-cover"
+										class="h-5 w-5 rounded-full object-cover"
 									/>
-									<span class="font-semibold text-sm">@{data.user.username}</span>
-									<span class="text-sm text-base-content/60">shipped {formatHours(ship.seconds)}</span>
-									<span class="badge {shipStatusBadge(ship.status)} badge-sm">{shipStatusLabel(ship.status)}</span>
-									<span class="text-xs text-base-content/40 ml-auto">
+									<span class="text-sm font-semibold">@{data.user.username}</span>
+									<span class="text-base-content/60 text-sm"
+										>shipped {formatHours(ship.seconds)}</span
+									>
+									<span class="badge {shipStatusBadge(ship.status)} badge-sm"
+										>{shipStatusLabel(ship.status)}</span
+									>
+									<span class="text-base-content/40 ml-auto text-xs">
 										{new Date(ship.submittedAt).toLocaleString()} ({timeAgo(ship.submittedAt)})
 									</span>
 								</div>
@@ -300,32 +315,35 @@
 						{#each shipRevs as r}
 							{@const isEdited = r.review.updatedAt.getTime() !== r.review.createdAt.getTime()}
 							<div class="relative flex gap-4 pb-5">
-								<div class="shrink-0 w-7 flex justify-center">
+								<div class="flex w-7 shrink-0 justify-center">
 									<div
-										class="w-3 h-3 rounded-full border-2 mt-1 z-10 relative {r.review.type === 'APPROVAL' || r.review.type === 'HQ_APPROVAL'
+										class="relative z-10 mt-1 h-3 w-3 rounded-full border-2 {r.review.type ===
+											'APPROVAL' || r.review.type === 'HQ_APPROVAL'
 											? 'bg-success border-success'
 											: r.review.type === 'REJECTION' || r.review.type === 'HQ_REJECTION'
 												? 'bg-error border-error'
 												: 'bg-base-300 border-base-300'}"
 									></div>
 								</div>
-								<div class="flex-1 min-w-0">
+								<div class="min-w-0 flex-1">
 									<div class="flex items-start gap-2">
 										<img
 											src={r.reviewer.avatarUrl ?? '/404.jpg'}
 											alt={r.reviewer.username}
-											class="w-5 h-5 rounded-full object-cover shrink-0 mt-0.5"
+											class="mt-0.5 h-5 w-5 shrink-0 rounded-full object-cover"
 										/>
-										<div class="flex-1 min-w-0">
+										<div class="min-w-0 flex-1">
 											<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-												<span class="font-semibold text-sm">@{r.reviewer.username}</span>
+												<span class="text-sm font-semibold">@{r.reviewer.username}</span>
 												<span class="badge {reviewTypeBadge(r.review.type)} badge-sm">
 													{reviewTypeLabel(r.review.type)}
 												</span>
 												{#if r.review.adjustedHours}
 													{@const rate = r.review.notesPerHour ?? NOTES_PER_HOUR}
-													<span class="text-xs text-base-content/50">
-														{r.review.adjustedHours}h &middot; {Math.ceil(r.review.adjustedHours * rate)} notes @ {rate}/h
+													<span class="text-base-content/50 text-xs">
+														{r.review.adjustedHours}h &middot; {Math.ceil(
+															r.review.adjustedHours * rate,
+														)} notes @ {rate}/h
 													</span>
 												{/if}
 												{#if r.review.isInternal}
@@ -333,20 +351,22 @@
 												{/if}
 											</div>
 											{#if r.review.userComment}
-												<div class="mt-1.5 rounded-lg bg-base-200 px-3 py-2 text-sm">
-													<p class="text-xs text-base-content/40 mb-0.5">Shipper-visible</p>
+												<div class="bg-base-200 mt-1.5 rounded-lg px-3 py-2 text-sm">
+													<p class="text-base-content/40 mb-0.5 text-xs">Shipper-visible</p>
 													{r.review.userComment}
 												</div>
 											{/if}
 											{#if r.review.internalComment}
-												<div class="mt-1.5 rounded-lg bg-warning/10 border border-warning/20 px-3 py-2 text-sm">
-													<p class="text-xs text-base-content/40 mb-0.5">Review-team only</p>
+												<div
+													class="bg-warning/10 border-warning/20 mt-1.5 rounded-lg border px-3 py-2 text-sm"
+												>
+													<p class="text-base-content/40 mb-0.5 text-xs">Review-team only</p>
 													{r.review.internalComment}
 												</div>
 											{/if}
 										</div>
-										<div class="flex items-center gap-2 shrink-0">
-											<span class="text-xs text-base-content/40">
+										<div class="flex shrink-0 items-center gap-2">
+											<span class="text-base-content/40 text-xs">
 												{new Date(r.review.createdAt).toLocaleString()}
 												{#if isEdited}<em class="not-italic opacity-60"> (edited)</em>{/if}
 											</span>
@@ -354,8 +374,8 @@
 												<button
 													class="btn btn-outline btn-xs"
 													onclick={() => openEdit(r)}
-													popovertarget="edit-review"
-												>Edit</button>
+													popovertarget="edit-review">Edit</button
+												>
 											{/if}
 										</div>
 									</div>
@@ -370,14 +390,14 @@
 
 	<!-- Submit Review -->
 	{#if pendingShip}
-		<div class="card bg-base-100 border border-base-300">
+		<div class="card bg-base-100 border-base-300 border">
 			<div class="card-body p-5">
-				<h2 class="font-semibold mb-4">Submit Review</h2>
+				<h2 class="mb-4 font-semibold">Submit Review</h2>
 				<form action={reviewFormAction} method="POST" class="space-y-3">
 					<input type="hidden" name="shipId" value={pendingShip.id} />
 
 					<fieldset class="fieldset p-0">
-						<legend class="fieldset-legend font-normal text-xs">Review type</legend>
+						<legend class="fieldset-legend text-xs font-normal">Review type</legend>
 						<select bind:value={reviewMode} class="select select-bordered select-sm w-full">
 							<option value="ship_comment">Ship Comment</option>
 							<option value="internal_comment">Internal Comment</option>
@@ -388,7 +408,7 @@
 
 					{#if reviewMode === 'approval'}
 						<fieldset class="fieldset p-0">
-							<legend class="fieldset-legend font-normal text-xs">Approved Hours</legend>
+							<legend class="fieldset-legend text-xs font-normal">Approved Hours</legend>
 							<input
 								type="number"
 								name="adjustedHours"
@@ -400,7 +420,9 @@
 							/>
 						</fieldset>
 						<fieldset class="fieldset p-0">
-							<legend class="fieldset-legend font-normal text-xs">Notes per Hour — ${hourlyRate}/hr</legend>
+							<legend class="fieldset-legend text-xs font-normal"
+								>Notes per Hour — ${hourlyRate}/hr</legend
+							>
 							<div class="flex items-center gap-3">
 								<input
 									type="range"
@@ -426,7 +448,7 @@
 								This goes over the regular program payout amount! If in doubt — ask in the channel!
 							</div>
 						{/if}
-						<p class="text-xs text-base-content/50">
+						<p class="text-base-content/50 text-xs">
 							Payout: {notesPayout} notes ({adjustedHours}h &times; {notesPerHour} notes/h)
 						</p>
 					{/if}
@@ -436,11 +458,11 @@
 							<input type="hidden" name="isInternal" value="on" />
 						{/if}
 						<fieldset class="fieldset p-0">
-							<legend class="fieldset-legend font-normal text-xs">
-									{reviewMode === 'internal_comment'
-										? 'Comment (only visible to review team)'
-										: 'Comment (visible to shipper)'}
-								</legend>
+							<legend class="fieldset-legend text-xs font-normal">
+								{reviewMode === 'internal_comment'
+									? 'Comment (only visible to review team)'
+									: 'Comment (visible to shipper)'}
+							</legend>
 							<textarea
 								required
 								name="comment"
@@ -453,7 +475,9 @@
 						</fieldset>
 					{:else}
 						<fieldset class="fieldset p-0">
-							<legend class="fieldset-legend font-normal text-xs">Shipper-visible comment (required)</legend>
+							<legend class="fieldset-legend text-xs font-normal"
+								>Shipper-visible comment (required)</legend
+							>
 							<textarea
 								required
 								name="userComment"
@@ -463,7 +487,9 @@
 							></textarea>
 						</fieldset>
 						<fieldset class="fieldset p-0">
-							<legend class="fieldset-legend font-normal text-xs">Review-team-only comment (required)</legend>
+							<legend class="fieldset-legend text-xs font-normal"
+								>Review-team-only comment (required)</legend
+							>
 							<textarea
 								required
 								name="internalComment"
@@ -474,10 +500,7 @@
 						</fieldset>
 					{/if}
 
-					<button
-						type="submit"
-						class="btn btn-sm btn-primary w-full"
-					>
+					<button type="submit" class="btn btn-sm btn-primary w-full">
 						{reviewMode === 'ship_comment'
 							? 'Post Comment'
 							: reviewMode === 'internal_comment'

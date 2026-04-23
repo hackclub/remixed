@@ -39,11 +39,11 @@
 	<!-- Hero Section -->
 	<div class="mx-auto flex max-w-4xl flex-col items-center gap-6">
 		<!-- Avatar with disc -->
-		<div class="relative shrink-0 anim-avatar" class:anim-active={anim}>
+		<div class="anim-avatar relative shrink-0" class:anim-active={anim}>
 			<img
 				src="/project/disc.png"
 				alt=""
-				class="absolute top-2 left-[45%] z-0 aspect-square w-48 object-cover sm:w-56 lg:w-64 anim-disc"
+				class="anim-disc absolute top-2 left-[45%] z-0 aspect-square w-48 object-cover sm:w-56 lg:w-64"
 				class:anim-active={anim}
 			/>
 			<div class="relative z-10">
@@ -63,7 +63,10 @@
 
 		<!-- Own profile actions -->
 		{#if isOwner}
-			<div class="flex flex-wrap items-center justify-center gap-3 anim-actions" class:anim-active={anim}>
+			<div
+				class="anim-actions flex flex-wrap items-center justify-center gap-3"
+				class:anim-active={anim}
+			>
 				<button class="{styleButton} !px-8 !py-1 !text-lg" onclick={copyReferral}>
 					{copied ? 'Copied!' : 'Copy Referral Link'}
 				</button>
@@ -73,7 +76,7 @@
 
 		<!-- Role badges -->
 		{#if roleBadges.length > 0}
-			<div class="flex flex-wrap justify-center gap-2 anim-badges" class:anim-active={anim}>
+			<div class="anim-badges flex flex-wrap justify-center gap-2" class:anim-active={anim}>
 				{#each roleBadges as role}
 					<span
 						class="rounded-full border-2 border-secondary bg-[#1c2c44] px-4 py-1 font-gothic text-sm tracking-wider text-secondary shadow-md"
@@ -85,25 +88,37 @@
 		{/if}
 
 		<!-- Stats -->
-		<div class="mt-2 flex flex-wrap justify-center gap-3 anim-stats" class:anim-active={anim}>
-			<div class="flex flex-col items-center rounded-2xl border-3 border-[#8B81FF] bg-[#1c2c44] px-5 py-3 shadow-md">
+		<div class="anim-stats mt-2 flex flex-wrap justify-center gap-3" class:anim-active={anim}>
+			<div
+				class="flex flex-col items-center rounded-2xl border-3 border-[#8B81FF] bg-[#1c2c44] px-5 py-3 shadow-md"
+			>
 				<span class="font-jua text-2xl text-[#E2BEFF]">{data.user.notesBalance}</span>
 				<span class="font-gothic text-xs tracking-wider text-[#E2BEFF]/70">NOTES</span>
 			</div>
-			<div class="flex flex-col items-center rounded-2xl border-3 border-[#8B81FF] bg-[#1c2c44] px-5 py-3 shadow-md">
-				<span class="font-jua text-2xl text-[#E2BEFF]">{formatHours(data.totalApprovedSeconds)}</span>
+			<div
+				class="flex flex-col items-center rounded-2xl border-3 border-[#8B81FF] bg-[#1c2c44] px-5 py-3 shadow-md"
+			>
+				<span class="font-jua text-2xl text-[#E2BEFF]"
+					>{formatHours(data.totalApprovedSeconds)}</span
+				>
 				<span class="font-gothic text-xs tracking-wider text-[#E2BEFF]/70">SHIPPED</span>
 			</div>
-			<div class="flex flex-col items-center rounded-2xl border-3 border-[#8B81FF] bg-[#1c2c44] px-5 py-3 shadow-md">
+			<div
+				class="flex flex-col items-center rounded-2xl border-3 border-[#8B81FF] bg-[#1c2c44] px-5 py-3 shadow-md"
+			>
 				<span class="font-jua text-2xl text-[#E2BEFF]">{data.userProjects.length}</span>
 				<span class="font-gothic text-xs tracking-wider text-[#E2BEFF]/70">PROJECTS</span>
 			</div>
-			<div class="flex flex-col items-center rounded-2xl border-3 border-[#8B81FF] bg-[#1c2c44] px-5 py-3 shadow-md">
+			<div
+				class="flex flex-col items-center rounded-2xl border-3 border-[#8B81FF] bg-[#1c2c44] px-5 py-3 shadow-md"
+			>
 				<span class="font-jua text-2xl text-[#E2BEFF]">{memberSince}</span>
 				<span class="font-gothic text-xs tracking-wider text-[#E2BEFF]/70">JOINED</span>
 			</div>
 			{#if data.user.referrals > 0 || isOwner}
-				<div class="flex flex-col items-center rounded-2xl border-3 border-[#8B81FF] bg-[#1c2c44] px-5 py-3 shadow-md">
+				<div
+					class="flex flex-col items-center rounded-2xl border-3 border-[#8B81FF] bg-[#1c2c44] px-5 py-3 shadow-md"
+				>
 					<span class="font-jua text-2xl text-[#E2BEFF]">{data.user.referrals}</span>
 					<span class="font-gothic text-xs tracking-wider text-[#E2BEFF]/70">REFERRALS</span>
 				</div>
@@ -112,12 +127,14 @@
 	</div>
 
 	<!-- Projects Section -->
-	<div class="mx-auto mt-16 max-w-6xl anim-projects" class:anim-active={anim}>
+	<div class="anim-projects mx-auto mt-16 max-w-6xl" class:anim-active={anim}>
 		<h2 class="mb-2 text-left text-text">
 			<BoldText class="font-jua text-3xl sm:text-4xl" stroke="1">Projects</BoldText>
 		</h2>
 		<p class="mb-8 font-jua text-lg text-white">
-			{data.userProjects.length} project{data.userProjects.length !== 1 ? 's' : ''} &bull; {formatHours(data.totalApprovedSeconds)} shipped
+			{data.userProjects.length} project{data.userProjects.length !== 1 ? 's' : ''} &bull; {formatHours(
+				data.totalApprovedSeconds,
+			)} shipped
 		</p>
 		{#if data.userProjects.length > 0}
 			<div class="flex flex-row flex-wrap justify-start gap-8">
@@ -135,20 +152,42 @@
 
 <style>
 	@keyframes avatar-enter {
-		from { opacity: 0; transform: translateY(40px) scale(0.9); }
-		to { opacity: 1; transform: translateY(0) scale(1); }
+		from {
+			opacity: 0;
+			transform: translateY(40px) scale(0.9);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
 	}
 	@keyframes disc-enter {
-		from { transform: translateY(60px) rotate(0deg); opacity: 0; }
-		to { transform: translateY(0) rotate(-110deg); opacity: 1; }
+		from {
+			transform: translateY(60px) rotate(0deg);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0) rotate(-110deg);
+			opacity: 1;
+		}
 	}
 	@keyframes fade-up {
-		from { opacity: 0; transform: translateY(24px); }
-		to { opacity: 1; transform: translateY(0); }
+		from {
+			opacity: 0;
+			transform: translateY(24px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 	@keyframes fade-in {
-		from { opacity: 0; }
-		to { opacity: 1; }
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 
 	.anim-avatar {

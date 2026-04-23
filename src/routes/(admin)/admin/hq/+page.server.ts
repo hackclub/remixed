@@ -41,16 +41,11 @@ export const load: PageServerLoad = async () => {
 					})
 					.from(shipReviews)
 					.innerJoin(users, eq(shipReviews.reviewerId, users.id))
-					.where(
-						and(inArray(shipReviews.shipId, shipIds), eq(shipReviews.type, 'APPROVAL')),
-					)
+					.where(and(inArray(shipReviews.shipId, shipIds), eq(shipReviews.type, 'APPROVAL')))
 					.orderBy(desc(shipReviews.createdAt))
 			: [];
 
-	const latestApprovalByShip = new Map<
-		number,
-		(typeof approvalReviews)[number]
-	>();
+	const latestApprovalByShip = new Map<number, (typeof approvalReviews)[number]>();
 	for (const r of approvalReviews) {
 		if (!latestApprovalByShip.has(r.review.shipId)) {
 			latestApprovalByShip.set(r.review.shipId, r);
@@ -112,8 +107,14 @@ export const actions: Actions = {
 			return fail(400, { error: 'Invalid ship id' });
 		}
 
-		if (!Number.isFinite(notesPerHour) || notesPerHour < MIN_NOTES_PER_HOUR || notesPerHour > MAX_NOTES_PER_HOUR) {
-			return fail(400, { error: `Notes per hour must be between ${MIN_NOTES_PER_HOUR} and ${MAX_NOTES_PER_HOUR}` });
+		if (
+			!Number.isFinite(notesPerHour) ||
+			notesPerHour < MIN_NOTES_PER_HOUR ||
+			notesPerHour > MAX_NOTES_PER_HOUR
+		) {
+			return fail(400, {
+				error: `Notes per hour must be between ${MIN_NOTES_PER_HOUR} and ${MAX_NOTES_PER_HOUR}`,
+			});
 		}
 
 		if (!userComment || !internalComment) {
@@ -301,9 +302,7 @@ export const actions: Actions = {
 		const existing = await db
 			.select({ id: shipReviews.id })
 			.from(shipReviews)
-			.where(
-				and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'HQ_APPROVAL')),
-			);
+			.where(and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'HQ_APPROVAL')));
 
 		if (existing.length === 0) {
 			await db.insert(shipReviews).values({
@@ -373,9 +372,7 @@ export const actions: Actions = {
 			const awardedRows = await tx
 				.select({ delta: notesLedger.delta })
 				.from(notesLedger)
-				.where(
-					and(eq(notesLedger.refId, shipId), eq(notesLedger.reason, 'ship_approved')),
-				);
+				.where(and(eq(notesLedger.refId, shipId), eq(notesLedger.reason, 'ship_approved')));
 			const awardedNotes = awardedRows.reduce((sum, row) => sum + row.delta, 0);
 
 			// Cancel the ship
@@ -415,17 +412,18 @@ export const actions: Actions = {
 						.select({ order: orders, item: shopItems })
 						.from(orders)
 						.innerJoin(shopItems, eq(orders.itemId, shopItems.id))
-						.where(
-							and(
-								eq(orders.userId, shipInfo.user.id),
-								eq(orders.status, 'PENDING'),
-							),
-						)
+						.where(and(eq(orders.userId, shipInfo.user.id), eq(orders.status, 'PENDING')))
 						.orderBy(desc(orders.createdAt));
 
 					let balance = updatedUser.notesBalance;
 					for (const { order, item } of pendingOrders) {
 						if (balance >= 0) break;
+
+						// Get the price that was actually charged for this order
+						const refundPrice =
+							order.purchasedRegion && item.regionPrices[order.purchasedRegion]
+								? item.regionPrices[order.purchasedRegion]
+								: (Object.values(item.regionPrices)[0] ?? 0);
 
 						await tx
 							.update(orders)
@@ -435,12 +433,12 @@ export const actions: Actions = {
 						// Refund the order cost
 						await tx
 							.update(users)
-							.set({ notesBalance: sql`${users.notesBalance} + ${item.cost}` })
+							.set({ notesBalance: sql`${users.notesBalance} + ${refundPrice}` })
 							.where(eq(users.id, shipInfo.user.id));
 
 						await tx.insert(notesLedger).values({
 							userId: shipInfo.user.id,
-							delta: item.cost,
+							delta: refundPrice,
 							reason: 'order_cancelled_revoke',
 							refId: order.id,
 						});
@@ -448,9 +446,9 @@ export const actions: Actions = {
 						cancelledOrders.push({
 							orderId: order.id,
 							itemName: item.name,
-							cost: item.cost,
+							cost: refundPrice,
 						});
-						balance += item.cost;
+						balance += refundPrice;
 					}
 				}
 			}
@@ -528,10 +526,7 @@ export const actions: Actions = {
 				await uploadToS3(key, bytes, baseType);
 				const newUrl = getPublicUrl(key);
 
-				await db
-					.update(projects)
-					.set({ coverArt: newUrl })
-					.where(eq(projects.id, project.id));
+				await db.update(projects).set({ coverArt: newUrl }).where(eq(projects.id, project.id));
 
 				succeeded++;
 			} catch (err) {
@@ -559,10 +554,7 @@ export const actions: Actions = {
 		}
 
 		await Promise.all([
-			db
-				.update(ships)
-				.set({ status: 'PENDING', feedback: null })
-				.where(eq(ships.id, shipId)),
+			db.update(ships).set({ status: 'PENDING', feedback: null }).where(eq(ships.id, shipId)),
 			db.insert(shipReviews).values({
 				shipId,
 				reviewerId: locals.user!.id,

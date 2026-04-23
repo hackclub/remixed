@@ -55,7 +55,7 @@ export function wordReveal(node: HTMLElement) {
 				observer.disconnect();
 			}
 		},
-		{ threshold: 0.1 }
+		{ threshold: 0.1 },
 	);
 
 	observer.observe(node);
@@ -63,7 +63,7 @@ export function wordReveal(node: HTMLElement) {
 	return {
 		destroy() {
 			observer.disconnect();
-		}
+		},
 	};
 }
 
@@ -83,7 +83,7 @@ export function blockReveal(node: HTMLElement, index: number = 0) {
 				observer.disconnect();
 			}
 		},
-		{ threshold: 0.1 }
+		{ threshold: 0.1 },
 	);
 
 	observer.observe(node);
@@ -94,6 +94,6 @@ export function blockReveal(node: HTMLElement, index: number = 0) {
 		},
 		destroy() {
 			observer.disconnect();
-		}
+		},
 	};
 }

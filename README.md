@@ -7,25 +7,32 @@
 **WS: Music-related prizes!**
 
 # Screenshots
+
 > [!NOTE]
 > The data here does not represent the data on the official [remixed.hackclub.com](https://remixed.hackclub.com/) deployment.
 
 ## Landing Page Design
+
 ![landing](static/og-banner.png)
 
 ## Projects
+
 ![projects](https://github.com/user-attachments/assets/425f560d-8bfe-4128-a7aa-72939a1ba015)
 
 ## Shop
+
 ![shop](https://github.com/user-attachments/assets/d23b309f-f9d9-4c9b-b4f3-8c9cc3014451)
 
 ## Profile
+
 ![profile](https://github.com/user-attachments/assets/2a80e28a-bf9e-4b22-a934-ad883dd99208)
 
 ## Admin Dashboard
+
 ![admin](https://github.com/user-attachments/assets/50fde568-7f8d-4e84-8ff6-b6cd623c13e1)
 
 # Features
+
 - [Hackatime](https://hackatime.hackclub.com/) integration
 - [Hack Club Auth](https://auth.hackclub.com/) integration
 - Referral link tracking
