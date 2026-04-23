@@ -2,11 +2,12 @@
 	import type { PageProps } from './$types';
 	import Note from '$lib/Note.svelte';
 	import { onMount } from 'svelte';
+	import { formatRegionName } from '$lib/shop';
 
 	let { data }: PageProps = $props();
 
 	function canAfford() {
-		return data.item.cost <= (data.balance ?? 0);
+		return (data.regionPrice ?? 0) <= (data.balance ?? 0);
 	}
 
 	const hasAddress = Boolean(data.address?.addressLine1);
@@ -15,6 +16,7 @@
 	onMount(() => requestAnimationFrame(() => (visible = true)));
 
 	function goBack() {
+		visible = false;
 		history.back();
 	}
 </script>
@@ -33,8 +35,10 @@
 
 <!-- Modal scroll container -->
 <div
-	class="fixed inset-0 z-50 overflow-y-auto project-scroll"
-	onclick={(e) => { if (e.target === e.currentTarget) goBack(); }}
+	class="project-scroll fixed inset-0 z-50 overflow-y-auto"
+	onclick={(e) => {
+		if (e.target === e.currentTarget) goBack();
+	}}
 >
 	<div class="flex min-h-full items-center justify-center px-4 py-12">
 		<!-- Modal panel -->
@@ -43,9 +47,10 @@
 			style="opacity: {visible ? 1 : 0}; transform: translateY({visible ? '0' : '2rem'})"
 		>
 			<div class="flex flex-col gap-4 font-jua">
-
 				<!-- Header banner -->
-				<div class="relative overflow-hidden rounded-[2rem] border-4 border-[#8B81FF] bg-text px-8 py-7 shadow-2xl/30 sm:px-14 sm:py-9">
+				<div
+					class="relative overflow-hidden rounded-[2rem] border-4 border-[#8B81FF] bg-text px-8 py-7 shadow-2xl/30 sm:px-14 sm:py-9"
+				>
 					<div
 						class="pointer-events-none absolute inset-0 opacity-[0.04]"
 						style="background-image: repeating-linear-gradient(0deg, #fff 0px, #fff 1px, transparent 1px, transparent 32px), repeating-linear-gradient(90deg, #fff 0px, #fff 1px, transparent 1px, transparent 32px);"
@@ -69,17 +74,18 @@
 							type="button"
 							onclick={goBack}
 							class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-[#E2BEFF]/20 text-2xl text-[#E2BEFF]/60 transition-colors hover:border-[#E2BEFF]/50 hover:text-[#E2BEFF]"
-							aria-label="Close"
-						>×</button>
+							aria-label="Close">×</button
+						>
 					</div>
 				</div>
 
 				<!-- Content -->
 				<div class="rounded-[1.5rem] border-4 border-[#8B81FF] bg-text shadow-2xl/30">
 					<div class="grid gap-0 lg:grid-cols-[minmax(0,18rem)_1fr]">
-
 						<!-- Image panel -->
-						<div class="flex items-center justify-center rounded-t-[1.25rem] bg-[#0d1a2d] p-8 lg:rounded-l-[1.25rem] lg:rounded-tr-none">
+						<div
+							class="flex items-center justify-center rounded-t-[1.25rem] bg-[#0d1a2d] p-8 lg:rounded-l-[1.25rem] lg:rounded-tr-none"
+						>
 							<div class="relative w-full">
 								<img
 									src={data.item.imageUrl}
@@ -96,30 +102,55 @@
 
 						<!-- Info + confirm panel -->
 						<div class="flex flex-col gap-6 px-6 py-7 sm:px-8">
-
 							<!-- Item info -->
 							<div>
 								<div class="mb-4 flex flex-wrap gap-2">
-									<div class="flex items-center gap-1.5 rounded-xl border-4 border-[#8B81FF] bg-[#0d1a2d] px-4 py-2 text-lg text-[#E2BEFF]">
-										<svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true" class="shrink-0 opacity-70">
-											<rect x="1" y="4" width="18" height="13" rx="3" stroke="#E2BEFF" stroke-width="2"/>
-											<path d="M1 8h18" stroke="#E2BEFF" stroke-width="2"/>
-											<circle cx="14.5" cy="13" r="1.5" fill="#E2BEFF"/>
+									<div
+										class="flex items-center gap-1.5 rounded-xl border-4 border-[#8B81FF] bg-[#0d1a2d] px-4 py-2 text-lg text-[#E2BEFF]"
+									>
+										<svg
+											width="16"
+											height="16"
+											viewBox="0 0 20 20"
+											fill="none"
+											aria-hidden="true"
+											class="shrink-0 opacity-70"
+										>
+											<rect
+												x="1"
+												y="4"
+												width="18"
+												height="13"
+												rx="3"
+												stroke="#E2BEFF"
+												stroke-width="2"
+											/>
+											<path d="M1 8h18" stroke="#E2BEFF" stroke-width="2" />
+											<circle cx="14.5" cy="13" r="1.5" fill="#E2BEFF" />
 										</svg>
 										Balance: {data.balance ?? 0}<span style="filter: invert(1)"><Note /></span>
 									</div>
-									<div
-										class="flex items-center rounded-xl px-4 py-2 text-lg
-											{canAfford()
+									{#if data.regionPrice}
+										<div
+											class="flex items-center rounded-xl px-4 py-2 text-lg
+												{canAfford()
 												? 'border-4 border-primary bg-primary text-text'
-												: 'ring-4 ring-accent-red/60 bg-accent-red/10 text-accent-red'}"
-									>
-										Cost: {data.item.cost}{#if canAfford()}<Note />{:else}<span style="filter: invert(1)"><Note /></span>{/if}
-									</div>
+												: 'box-border border-4 bg-accent-red/10 text-accent-red'}"
+										>
+											Cost ({formatRegionName(data.selectedRegion)}): {data.regionPrice}{#if canAfford()}<Note
+												/>{:else}<span style="filter: invert(1)"><Note /></span>{/if}
+										</div>
+									{:else}
+										<div
+											class="flex items-center rounded-xl bg-accent-red/10 px-4 py-2 text-lg text-accent-red ring-4 ring-accent-red/60"
+										>
+											Item unavailable in your region
+										</div>
+									{/if}
 								</div>
 
 								<h2 class="text-3xl text-[#E2BEFF] text-shadow-flat">{data.item.name}</h2>
-								<p class="mt-3 text-base text-[#E2BEFF]/60 leading-snug">{data.item.description}</p>
+								<p class="mt-3 text-base leading-snug text-[#E2BEFF]/60">{data.item.description}</p>
 							</div>
 
 							<!-- Divider -->
@@ -134,17 +165,34 @@
 										<div class="h-2.5 w-2.5 rounded-full bg-accent-red/20"></div>
 									</div>
 									<p class="text-xl text-accent-red">Not enough notes to purchase this item.</p>
-									<p class="text-sm text-[#E2BEFF]/40">
-										You need {data.item.cost - (data.balance ?? 0)} more<span style="filter: invert(1) sepia(1) saturate(3) hue-rotate(300deg)"><Note /></span> to unlock this reward.
-									</p>
+									{#if data.regionPrice}
+										<p class="text-sm text-[#E2BEFF]/40">
+											You need {data.regionPrice.price - (data.balance ?? 0)} more<span
+												style="filter: invert(1) sepia(1) saturate(3) hue-rotate(300deg)"
+												><Note /></span
+											> to unlock this reward.
+										</p>
+									{:else}
+										<p class="text-sm text-[#E2BEFF]/40">
+											This item is not available in your region.
+										</p>
+									{/if}
 									<button
 										type="button"
 										onclick={goBack}
 										class="hover-effect-shadow mt-2 inline-flex cursor-pointer items-center gap-2 rounded-xl border-4 border-[#8B81FF] bg-text px-8 py-2 text-lg text-[#E2BEFF]"
 									>
 										<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-											<circle cx="10" cy="10" r="9" fill="#E2BEFF"/>
-											<text x="10" y="10" text-anchor="middle" dominant-baseline="central" font-family="Jua" font-size="11" fill="#1B2A42">B</text>
+											<circle cx="10" cy="10" r="9" fill="#E2BEFF" />
+											<text
+												x="10"
+												y="10"
+												text-anchor="middle"
+												dominant-baseline="central"
+												font-family="Jua"
+												font-size="11"
+												fill="#1B2A42">B</text
+											>
 										</svg>
 										Go Back
 									</button>
@@ -167,8 +215,16 @@
 										class="hover-effect-shadow mt-2 inline-flex cursor-pointer items-center gap-2 rounded-xl border-4 border-[#8B81FF] bg-text px-8 py-2 text-lg text-[#E2BEFF]"
 									>
 										<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-											<circle cx="10" cy="10" r="9" fill="#E2BEFF"/>
-											<text x="10" y="10" text-anchor="middle" dominant-baseline="central" font-family="Jua" font-size="11" fill="#1B2A42">B</text>
+											<circle cx="10" cy="10" r="9" fill="#E2BEFF" />
+											<text
+												x="10"
+												y="10"
+												text-anchor="middle"
+												dominant-baseline="central"
+												font-family="Jua"
+												font-size="11"
+												fill="#1B2A42">B</text
+											>
 										</svg>
 										Go Back
 									</button>
@@ -176,11 +232,13 @@
 							{:else}
 								<!-- Shipping address confirmation + place order -->
 								<div>
-									<div class="mb-4 w-full text-center gap-3">
+									<div class="mb-4 w-full gap-3 text-center">
 										<span class="text-xl text-[#E2BEFF]">This item will ship to this address.</span>
 									</div>
 
-									<div class="rounded-xl border-2 border-[#8B81FF]/40 bg-[#0d1a2d] px-5 py-4 text-[#E2BEFF]/70 leading-relaxed">
+									<div
+										class="rounded-xl border-2 border-[#8B81FF]/40 bg-[#0d1a2d] px-5 py-4 leading-relaxed text-[#E2BEFF]/70"
+									>
 										{#if data.address?.fullName}
 											<p class="text-[#E2BEFF]">{data.address.fullName}</p>
 										{/if}
@@ -202,8 +260,16 @@
 										class="hover-effect-shadow inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border-4 border-[#8B81FF] bg-text px-8 py-3 text-xl text-[#E2BEFF]"
 									>
 										<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-											<circle cx="12" cy="12" r="11" fill="#E2BEFF"/>
-											<text x="12" y="12" text-anchor="middle" dominant-baseline="central" font-family="Jua" font-size="13" fill="#1B2A42">A</text>
+											<circle cx="12" cy="12" r="11" fill="#E2BEFF" />
+											<text
+												x="12"
+												y="12"
+												text-anchor="middle"
+												dominant-baseline="central"
+												font-family="Jua"
+												font-size="13"
+												fill="#1B2A42">A</text
+											>
 										</svg>
 										Confirm Order
 									</button>
@@ -212,7 +278,6 @@
 						</div>
 					</div>
 				</div>
-
 			</div>
 		</div>
 	</div>

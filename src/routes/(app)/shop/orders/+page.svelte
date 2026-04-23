@@ -20,8 +20,16 @@
 			class="hover-effect-shadow inline-flex cursor-pointer items-center gap-2 rounded-xl border-4 border-[#8B81FF] bg-text px-5 py-2 font-jua text-lg text-[#E2BEFF]"
 		>
 			<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-				<circle cx="10" cy="10" r="9" fill="#E2BEFF"/>
-				<text x="10" y="10" text-anchor="middle" dominant-baseline="central" font-family="Jua" font-size="11" fill="#1B2A42">B</text>
+				<circle cx="10" cy="10" r="9" fill="#E2BEFF" />
+				<text
+					x="10"
+					y="10"
+					text-anchor="middle"
+					dominant-baseline="central"
+					font-family="Jua"
+					font-size="11"
+					fill="#1B2A42">B</text
+				>
 			</svg>
 			Back to Shop
 		</a>
@@ -29,7 +37,6 @@
 </PageHeader>
 
 <div class="relative z-2 flex min-h-screen w-full flex-col items-center px-4 pt-56 pb-40 sm:px-8">
-
 	{#if data.orders.length > 0}
 		<div class="grid w-full max-w-[90rem] gap-5 md:grid-cols-2 xl:grid-cols-3">
 			{#each data.orders as orderInfo, i}
@@ -38,7 +45,9 @@
 					class:revealed={mounted}
 					style="--block-i:{i}; --block-stagger:60ms"
 				>
-					<div class="hover-effect-shadow flex flex-col overflow-hidden rounded-[1.5rem] border-4 border-[#8B81FF] bg-text">
+					<div
+						class="hover-effect-shadow flex flex-col overflow-hidden rounded-[1.5rem] border-4 border-[#8B81FF] bg-text"
+					>
 						<!-- Image area -->
 						<div class="relative flex items-center justify-center bg-[#0d1a2d] px-8 py-6">
 							<img
@@ -56,8 +65,8 @@
 							<div
 								class="absolute top-3 right-3 rounded-xl px-3 py-1.5 font-jua text-sm
 									{orderInfo.order.status === 'FULFILLED'
-										? 'border-4 border-primary bg-primary text-text'
-										: 'ring-4 ring-accent-red/60 bg-accent-red/10 text-accent-red'}"
+									? 'border-4 border-primary bg-primary text-text'
+									: 'bg-accent-red/10 text-accent-red ring-4 ring-accent-red/60'}"
 							>
 								{orderInfo.order.status === 'FULFILLED' ? 'Fulfilled' : 'Pending'}
 							</div>
@@ -76,7 +85,7 @@
 		</div>
 	{:else}
 		<div
-			class="w-full max-w-3xl rounded-[2rem] border-4 border-[#8B81FF] bg-text px-8 py-14 text-center font-jua shadow-xl/30 block-reveal"
+			class="block-reveal w-full max-w-3xl rounded-[2rem] border-4 border-[#8B81FF] bg-text px-8 py-14 text-center font-jua shadow-xl/30"
 			class:revealed={mounted}
 			style="--block-i:0; --block-stagger:100ms"
 		>
