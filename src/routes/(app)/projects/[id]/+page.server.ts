@@ -53,12 +53,22 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			.filter((s) => s.status !== 'CANCELLED')
 			.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
 
-		const allShipIds = projectShips.map((s) => s.id);
-		shipFeedback = await db
-			.select()
-			.from(shipReviews)
-			.where(and(inArray(shipReviews.shipId, allShipIds), eq(shipReviews.isInternal, false)))
-			.orderBy(shipReviews.createdAt);
+		// Only show reviews for ships that have completed the full review process.
+		// REVIEWER_APPROVED ships are awaiting HQ — showing their reviews early
+		// would reveal intermediate feedback that HQ may still change or override.
+		const finalizedShipIds = projectShips
+			.filter((s) => s.status === 'APPROVED' || s.status === 'REJECTED')
+			.map((s) => s.id);
+
+		if (finalizedShipIds.length > 0) {
+			shipFeedback = await db
+				.select()
+				.from(shipReviews)
+				.where(
+					and(inArray(shipReviews.shipId, finalizedShipIds), eq(shipReviews.isInternal, false)),
+				)
+				.orderBy(shipReviews.createdAt);
+		}
 	}
 
 	return {
