@@ -178,6 +178,7 @@
 					<h1 class="text-xl font-bold">{data.project.title}</h1>
 					<p class="text-sm text-base-content/60 mt-0.5">
 						by <a href="/user/{data.user.id}" class="link link-hover">@{data.user.username}</a>
+						<span class="ml-1 font-mono text-xs opacity-60">{data.user.slackId}</span>
 					</p>
 				</div>
 			</div>
