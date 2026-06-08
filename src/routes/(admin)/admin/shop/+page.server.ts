@@ -24,6 +24,8 @@ export const load: PageServerLoad = async () => {
 	};
 };
 
+const REGIONS = ['US', 'EU', 'UK', 'INDIA', 'CANADA', 'AUSTRALIA', 'REST_OF_WORLD'] as const;
+
 export const actions: Actions = {
 	updateItem: async ({ locals, request }) => {
 		const data = await request.formData();
@@ -32,8 +34,21 @@ export const actions: Actions = {
 		const name = (data.get('name') as string).trim();
 		const description = (data.get('description') as string).trim();
 		const categories = (data.get('categories') as string).split(',').map((c) => c.trim());
-		const cost = Number(data.get('cost'));
 		const imageUrl = (data.get('imageUrl') as string).trim();
+
+		// Build regionPrices from form data
+		const regionPrices: Record<string, number> = {};
+		for (const region of REGIONS) {
+			const price = data.get(`region_${region}`);
+			if (price) {
+				regionPrices[region] = Number(price);
+			}
+		}
+
+		if (Object.keys(regionPrices).length === 0) {
+			return fail(400, { error: 'At least one region price must be specified' });
+		}
+
 		const [prevItem] = (await db.select().from(shopItems).where(eq(shopItems.id, id))) ?? null;
 		let newItem!: typeof shopItems.$inferSelect;
 
@@ -44,12 +59,12 @@ export const actions: Actions = {
 		if (id == -1) {
 			[newItem] = await db
 				.insert(shopItems)
-				.values({ name, description, cost, imageUrl, categories })
+				.values({ name, description, regionPrices, imageUrl, categories })
 				.returning();
 		} else {
 			[newItem] = await db
 				.update(shopItems)
-				.set({ name, description, cost, imageUrl, categories })
+				.set({ name, description, regionPrices, imageUrl, categories })
 				.where(eq(shopItems.id, id))
 				.returning();
 		}
@@ -94,7 +109,7 @@ export const actions: Actions = {
 				originalId: item.id,
 				name: item.name,
 				description: item.description,
-				cost: item.cost,
+				regionPrices: item.regionPrices,
 				imageUrl: item.imageUrl,
 				categories: item.categories,
 				deletedAt,

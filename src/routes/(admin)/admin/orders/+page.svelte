@@ -32,52 +32,62 @@
 <!-- Fulfill order popover -->
 <div
 	bind:this={fulfillOrderPopover}
-	class="bg-base-200 shadow-2xl rounded-xl border border-base-300 w-[min(90vw,36rem)]"
+	class="bg-base-200 border-base-300 w-[min(90vw,36rem)] rounded-xl border shadow-2xl"
 	popover
 	id="fulfill-order"
 >
 	{#if activeItem && activeOrderInfo}
-		<div class="px-5 py-4 border-b border-base-300 flex items-center gap-3">
+		<div class="border-base-300 flex items-center gap-3 border-b px-5 py-4">
 			{#if activeItem.imageUrl}
-				<img src={activeItem.imageUrl} alt={activeItem.name} class="w-10 h-10 rounded object-cover" />
+				<img
+					src={activeItem.imageUrl}
+					alt={activeItem.name}
+					class="h-10 w-10 rounded object-cover"
+				/>
 			{/if}
-			<h3 class="font-semibold text-sm">{activeItem.name}</h3>
+			<h3 class="text-sm font-semibold">{activeItem.name}</h3>
 		</div>
 	{/if}
 	<div class="p-5">
 		{#if activeItem && activeOrderInfo}
-			<div class="space-y-2 text-sm mb-4">
+			<div class="mb-4 space-y-2 text-sm">
 				<div class="flex justify-between">
 					<span class="text-base-content/60">Country</span>
 					<span>{activeOrderInfo.country}</span>
 				</div>
 				<div class="flex justify-between">
 					<span class="text-base-content/60">Address</span>
-					<span class="blur-sm hover:blur-none transition-all cursor-pointer text-right">
+					<span class="cursor-pointer text-right blur-sm transition-all hover:blur-none">
 						{activeOrderInfo.addressLine1}
 						{#if activeOrderInfo.addressLine2}<br />{activeOrderInfo.addressLine2}{/if}
 					</span>
 				</div>
 				<div class="flex justify-between">
 					<span class="text-base-content/60">Zip / City</span>
-					<span class="blur-sm hover:blur-none transition-all cursor-pointer">
+					<span class="cursor-pointer blur-sm transition-all hover:blur-none">
 						{activeOrderInfo.zipCode}, {activeOrderInfo.city}
 					</span>
 				</div>
 				<div class="flex justify-between">
 					<span class="text-base-content/60">State</span>
-					<span class="blur-sm hover:blur-none transition-all cursor-pointer">{activeOrderInfo.state}</span>
+					<span class="cursor-pointer blur-sm transition-all hover:blur-none"
+						>{activeOrderInfo.state}</span
+					>
 				</div>
 				<div class="flex justify-between">
 					<span class="text-base-content/60">Email</span>
-					<span class="blur-sm hover:blur-none transition-all cursor-pointer">{activeOrderInfo.email}</span>
+					<span class="cursor-pointer blur-sm transition-all hover:blur-none"
+						>{activeOrderInfo.email}</span
+					>
 				</div>
 				<div class="flex justify-between">
 					<span class="text-base-content/60">Full Name</span>
-					<span class="blur-sm hover:blur-none transition-all cursor-pointer">{activeOrderInfo.fullName}</span>
+					<span class="cursor-pointer blur-sm transition-all hover:blur-none"
+						>{activeOrderInfo.fullName}</span
+					>
 				</div>
 			</div>
-			<p class="text-xs text-base-content/40 mb-4">Hover over blurred fields to reveal them.</p>
+			<p class="text-base-content/40 mb-4 text-xs">Hover over blurred fields to reveal them.</p>
 			<form action="?/completeOrder" method="POST">
 				<input type="hidden" value={activeOrderInfo.id} name="orderId" />
 				<div class="flex gap-2">
@@ -92,7 +102,7 @@
 		{:else}
 			<div class="flex items-center justify-center py-8">
 				<span class="loading loading-spinner loading-md"></span>
-				<span class="ml-3 text-sm text-base-content/60">Loading order details...</span>
+				<span class="text-base-content/60 ml-3 text-sm">Loading order details...</span>
 			</div>
 		{/if}
 	</div>
@@ -103,11 +113,11 @@
 
 	<!-- Pending Orders -->
 	<section>
-		<h2 class="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-2">
+		<h2 class="text-base-content/70 mb-2 text-sm font-semibold tracking-wide uppercase">
 			Pending Orders ({data.pendingOrders.length})
 		</h2>
-		<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-			<table class="table table-sm table-zebra">
+		<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border">
+			<table class="table-sm table-zebra table">
 				<thead>
 					<tr>
 						<th>ID</th>
@@ -123,7 +133,11 @@
 							<td class="font-mono text-xs">{orderInfo.order.id}</td>
 							<td>
 								<div class="flex items-center gap-2">
-									<img src={orderInfo.user.avatarUrl ?? '/404.jpg'} alt={orderInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+									<img
+										src={orderInfo.user.avatarUrl ?? '/404.jpg'}
+										alt={orderInfo.user.username}
+										class="h-6 w-6 shrink-0 rounded-full object-cover"
+									/>
 									<a href="/user/{orderInfo.user.id}" class="link link-hover">
 										{orderInfo.user.username}
 									</a>
@@ -132,7 +146,11 @@
 							<td>
 								<div class="flex items-center gap-2">
 									{#if orderInfo.item.imageUrl}
-										<img src={orderInfo.item.imageUrl} alt={orderInfo.item.name} class="w-8 h-8 rounded object-cover shrink-0" />
+										<img
+											src={orderInfo.item.imageUrl}
+											alt={orderInfo.item.name}
+											class="h-8 w-8 shrink-0 rounded object-cover"
+										/>
 									{/if}
 									<a href="/shop/{orderInfo.item.id}" class="link link-hover">
 										{orderInfo.item.name}
@@ -161,7 +179,7 @@
 					{/each}
 					{#if data.pendingOrders.length === 0}
 						<tr>
-							<td colspan="5" class="text-center text-base-content/40 py-6">No pending orders</td>
+							<td colspan="5" class="text-base-content/40 py-6 text-center">No pending orders</td>
 						</tr>
 					{/if}
 				</tbody>
@@ -171,11 +189,11 @@
 
 	<!-- Fulfilled Orders -->
 	<section>
-		<h2 class="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-2">
+		<h2 class="text-base-content/70 mb-2 text-sm font-semibold tracking-wide uppercase">
 			Fulfilled Orders ({data.fulfilledOrders.length})
 		</h2>
-		<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100 opacity-80">
-			<table class="table table-sm table-zebra">
+		<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border opacity-80">
+			<table class="table-sm table-zebra table">
 				<thead>
 					<tr>
 						<th>ID</th>
@@ -191,7 +209,11 @@
 							<td class="font-mono text-xs">{orderInfo.order.id}</td>
 							<td>
 								<div class="flex items-center gap-2">
-									<img src={orderInfo.user.avatarUrl ?? '/404.jpg'} alt={orderInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+									<img
+										src={orderInfo.user.avatarUrl ?? '/404.jpg'}
+										alt={orderInfo.user.username}
+										class="h-6 w-6 shrink-0 rounded-full object-cover"
+									/>
 									<a href="/user/{orderInfo.user.id}" class="link link-hover">
 										{orderInfo.user.username}
 									</a>
@@ -200,7 +222,11 @@
 							<td>
 								<div class="flex items-center gap-2">
 									{#if orderInfo.item.imageUrl}
-										<img src={orderInfo.item.imageUrl} alt={orderInfo.item.name} class="w-8 h-8 rounded object-cover shrink-0 opacity-70" />
+										<img
+											src={orderInfo.item.imageUrl}
+											alt={orderInfo.item.name}
+											class="h-8 w-8 shrink-0 rounded object-cover opacity-70"
+										/>
 									{/if}
 									<a href="/shop/{orderInfo.item.id}" class="link link-hover">
 										{orderInfo.item.name}
@@ -229,7 +255,7 @@
 					{/each}
 					{#if data.fulfilledOrders.length === 0}
 						<tr>
-							<td colspan="5" class="text-center text-base-content/40 py-6">No fulfilled orders</td>
+							<td colspan="5" class="text-base-content/40 py-6 text-center">No fulfilled orders</td>
 						</tr>
 					{/if}
 				</tbody>

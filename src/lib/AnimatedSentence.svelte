@@ -2,7 +2,12 @@
 	import BoldText from './BoldText.svelte';
 	import { onMount } from 'svelte';
 
-	let { text, stroke = '2', class: className = '', style: styleName = '' }: {
+	let {
+		text,
+		stroke = '2',
+		class: className = '',
+		style: styleName = '',
+	}: {
 		text: string;
 		stroke?: string;
 		class?: string;
@@ -22,19 +27,21 @@
 					observer.disconnect();
 				}
 			},
-			{ threshold: 0.1 }
+			{ threshold: 0.1 },
 		);
 		observer.observe(container);
 		return () => observer.disconnect();
 	});
 </script>
 
-<span bind:this={container} class="inline-flex flex-wrap gap-x-[0.3em] {className}" style={styleName}>
+<span
+	bind:this={container}
+	class="inline-flex flex-wrap gap-x-[0.3em] {className}"
+	style={styleName}
+>
 	{#each words as word, i}
-		<span
-			class="word-reveal"
-			class:revealed={visible}
-			style="--word-i: {i}"
-		><BoldText {stroke}>{word}</BoldText></span>
+		<span class="word-reveal" class:revealed={visible} style="--word-i: {i}"
+			><BoldText {stroke}>{word}</BoldText></span
+		>
 	{/each}
 </span>

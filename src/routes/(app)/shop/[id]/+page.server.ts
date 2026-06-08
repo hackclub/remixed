@@ -4,8 +4,9 @@ import { eq, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { decrypt, encrypt } from '$lib/server/crypto';
+import { getPriceForRegion, type ShopRegion, DEFAULT_REGION } from '$lib/shop';
 
-export const load: PageServerLoad = async ({ locals, params }) => {
+export const load: PageServerLoad = async ({ locals, params, url }) => {
 	const itemId = Number(params.id);
 	const [item] = await db.select().from(shopItems).where(eq(shopItems.id, itemId));
 
@@ -27,14 +28,21 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			}
 		: null;
 
-	return { item, balance: locals.user?.notesBalance, address };
+	// Get selected region from query param or use default
+	const selectedRegion = (url.searchParams.get('region') as ShopRegion) || DEFAULT_REGION;
+	const regionPrice = getPriceForRegion(item.regionPrices, selectedRegion);
+
+	return { item, balance: locals.user?.notesBalance, address, regionPrice, selectedRegion };
 };
 
 export const actions: Actions = {
-	placeOrder: async ({ locals, params }) => {
+	placeOrder: async ({ locals, params, request }) => {
 		if (!locals.user) {
 			return fail(401, { error: 'Unauthorized' });
 		}
+
+		const formData = await request.formData();
+		const selectedRegion = (formData.get('selectedRegion') as ShopRegion) || DEFAULT_REGION;
 
 		const itemId = Number(params.id);
 		const [item] = await db.select().from(shopItems).where(eq(shopItems.id, itemId));
@@ -42,7 +50,15 @@ export const actions: Actions = {
 			throw error(404, 'Shop item not found');
 		}
 
-		if (locals.user.notesBalance < item.cost) return fail(400, { error: 'Too Expensive' });
+		const regionPrice = getPriceForRegion(item.regionPrices, selectedRegion);
+
+		if (!regionPrice) {
+			return fail(400, { error: 'Item not available in selected region' });
+		}
+
+		if (locals.user.notesBalance < regionPrice) {
+			return fail(400, { error: 'Too Expensive' });
+		}
 
 		const user = locals.user;
 
@@ -59,6 +75,7 @@ export const actions: Actions = {
 			.values({
 				userId,
 				itemId,
+				purchasedRegion: selectedRegion,
 				fullName,
 				email,
 				addressLine1: user.addressLine1,
@@ -73,11 +90,11 @@ export const actions: Actions = {
 		await Promise.all([
 			db
 				.update(users)
-				.set({ notesBalance: sql`${users.notesBalance} - ${item.cost}` })
+				.set({ notesBalance: sql`${users.notesBalance} - ${regionPrice}` })
 				.where(eq(users.id, userId)),
 			db
 				.insert(notesLedger)
-				.values({ userId, delta: -item.cost, reason: 'purchase_item', refId: orderInfo.id }),
+				.values({ userId, delta: -regionPrice, reason: 'purchase_item', refId: orderInfo.id }),
 		]);
 
 		throw redirect(303, '/shop/orders');

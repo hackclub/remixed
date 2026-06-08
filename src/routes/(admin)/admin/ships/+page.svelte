@@ -84,11 +84,11 @@
 
 	<!-- Pending Reviews -->
 	<section>
-		<h2 class="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-2">
+		<h2 class="text-base-content/70 mb-2 text-sm font-semibold tracking-wide uppercase">
 			Pending Reviews ({filteredPendingShips.length})
 		</h2>
-		<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-			<table class="table table-sm table-zebra">
+		<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border">
+			<table class="table-sm table-zebra table">
 				<thead>
 					<tr>
 						<th>Ship</th>
@@ -108,7 +108,11 @@
 							<td class="font-mono text-xs">#{shipInfo.ship.id}</td>
 							<td>
 								<div class="flex items-center gap-2">
-									<img src={shipInfo.user.avatarUrl ?? '/404.jpg'} alt={shipInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+									<img
+										src={shipInfo.user.avatarUrl ?? '/404.jpg'}
+										alt={shipInfo.user.username}
+										class="h-6 w-6 shrink-0 rounded-full object-cover"
+									/>
 									{shipInfo.user.username}
 								</div>
 							</td>
@@ -116,7 +120,7 @@
 							<td>{formatProjectCategory(shipInfo.project.category)}</td>
 							<td>
 								{#if shipInfo.project.hackatimeProjects.length}
-									<div class="max-w-48 text-xs text-base-content/70">
+									<div class="text-base-content/70 max-w-48 text-xs">
 										{shipInfo.project.hackatimeProjects.join(', ')}
 									</div>
 								{:else}
@@ -127,7 +131,10 @@
 						</tr>
 					{/each}
 					{#if filteredPendingShips.length === 0}
-						<tr><td colspan="6" class="text-center text-base-content/40 py-6">No pending ships</td></tr>
+						<tr
+							><td colspan="6" class="text-base-content/40 py-6 text-center">No pending ships</td
+							></tr
+						>
 					{/if}
 				</tbody>
 			</table>
@@ -137,11 +144,11 @@
 	<!-- Awaiting HQ -->
 	{#if filteredReviewerApprovedShips.length > 0}
 		<section>
-			<h2 class="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-2">
+			<h2 class="text-base-content/70 mb-2 text-sm font-semibold tracking-wide uppercase">
 				Awaiting HQ Approval ({filteredReviewerApprovedShips.length})
 			</h2>
-			<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-				<table class="table table-sm table-zebra">
+			<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border">
+				<table class="table-sm table-zebra table">
 					<thead>
 						<tr>
 							<th>Ship</th>
@@ -160,7 +167,11 @@
 								<td class="font-mono text-xs">#{shipInfo.ship.id}</td>
 								<td>
 									<div class="flex items-center gap-2">
-										<img src={shipInfo.user.avatarUrl ?? '/404.jpg'} alt={shipInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+										<img
+											src={shipInfo.user.avatarUrl ?? '/404.jpg'}
+											alt={shipInfo.user.username}
+											class="h-6 w-6 shrink-0 rounded-full object-cover"
+										/>
 										{shipInfo.user.username}
 									</div>
 								</td>
@@ -177,11 +188,11 @@
 
 	<!-- Reviewed Ships -->
 	<section>
-		<h2 class="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-2">
+		<h2 class="text-base-content/70 mb-2 text-sm font-semibold tracking-wide uppercase">
 			Reviewed Ships
 		</h2>
-		<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-			<table class="table table-sm table-zebra">
+		<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border">
+			<table class="table-sm table-zebra table">
 				<thead>
 					<tr>
 						<th>Ship</th>
@@ -205,7 +216,11 @@
 							<td class="font-mono text-xs">#{shipInfo.ship.id}</td>
 							<td>
 								<div class="flex items-center gap-2">
-									<img src={shipInfo.user.avatarUrl ?? '/404.jpg'} alt={shipInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+									<img
+										src={shipInfo.user.avatarUrl ?? '/404.jpg'}
+										alt={shipInfo.user.username}
+										class="h-6 w-6 shrink-0 rounded-full object-cover"
+									/>
 									{shipInfo.user.username}
 								</div>
 							</td>
@@ -220,7 +235,9 @@
 								{/if}
 							</td>
 							<td>{formatHours(shipInfo.ship.seconds)}</td>
-							<td class="max-w-xs truncate text-xs text-base-content/70">{shipInfo.ship.feedback ?? '—'}</td>
+							<td class="text-base-content/70 max-w-xs truncate text-xs"
+								>{shipInfo.ship.feedback ?? '—'}</td
+							>
 							{#if isOrg}
 								<td>
 									<form action="?/undoReview" method="POST">
@@ -232,7 +249,10 @@
 						</tr>
 					{/each}
 					{#if filteredReviewedShips.length === 0}
-						<tr><td colspan="7" class="text-center text-base-content/40 py-6">No reviewed ships</td></tr>
+						<tr
+							><td colspan="7" class="text-base-content/40 py-6 text-center">No reviewed ships</td
+							></tr
+						>
 					{/if}
 				</tbody>
 			</table>
@@ -241,11 +261,11 @@
 
 	<!-- Deleted Ships -->
 	<section>
-		<h2 class="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-2">
+		<h2 class="text-base-content/70 mb-2 text-sm font-semibold tracking-wide uppercase">
 			Deleted Ships ({filteredDeletedShips.length})
 		</h2>
-		<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-			<table class="table table-sm table-zebra opacity-75">
+		<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border">
+			<table class="table-sm table-zebra table opacity-75">
 				<thead>
 					<tr>
 						<th>Project</th>
@@ -268,7 +288,9 @@
 							<td><span class="badge badge-ghost badge-sm">Deleted</span></td>
 							<td>
 								{#if shipInfo.project?.hackatimeProjects.length}
-									<div class="max-w-48 text-xs">{shipInfo.project.hackatimeProjects.join(', ')}</div>
+									<div class="max-w-48 text-xs">
+										{shipInfo.project.hackatimeProjects.join(', ')}
+									</div>
 								{:else}
 									<span class="text-base-content/30">—</span>
 								{/if}
@@ -280,7 +302,10 @@
 						</tr>
 					{/each}
 					{#if filteredDeletedShips.length === 0}
-						<tr><td colspan="9" class="text-center text-base-content/40 py-6">No deleted ships</td></tr>
+						<tr
+							><td colspan="9" class="text-base-content/40 py-6 text-center">No deleted ships</td
+							></tr
+						>
 					{/if}
 				</tbody>
 			</table>

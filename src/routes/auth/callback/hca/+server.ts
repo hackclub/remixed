@@ -61,7 +61,8 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 		let userId = existingUser?.id;
 		const alreadyLinkedHackatime = Boolean(existingUser?.accessToken);
 
-		const primaryAddress = hcaProfile.addresses?.find((a) => a.primary) ?? hcaProfile.addresses?.[0];
+		const primaryAddress =
+			hcaProfile.addresses?.find((a) => a.primary) ?? hcaProfile.addresses?.[0];
 		const encryptOrKeep = (val: string | undefined | null, existing: string | null | undefined) =>
 			val ? encrypt(val) : (existing ?? null);
 

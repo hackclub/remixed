@@ -9,10 +9,12 @@
 <div class="space-y-6">
 	<div>
 		<h1 class="text-xl font-bold">Overview</h1>
-		<p class="text-base-content/50 text-sm mt-0.5">Platform statistics and administration</p>
+		<p class="text-base-content/50 mt-0.5 text-sm">Platform statistics and administration</p>
 	</div>
 
-	<div class="stats stats-vertical sm:stats-horizontal shadow border border-base-300 w-full bg-base-100">
+	<div
+		class="stats stats-vertical sm:stats-horizontal border-base-300 bg-base-100 w-full border shadow"
+	>
 		{#each data.stats as stat}
 			<div class="stat">
 				<div class="stat-title">{stat.label}</div>
@@ -28,11 +30,11 @@
 		{#each data.adminLinks as link}
 			<a
 				href={link.href}
-				class="card bg-base-100 border border-base-300 hover:border-primary hover:shadow-md transition-all duration-150"
+				class="card bg-base-100 border-base-300 border transition-all duration-150 hover:border-primary hover:shadow-md"
 			>
 				<div class="card-body p-5">
 					<h2 class="card-title text-sm font-semibold">{link.title}</h2>
-					<p class="text-sm text-base-content/60">{link.description}</p>
+					<p class="text-base-content/60 text-sm">{link.description}</p>
 				</div>
 			</a>
 		{/each}

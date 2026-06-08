@@ -3,10 +3,13 @@
 	import Note from '$lib/Note.svelte';
 	import PageHeader from '$lib/PageHeader.svelte';
 	import { onMount } from 'svelte';
+	import { DEFAULT_REGION, getPriceForRegion, ALL_REGIONS, formatRegionName } from '$lib/shop';
+	import type { ShopRegion } from '$lib/shop';
 
 	let shopItems: any[] = $state([]);
 	let mounted = $state(false);
 	let activeCategory = $state<string | null>(null);
+	let selectedRegion = $state<ShopRegion>(DEFAULT_REGION);
 
 	type ShopProps = {
 		data: {
@@ -16,17 +19,35 @@
 
 	let { data }: ShopProps = $props();
 
-	function canAfford(cost: number) {
-		return (data.user?.notesBalance ?? 0) >= cost;
+	function getDisplayPrice(item: any): number | null {
+		return getPriceForRegion(item.regionPrices, selectedRegion) ?? null;
+	}
+
+	function isAvailableInRegion(item: any): boolean {
+		return getDisplayPrice(item) !== null;
+	}
+
+	function canAfford(price: number | null) {
+		if (price === null) return false;
+		return (data.user?.notesBalance ?? 0) >= price;
 	}
 
 	function sortShopItems(items: any[]) {
-		return [...items].sort((a, b) => a.cost - b.cost || a.id - b.id);
+		return [...items]
+			.filter((item) => isAvailableInRegion(item))
+			.sort((a, b) => {
+				const priceA = getDisplayPrice(a) ?? Infinity;
+				const priceB = getDisplayPrice(b) ?? Infinity;
+				return priceA - priceB || a.id - b.id;
+			});
 	}
 
 	function groupByCategory(items: any[]) {
 		const groups: Record<string, any[]> = {};
 		for (const item of items) {
+			// Skip unavailable items
+			if (!isAvailableInRegion(item)) continue;
+
 			let categories = (item.categories ?? []).filter((c: string) => c);
 			categories = categories.length > 0 ? categories : ['Uncategorized'];
 			for (const cat of categories) {
@@ -41,6 +62,12 @@
 	}
 
 	onMount(() => {
+		// Load region from localStorage
+		const savedRegion = localStorage.getItem('selectedRegion') as ShopRegion | null;
+		if (savedRegion && ALL_REGIONS.includes(savedRegion)) {
+			selectedRegion = savedRegion;
+		}
+
 		requestAnimationFrame(() => (mounted = true));
 
 		try {
@@ -59,10 +86,17 @@
 			});
 	});
 
+	function handleRegionChange(region: ShopRegion) {
+		selectedRegion = region;
+		localStorage.setItem('selectedRegion', region);
+	}
+
 	let groupedItems = $derived(groupByCategory(shopItems));
 	let categories = $derived(Object.keys(groupedItems).sort());
 
-	let visibleGroups = $derived(activeCategory ? { [activeCategory]: groupedItems[activeCategory] ?? [] } : groupedItems);
+	let visibleGroups = $derived(
+		activeCategory ? { [activeCategory]: groupedItems[activeCategory] ?? [] } : groupedItems,
+	);
 	let visibleCategories = $derived(activeCategory ? [activeCategory] : categories);
 </script>
 
@@ -72,53 +106,79 @@
 
 <PageHeader title="Shop" subtitle="Spend your notes on rewards for the projects you ship.">
 	{#snippet description()}
-		<div class="flex items-center rounded-2xl border-4 border-[#8B81FF] bg-[#1B2A42] px-4 py-2 text-lg text-[#E2BEFF]">
-			{data.user?.notesBalance ?? 0}<span style="filter: brightness(0) saturate(100%) invert(80%) sepia(37%) saturate(392%) hue-rotate(215deg) brightness(105%)"><Note /></span>
+		<div
+			class="flex items-center rounded-2xl border-4 border-[#8B81FF] bg-[#1B2A42] px-4 py-2 text-lg text-[#E2BEFF]"
+		>
+			{data.user?.notesBalance ?? 0}<span
+				style="filter: brightness(0) saturate(100%) invert(80%) sepia(37%) saturate(392%) hue-rotate(215deg) brightness(105%)"
+				><Note /></span
+			>
 		</div>
 		<a
 			href="/shop/orders"
 			class="hover-effect-shadow inline-flex cursor-pointer items-center gap-2 rounded-xl border-4 border-[#8B81FF] bg-text px-5 py-2 text-lg text-[#E2BEFF]"
 		>
 			<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-				<circle cx="10" cy="10" r="9" fill="#E2BEFF"/>
-				<text x="10" y="10" text-anchor="middle" dominant-baseline="central" font-family="Jua" font-size="11" fill="#1B2A42">B</text>
+				<circle cx="10" cy="10" r="9" fill="#E2BEFF" />
+				<text
+					x="10"
+					y="10"
+					text-anchor="middle"
+					dominant-baseline="central"
+					font-family="Jua"
+					font-size="11"
+					fill="#1B2A42">B</text
+				>
 			</svg>
 			Orders
 		</a>
 	{/snippet}
 </PageHeader>
 
-<div class="relative z-2 flex min-h-screen w-full flex-col items-center px-4 pt-56 pb-40 sm:px-8">
-
-	<!-- Category tab navigation -->
-	{#if categories.length > 1}
-		<div
-			class="no-scrollbar mb-8 flex w-full max-w-[90rem] gap-2 overflow-x-auto pt-2 pb-2 block-reveal"
-			class:revealed={mounted}
-			style="--block-i:0; --block-stagger:100ms"
-		>
-			<button
-				onclick={() => (activeCategory = null)}
-				class="hover-effect-shadow shrink-0 cursor-pointer rounded-xl border-4 px-5 py-2 font-jua text-lg transition-colors
-					{activeCategory === null
+<div class="relative z-2 flex min-h-screen w-full flex-col items-center px-4 pt-64 pb-40 sm:px-8">
+	<!-- Category and Region selector navigation -->
+	<div class="mb-8 flex w-full max-w-[90rem] items-center gap-2">
+		<!-- Category tabs (scrollable left side) -->
+		{#if categories.length > 0}
+			<div
+				class="no-scrollbar block-reveal flex flex-1 gap-2 overflow-x-auto pt-2 pb-2"
+				class:revealed={mounted}
+				style="--block-i:0; --block-stagger:100ms"
+			>
+				<button
+					onclick={() => (activeCategory = null)}
+					class="hover-effect-shadow shrink-0 cursor-pointer rounded-xl border-4 px-5 py-2 font-jua text-lg transition-colors
+						{activeCategory === null
 						? 'border-primary bg-primary text-text'
 						: 'border-[#8B81FF] bg-text text-[#E2BEFF]'}"
-			>
-				All
-			</button>
-			{#each categories as cat}
-				<button
-					onclick={() => (activeCategory = activeCategory === cat ? null : cat)}
-					class="hover-effect-shadow shrink-0 cursor-pointer rounded-xl border-4 px-5 py-2 font-jua text-lg transition-colors
-						{activeCategory === cat
+				>
+					All
+				</button>
+				{#each categories as cat}
+					<button
+						onclick={() => (activeCategory = activeCategory === cat ? null : cat)}
+						class="hover-effect-shadow shrink-0 cursor-pointer rounded-xl border-4 px-5 py-2 font-jua text-lg transition-colors
+							{activeCategory === cat
 							? 'border-secondary bg-secondary text-text'
 							: 'border-[#8B81FF] bg-text text-[#E2BEFF]'}"
-				>
-					{cat}
-				</button>
+					>
+						{cat}
+					</button>
+				{/each}
+			</div>
+		{/if}
+
+		<!-- Region selector (fixed right side) -->
+		<select
+			value={selectedRegion}
+			onchange={(e) => handleRegionChange(e.currentTarget.value as ShopRegion)}
+			class="hover-effect-shadow shrink-0 cursor-pointer rounded-xl border-4 border-[#8B81FF] bg-text px-5 py-2 font-jua text-lg text-[#E2BEFF] transition-colors"
+		>
+			{#each ALL_REGIONS as region}
+				<option value={region}>{formatRegionName(region)}</option>
 			{/each}
-		</div>
-	{/if}
+		</select>
+	</div>
 
 	<!-- Item grid -->
 	{#if shopItems.length > 0}
@@ -143,7 +203,8 @@
 
 					<div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
 						{#each visibleGroups[category] as item, itemIdx}
-							{@const affordable = canAfford(item.cost)}
+							{@const displayPrice = getDisplayPrice(item)}
+							{@const affordable = canAfford(displayPrice)}
 							<a
 								href="/shop/{item.id}"
 								class="hover-effect-shadow group relative flex flex-col overflow-hidden rounded-[1.5rem] border-4 border-[#8B81FF] bg-text transition-all hover:border-secondary"
@@ -157,12 +218,56 @@
 										class="h-full w-full object-contain p-6 transition-transform duration-300 group-hover:scale-105"
 									/>
 
-									<!-- Can't-afford lock badge -->
-									{#if !affordable}
-										<div class="absolute top-3 right-3 flex items-center gap-1.5 rounded-xl border-2 border-accent-red/60 bg-text/90 px-3 py-1.5 font-jua text-sm text-accent-red">
-											<svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-												<rect x="2" y="5.5" width="9" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
-												<path d="M4.5 5.5V4a2 2 0 1 1 4 0v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+									<!-- Can't-afford lock badge or unavailable badge -->
+									{#if displayPrice === null}
+										<div
+											class="absolute top-3 right-3 flex items-center gap-1.5 rounded-xl border-2 border-accent-red/60 bg-text/90 px-3 py-1.5 font-jua text-sm text-accent-red"
+										>
+											<svg
+												width="13"
+												height="13"
+												viewBox="0 0 13 13"
+												fill="none"
+												aria-hidden="true"
+											>
+												<circle cx="6.5" cy="6.5" r="6" stroke="currentColor" stroke-width="1" />
+												<line
+													x1="4"
+													y1="6.5"
+													x2="9"
+													y2="6.5"
+													stroke="currentColor"
+													stroke-width="1"
+												/>
+											</svg>
+											Unavailable
+										</div>
+									{:else if !affordable}
+										<div
+											class="absolute top-3 right-3 flex items-center gap-1.5 rounded-xl border-2 border-accent-red/60 bg-text/90 px-3 py-1.5 font-jua text-sm text-accent-red"
+										>
+											<svg
+												width="13"
+												height="13"
+												viewBox="0 0 13 13"
+												fill="none"
+												aria-hidden="true"
+											>
+												<rect
+													x="2"
+													y="5.5"
+													width="9"
+													height="7"
+													rx="1.5"
+													stroke="currentColor"
+													stroke-width="1.5"
+												/>
+												<path
+													d="M4.5 5.5V4a2 2 0 1 1 4 0v1.5"
+													stroke="currentColor"
+													stroke-width="1.5"
+													stroke-linecap="round"
+												/>
 											</svg>
 											Need more notes
 										</div>
@@ -186,23 +291,44 @@
 										<!-- Price tag -->
 										<div
 											class="shrink-0 rounded-xl px-3 py-1 text-lg leading-none
-												{affordable
+												{displayPrice === null
+												? 'border-2 border-gray-400 bg-gray-400/10 text-gray-400'
+												: affordable
 													? 'border-4 border-primary bg-primary text-text'
-													: 'ring-4 ring-accent-red/60 bg-accent-red/10 text-accent-red'}"
+													: 'bg-accent-red/10 text-accent-red ring-4 ring-accent-red/60'}"
 										>
-											{item.cost}{#if affordable}<Note />{:else}<span style="filter: invert(1)"><Note /></span>{/if}
+											{displayPrice ?? '—'}
+											{#if displayPrice && affordable}
+												<Note />
+											{:else if displayPrice}
+												<span style="filter: invert(1)"><Note /></span>
+											{/if}
 										</div>
 									</div>
 
-									<p class="grow text-base text-[#E2BEFF]/60 leading-snug">{item.description}</p>
+									<p class="grow text-base leading-snug text-[#E2BEFF]/60">{item.description}</p>
 
 									<!-- "A" button CTA -->
 									<div
 										class="mt-1 flex items-center gap-2 self-end rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-4 py-2 text-base text-[#E2BEFF]/70 transition-colors group-hover:border-secondary group-hover:text-secondary"
 									>
 										<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-											<circle cx="10" cy="10" r="9" fill="#E2BEFF" class="transition-all group-hover:fill-secondary"/>
-											<text x="10" y="10" text-anchor="middle" dominant-baseline="central" font-family="Jua" font-size="11" fill="#1B2A42">A</text>
+											<circle
+												cx="10"
+												cy="10"
+												r="9"
+												fill="#E2BEFF"
+												class="transition-all group-hover:fill-secondary"
+											/>
+											<text
+												x="10"
+												y="10"
+												text-anchor="middle"
+												dominant-baseline="central"
+												font-family="Jua"
+												font-size="11"
+												fill="#1B2A42">A</text
+											>
 										</svg>
 										View
 									</div>
@@ -216,7 +342,7 @@
 	{:else}
 		<!-- Empty state -->
 		<div
-			class="w-full max-w-3xl rounded-[2rem] border-4 border-[#8B81FF] bg-text px-8 py-14 text-center font-jua shadow-xl/30 block-reveal"
+			class="block-reveal w-full max-w-3xl rounded-[2rem] border-4 border-[#8B81FF] bg-text px-8 py-14 text-center font-jua shadow-xl/30"
 			class:revealed={mounted}
 			style="--block-i:0; --block-stagger:100ms"
 		>

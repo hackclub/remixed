@@ -57,13 +57,13 @@
 <!-- Edit user popover -->
 <div
 	bind:this={manageUserPopover}
-	class="bg-base-200 shadow-2xl rounded-xl border border-base-300 w-[min(96vw,48rem)] max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain"
+	class="bg-base-200 border-base-300 max-h-[calc(100vh-2rem)] w-[min(96vw,48rem)] overflow-y-auto overscroll-contain rounded-xl border shadow-2xl"
 	popover
 	id="manage-user"
 >
 	{#if activeUser}
-		<div class="px-5 py-4 border-b border-base-300">
-			<h3 class="font-semibold text-sm">Edit User</h3>
+		<div class="border-base-300 border-b px-5 py-4">
+			<h3 class="text-sm font-semibold">Edit User</h3>
 		</div>
 		<div class="p-5">
 			<form action="?/updateUser" method="POST" class="space-y-3">
@@ -73,19 +73,19 @@
 					<div class="alert alert-error text-sm">{form.error}</div>
 				{/if}
 
-				<div class="grid grid-cols-2 gap-3 mb-2">
+				<div class="mb-2 grid grid-cols-2 gap-3">
 					<div class="bg-base-300 rounded-lg p-3">
-						<p class="text-xs text-base-content/50">User ID</p>
+						<p class="text-base-content/50 text-xs">User ID</p>
 						<p class="font-mono text-sm">{activeUser.id}</p>
 					</div>
 					<div class="bg-base-300 rounded-lg p-3">
-						<p class="text-xs text-base-content/50">Created</p>
+						<p class="text-base-content/50 text-xs">Created</p>
 						<p class="text-sm">{activeUser.createdAt}</p>
 					</div>
 				</div>
 
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Username</legend>
+					<legend class="fieldset-legend text-xs font-normal">Username</legend>
 					<input
 						name="username"
 						class="input input-bordered input-sm w-full"
@@ -95,7 +95,7 @@
 				</fieldset>
 
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Slack ID</legend>
+					<legend class="fieldset-legend text-xs font-normal">Slack ID</legend>
 					<input
 						name="slackId"
 						class="input input-bordered input-sm w-full font-mono"
@@ -105,7 +105,7 @@
 				</fieldset>
 
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">HCA ID</legend>
+					<legend class="fieldset-legend text-xs font-normal">HCA ID</legend>
 					<input
 						name="hcaId"
 						class="input input-bordered input-sm w-full font-mono"
@@ -114,7 +114,7 @@
 				</fieldset>
 
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Avatar URL</legend>
+					<legend class="fieldset-legend text-xs font-normal">Avatar URL</legend>
 					<input
 						name="avatarUrl"
 						type="url"
@@ -124,7 +124,7 @@
 				</fieldset>
 
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Notes Balance</legend>
+					<legend class="fieldset-legend text-xs font-normal">Notes Balance</legend>
 					<input
 						name="notesBalance"
 						type="number"
@@ -136,7 +136,7 @@
 				</fieldset>
 
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Referrals</legend>
+					<legend class="fieldset-legend text-xs font-normal">Referrals</legend>
 					<input
 						name="referrals"
 						type="number"
@@ -148,11 +148,17 @@
 				</fieldset>
 
 				<fieldset class="fieldset p-0">
-					<legend class="fieldset-legend font-normal text-xs">Roles (Ctrl+Click to multi-select)</legend>
-					<select multiple name="userRoles" class="select select-bordered select-sm w-full h-28">
-						<option value="ORGANIZER" selected={activeUser.roles.includes('ORGANIZER')}>Organizer</option>
+					<legend class="fieldset-legend text-xs font-normal"
+						>Roles (Ctrl+Click to multi-select)</legend
+					>
+					<select multiple name="userRoles" class="select select-bordered select-sm h-28 w-full">
+						<option value="ORGANIZER" selected={activeUser.roles.includes('ORGANIZER')}
+							>Organizer</option
+						>
 						<option value="HQ" selected={activeUser.roles.includes('HQ')}>HQ</option>
-						<option value="REVIEWER" selected={activeUser.roles.includes('REVIEWER')}>Reviewer</option>
+						<option value="REVIEWER" selected={activeUser.roles.includes('REVIEWER')}
+							>Reviewer</option
+						>
 						<option value="STAFF" selected={activeUser.roles.includes('STAFF')}>Staff</option>
 					</select>
 				</fieldset>
@@ -182,8 +188,8 @@
 		placeholder="Search users, Slack IDs, HCA IDs, roles, or balances"
 	/>
 
-	<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-		<table class="table table-sm table-zebra">
+	<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border">
+		<table class="table-sm table-zebra table">
 			<thead>
 				<tr>
 					<th>ID</th>
@@ -202,7 +208,11 @@
 						<td class="font-mono text-xs">{user.id}</td>
 						<td>
 							<div class="flex items-center gap-2">
-								<img src={user.avatarUrl ?? '/404.jpg'} alt={user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+								<img
+									src={user.avatarUrl ?? '/404.jpg'}
+									alt={user.username}
+									class="h-6 w-6 shrink-0 rounded-full object-cover"
+								/>
 								<a href="/user/{user.id}" class="link link-hover">{user.username}</a>
 							</div>
 						</td>
@@ -240,7 +250,7 @@
 					</tr>
 				{/each}
 				{#if filteredUsers.length === 0}
-					<tr><td colspan="8" class="text-center text-base-content/40 py-6">No users found</td></tr>
+					<tr><td colspan="8" class="text-base-content/40 py-6 text-center">No users found</td></tr>
 				{/if}
 			</tbody>
 		</table>

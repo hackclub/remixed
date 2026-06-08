@@ -48,19 +48,19 @@
 <!-- HQ Approve popover -->
 <div
 	bind:this={approvePopover}
-	class="bg-base-200 shadow-2xl rounded-xl border border-base-300 w-[min(90vw,36rem)]"
+	class="bg-base-200 border-base-300 w-[min(90vw,36rem)] rounded-xl border shadow-2xl"
 	popover
 	id="hq-approve"
 >
-	<div class="px-5 py-4 border-b border-base-300">
-		<h3 class="font-semibold text-sm">Final Approve</h3>
+	<div class="border-base-300 border-b px-5 py-4">
+		<h3 class="text-sm font-semibold">Final Approve</h3>
 	</div>
 	<div class="p-5">
 		<form action="?/hqApprove" method="POST" class="space-y-3">
 			<input type="hidden" name="shipId" value={activeShipId} />
-			<p class="text-sm text-base-content/60">Ship time: {formatHours(activeShipSeconds)}</p>
+			<p class="text-base-content/60 text-sm">Ship time: {formatHours(activeShipSeconds)}</p>
 			<fieldset class="fieldset p-0">
-				<legend class="fieldset-legend font-normal text-xs">Final Approved Hours</legend>
+				<legend class="fieldset-legend text-xs font-normal">Final Approved Hours</legend>
 				<input
 					type="number"
 					name="adjustedHours"
@@ -72,7 +72,9 @@
 				/>
 			</fieldset>
 			<fieldset class="fieldset p-0">
-				<legend class="fieldset-legend font-normal text-xs">Notes per Hour — ${hourlyRate}/hr</legend>
+				<legend class="fieldset-legend text-xs font-normal"
+					>Notes per Hour — ${hourlyRate}/hr</legend
+				>
 				<div class="flex items-center gap-3">
 					<input
 						type="range"
@@ -98,11 +100,11 @@
 					This goes over the regular program payout amount! If in doubt — ask in the channel!
 				</div>
 			{/if}
-			<p class="text-xs text-base-content/50">
+			<p class="text-base-content/50 text-xs">
 				Payout: {notesPayout} notes ({adjustedHours}h x {notesPerHour} notes/h)
 			</p>
 			<fieldset class="fieldset p-0">
-				<legend class="fieldset-legend font-normal text-xs">Comment for shipper (required)</legend>
+				<legend class="fieldset-legend text-xs font-normal">Comment for shipper (required)</legend>
 				<textarea
 					required
 					name="userComment"
@@ -112,7 +114,9 @@
 				></textarea>
 			</fieldset>
 			<fieldset class="fieldset p-0">
-				<legend class="fieldset-legend font-normal text-xs">Internal comment / Hours justification (required)</legend>
+				<legend class="fieldset-legend text-xs font-normal"
+					>Internal comment / Hours justification (required)</legend
+				>
 				<textarea
 					required
 					name="internalComment"
@@ -136,18 +140,20 @@
 <!-- HQ Reject popover -->
 <div
 	bind:this={rejectPopover}
-	class="bg-base-200 shadow-2xl rounded-xl border border-base-300 w-[min(90vw,36rem)]"
+	class="bg-base-200 border-base-300 w-[min(90vw,36rem)] rounded-xl border shadow-2xl"
 	popover
 	id="hq-reject"
 >
-	<div class="px-5 py-4 border-b border-base-300">
-		<h3 class="font-semibold text-sm">Return to Queue</h3>
+	<div class="border-base-300 border-b px-5 py-4">
+		<h3 class="text-sm font-semibold">Return to Queue</h3>
 	</div>
 	<div class="p-5">
 		<form action="?/hqReject" method="POST" class="space-y-3">
 			<input type="hidden" name="shipId" value={activeShipId} />
 			<fieldset class="fieldset p-0">
-				<legend class="fieldset-legend font-normal text-xs">Internal comment (required, shipper NOT notified)</legend>
+				<legend class="fieldset-legend text-xs font-normal"
+					>Internal comment (required, shipper NOT notified)</legend
+				>
 				<textarea
 					required
 					name="internalComment"
@@ -170,19 +176,19 @@
 <!-- Backfill Airtable popover -->
 <div
 	bind:this={backfillPopover}
-	class="bg-base-200 shadow-2xl rounded-xl border border-base-300 w-[min(90vw,36rem)]"
+	class="bg-base-200 border-base-300 w-[min(90vw,36rem)] rounded-xl border shadow-2xl"
 	popover
 	id="backfill-airtable"
 >
-	<div class="px-5 py-4 border-b border-base-300">
-		<h3 class="font-semibold text-sm">Backfill to Airtable</h3>
-		<p class="text-xs text-base-content/50 mt-0.5">Ship #{backfillShipId}</p>
+	<div class="border-base-300 border-b px-5 py-4">
+		<h3 class="text-sm font-semibold">Backfill to Airtable</h3>
+		<p class="text-base-content/50 mt-0.5 text-xs">Ship #{backfillShipId}</p>
 	</div>
 	<div class="p-5">
 		<form action="?/backfillAirtable" method="POST" class="space-y-3">
 			<input type="hidden" name="shipId" value={backfillShipId} />
 			<fieldset class="fieldset p-0">
-				<legend class="fieldset-legend font-normal text-xs">Hours justification (required)</legend>
+				<legend class="fieldset-legend text-xs font-normal">Hours justification (required)</legend>
 				<textarea
 					required
 					name="justification"
@@ -206,23 +212,23 @@
 <!-- Revoke Legacy Ship popover -->
 <div
 	bind:this={revokePopover}
-	class="bg-base-200 shadow-2xl rounded-xl border border-base-300 w-[min(90vw,36rem)]"
+	class="bg-base-200 border-base-300 w-[min(90vw,36rem)] rounded-xl border shadow-2xl"
 	popover
 	id="revoke-legacy"
 >
-	<div class="px-5 py-4 border-b border-base-300">
-		<h3 class="font-semibold text-sm text-error">Revoke Legacy Ship</h3>
-		<p class="text-xs text-base-content/50 mt-0.5">Ship #{revokeShipId}</p>
+	<div class="border-base-300 border-b px-5 py-4">
+		<h3 class="text-error text-sm font-semibold">Revoke Legacy Ship</h3>
+		<p class="text-base-content/50 mt-0.5 text-xs">Ship #{revokeShipId}</p>
 	</div>
 	<div class="p-5">
-		<p class="text-xs text-base-content/60 mb-4">
+		<p class="text-base-content/60 mb-4 text-xs">
 			This will cancel the ship, deduct awarded notes, cancel pending orders if the balance goes
 			negative, and notify the user via Slack.
 		</p>
 		<form action="?/revokeLegacyShip" method="POST" class="space-y-3">
 			<input type="hidden" name="shipId" value={revokeShipId} />
 			<fieldset class="fieldset p-0">
-				<legend class="fieldset-legend font-normal text-xs">Reason (required, sent to user)</legend>
+				<legend class="fieldset-legend text-xs font-normal">Reason (required, sent to user)</legend>
 				<textarea
 					required
 					name="reason"
@@ -247,14 +253,14 @@
 	<h1 class="text-xl font-bold">HQ Review Queue ({data.ships.length})</h1>
 
 	{#if data.ships.length === 0}
-		<div class="card bg-base-100 border border-base-300">
-			<div class="card-body py-10 text-center text-base-content/40">
+		<div class="card bg-base-100 border-base-300 border">
+			<div class="card-body text-base-content/40 py-10 text-center">
 				No ships awaiting HQ approval.
 			</div>
 		</div>
 	{:else}
-		<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-			<table class="table table-sm table-zebra">
+		<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border">
+			<table class="table-sm table-zebra table">
 				<thead>
 					<tr>
 						<th>Ship</th>
@@ -273,13 +279,20 @@
 					{#each data.ships as shipInfo}
 						<tr>
 							<td>
-								<a href="/admin/ships/{shipInfo.project.id}" class="link link-hover font-mono text-xs">
+								<a
+									href="/admin/ships/{shipInfo.project.id}"
+									class="link link-hover font-mono text-xs"
+								>
 									#{shipInfo.ship.id}
 								</a>
 							</td>
 							<td>
 								<div class="flex items-center gap-2">
-									<img src={shipInfo.user.avatarUrl ?? '/404.jpg'} alt={shipInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+									<img
+										src={shipInfo.user.avatarUrl ?? '/404.jpg'}
+										alt={shipInfo.user.username}
+										class="h-6 w-6 shrink-0 rounded-full object-cover"
+									/>
 									<a href="/user/{shipInfo.user.id}" class="link link-hover">
 										{shipInfo.user.username}
 									</a>
@@ -323,11 +336,13 @@
 									: ''}
 								{#if shipInfo.approval?.review.adjustedHours != null}
 									{@const rate = shipInfo.approval?.review.notesPerHour ?? NOTES_PER_HOUR}
-									<span class="text-xs text-base-content/50">@ ${(rate * NOTE_VALUE_USD).toFixed(2)}/hr</span>
+									<span class="text-base-content/50 text-xs"
+										>@ ${(rate * NOTE_VALUE_USD).toFixed(2)}/hr</span
+									>
 								{/if}
 							</td>
 							<td class="max-w-xs">
-								<div class="truncate text-xs text-base-content/70">
+								<div class="text-base-content/70 truncate text-xs">
 									{shipInfo.approval?.review.internalComment ?? '—'}
 								</div>
 							</td>
@@ -353,10 +368,10 @@
 	{/if}
 
 	<!-- Screenshot backfill -->
-	<div class="card bg-base-100 border border-base-300">
+	<div class="card bg-base-100 border-base-300 border">
 		<div class="card-body p-5">
-			<h2 class="font-semibold text-sm mb-1">Backfill Screenshots to R2</h2>
-			<p class="text-xs text-base-content/60 mb-4">
+			<h2 class="mb-1 text-sm font-semibold">Backfill Screenshots to R2</h2>
+			<p class="text-base-content/60 mb-4 text-xs">
 				Uploads all project screenshots still stored as raw external URLs to our R2 bucket. Run once
 				after enabling R2 storage.
 			</p>
@@ -365,7 +380,7 @@
 			</form>
 			{#if form && 'backfillResult' in form && form.backfillResult}
 				{@const r = form.backfillResult}
-				<div class="mt-4 text-sm space-y-1">
+				<div class="mt-4 space-y-1 text-sm">
 					<p>Total to migrate: {r.total}</p>
 					<p class="text-success">Succeeded: {r.succeeded}</p>
 					{#if r.failed > 0}
@@ -382,14 +397,14 @@
 	<!-- Legacy Approved Ships -->
 	{#if data.legacyApprovedShips.length > 0}
 		<section>
-			<h2 class="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-2">
+			<h2 class="text-base-content/70 mb-2 text-sm font-semibold tracking-wide uppercase">
 				Legacy Approved Ships ({data.legacyApprovedShips.length})
 			</h2>
-			<p class="text-xs text-base-content/50 mb-3">
+			<p class="text-base-content/50 mb-3 text-xs">
 				Approved ships that can be synced (or re-synced) to Airtable.
 			</p>
-			<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-				<table class="table table-sm table-zebra">
+			<div class="rounded-box border-base-300 bg-base-100 overflow-x-auto border">
+				<table class="table-sm table-zebra table">
 					<thead>
 						<tr>
 							<th>Ship</th>
@@ -408,7 +423,11 @@
 								<td class="font-mono text-xs">#{shipInfo.ship.id}</td>
 								<td>
 									<div class="flex items-center gap-2">
-										<img src={shipInfo.user.avatarUrl ?? '/404.jpg'} alt={shipInfo.user.username} class="w-6 h-6 rounded-full object-cover shrink-0" />
+										<img
+											src={shipInfo.user.avatarUrl ?? '/404.jpg'}
+											alt={shipInfo.user.username}
+											class="h-6 w-6 shrink-0 rounded-full object-cover"
+										/>
 										<a href="/user/{shipInfo.user.id}" class="link link-hover">
 											{shipInfo.user.username}
 										</a>
@@ -463,7 +482,8 @@
 													: 'Legacy approval, backfilled to Airtable';
 											}}
 											popovertarget="backfill-airtable"
-										>{shipInfo.airtableSynced ? 'Re-sync' : 'Backfill'}</button>
+											>{shipInfo.airtableSynced ? 'Re-sync' : 'Backfill'}</button
+										>
 										<button
 											class="btn btn-xs btn-error btn-outline"
 											type="button"
@@ -471,8 +491,8 @@
 												revokeShipId = String(shipInfo.ship.id);
 												revokeReason = '';
 											}}
-											popovertarget="revoke-legacy"
-										>Revoke</button>
+											popovertarget="revoke-legacy">Revoke</button
+										>
 									</div>
 								</td>
 							</tr>

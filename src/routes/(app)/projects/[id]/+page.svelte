@@ -64,17 +64,36 @@
 	const isOwner = data.currentUserId == data.project?.userId;
 
 	const CATEGORY_META: Record<string, { img: string; pathway: string; displayLabel: string }> = {
-		RHYTHM_GAME:  { img: '/landing/crunch_magenta.png', pathway: 'Pathway #1', displayLabel: 'rhythm game'   },
-		AUDIO_EDITOR: { img: '/landing/crunch_yellow.png',  pathway: 'Pathway #2', displayLabel: 'audio editor'  },
-		MUSIC_PLAYER: { img: '/landing/crunch_pink.png',    pathway: 'Pathway #3', displayLabel: 'music player'  },
-		WILDCARD:     { img: '/landing/crunch_sparkly.png', pathway: 'Wildcard',   displayLabel: 'anything else' },
+		RHYTHM_GAME: {
+			img: '/landing/crunch_magenta.png',
+			pathway: 'Pathway #1',
+			displayLabel: 'rhythm game',
+		},
+		AUDIO_EDITOR: {
+			img: '/landing/crunch_yellow.png',
+			pathway: 'Pathway #2',
+			displayLabel: 'audio editor',
+		},
+		MUSIC_PLAYER: {
+			img: '/landing/crunch_pink.png',
+			pathway: 'Pathway #3',
+			displayLabel: 'music player',
+		},
+		WILDCARD: {
+			img: '/landing/crunch_sparkly.png',
+			pathway: 'Wildcard',
+			displayLabel: 'anything else',
+		},
 	};
 	const CATEGORY_ORDER = ['RHYTHM_GAME', 'AUDIO_EDITOR', 'MUSIC_PLAYER', 'WILDCARD'];
 	const CATEGORY_ROTATIONS: Record<string, number> = {
-		RHYTHM_GAME: -3, AUDIO_EDITOR: 2, MUSIC_PLAYER: -2, WILDCARD: 3,
+		RHYTHM_GAME: -3,
+		AUDIO_EDITOR: 2,
+		MUSIC_PLAYER: -2,
+		WILDCARD: 3,
 	};
 	const sortedCategories = [...PROJECT_CATEGORY_OPTIONS].sort(
-		(a, b) => CATEGORY_ORDER.indexOf(a.value) - CATEGORY_ORDER.indexOf(b.value)
+		(a, b) => CATEGORY_ORDER.indexOf(a.value) - CATEGORY_ORDER.indexOf(b.value),
 	);
 
 	function formatTime(seconds: number): string {
@@ -89,7 +108,9 @@
 	let editOpen = $state(false);
 	let editVisible = $state(false);
 	let editSelectedCategory = $state(draft.category ?? PROJECT_CATEGORY_OPTIONS[0].value);
-	let editSelectedIndex = $derived(sortedCategories.findIndex(c => c.value === editSelectedCategory));
+	let editSelectedIndex = $derived(
+		sortedCategories.findIndex((c) => c.value === editSelectedCategory),
+	);
 	let editHoveredIndex = $state(-1);
 	let editSelectedHackatimeProjects = $state([...(data.project?.hackatimeProjects ?? [])]);
 
@@ -163,262 +184,463 @@
 </div>
 
 {#if editOpen}
-    <!-- Backdrop -->
-    <div
-        class="fixed inset-0 z-40 bg-[#0d1a2d]/75 backdrop-blur-sm transition-opacity duration-300"
-        style="opacity: {editVisible ? 1 : 0}"
-        onclick={closeEdit}
-        role="presentation"
-    ></div>
+	<!-- Backdrop -->
+	<div
+		class="fixed inset-0 z-40 bg-[#0d1a2d]/75 backdrop-blur-sm transition-opacity duration-300"
+		style="opacity: {editVisible ? 1 : 0}"
+		onclick={closeEdit}
+		role="presentation"
+	></div>
 
-    <!-- Modal scroll container -->
-    <div
-        class="fixed inset-0 z-50 overflow-y-auto project-scroll"
-        onclick={(e) => { if (e.target === e.currentTarget) closeEdit(); }}
-    >
-        <div class="flex min-h-full items-start justify-center px-4 py-12 pb-24">
-            <!-- Modal panel -->
-            <div
-                class="w-full max-w-4xl transition-all duration-300"
-                style="opacity: {editVisible ? 1 : 0}; transform: translateY({editVisible ? '0' : '2rem'})"
-            >
-                <form method="POST" action="?/update" class="flex flex-col gap-4 font-jua">
-                    <!-- Header Banner -->
-                    <div class="relative overflow-hidden rounded-[2rem] border-4 border-[#8B81FF] bg-text px-8 py-7 shadow-2xl/30 sm:px-14 sm:py-9">
-                        <div class="pointer-events-none absolute inset-0 opacity-5" style="background-image: repeating-linear-gradient(0deg, #fff 0px, #fff 1px, transparent 1px, transparent 32px), repeating-linear-gradient(90deg, #fff 0px, #fff 1px, transparent 1px, transparent 32px);"></div>
-                        <div class="relative flex items-center gap-6">
-                            <div class="hidden flex-col gap-1.5 sm:flex" aria-hidden="true">
-                                <div class="h-3 w-3 rounded-full bg-secondary shadow-sm"></div>
-                                <div class="h-3 w-3 rounded-full bg-accent-purple shadow-sm"></div>
-                                <div class="h-3 w-3 rounded-full bg-primary shadow-sm"></div>
-                                <div class="h-3 w-3 rounded-full bg-accent-red shadow-sm"></div>
-                            </div>
-                            <div class="flex-1">
-                                <h1 class="font-daydream text-2xl text-[#E2BEFF] text-shadow-flat sm:text-4xl">Edit Project</h1>
-                                <p class="mt-1 text-sm text-[#E2BEFF]/60 sm:text-base">All changes take effect on save.</p>
-                            </div>
-                            <button
-                                type="button"
-                                onclick={closeEdit}
-                                class="flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-[#E2BEFF]/20 text-2xl text-[#E2BEFF]/60 transition-colors hover:border-[#E2BEFF]/50 hover:text-[#E2BEFF]"
-                                aria-label="Close"
-                            >×</button>
-                        </div>
-                    </div>
+	<!-- Modal scroll container -->
+	<div
+		class="project-scroll fixed inset-0 z-50 overflow-y-auto"
+		onclick={(e) => {
+			if (e.target === e.currentTarget) closeEdit();
+		}}
+	>
+		<div class="flex min-h-full items-start justify-center px-4 py-12 pb-24">
+			<!-- Modal panel -->
+			<div
+				class="w-full max-w-4xl transition-all duration-300"
+				style="opacity: {editVisible ? 1 : 0}; transform: translateY({editVisible ? '0' : '2rem'})"
+			>
+				<form method="POST" action="?/update" class="flex flex-col gap-4 font-jua">
+					<!-- Header Banner -->
+					<div
+						class="relative overflow-hidden rounded-[2rem] border-4 border-[#8B81FF] bg-text px-8 py-7 shadow-2xl/30 sm:px-14 sm:py-9"
+					>
+						<div
+							class="pointer-events-none absolute inset-0 opacity-5"
+							style="background-image: repeating-linear-gradient(0deg, #fff 0px, #fff 1px, transparent 1px, transparent 32px), repeating-linear-gradient(90deg, #fff 0px, #fff 1px, transparent 1px, transparent 32px);"
+						></div>
+						<div class="relative flex items-center gap-6">
+							<div class="hidden flex-col gap-1.5 sm:flex" aria-hidden="true">
+								<div class="h-3 w-3 rounded-full bg-secondary shadow-sm"></div>
+								<div class="h-3 w-3 rounded-full bg-accent-purple shadow-sm"></div>
+								<div class="h-3 w-3 rounded-full bg-primary shadow-sm"></div>
+								<div class="h-3 w-3 rounded-full bg-accent-red shadow-sm"></div>
+							</div>
+							<div class="flex-1">
+								<h1 class="font-daydream text-2xl text-[#E2BEFF] text-shadow-flat sm:text-4xl">
+									Edit Project
+								</h1>
+								<p class="mt-1 text-sm text-[#E2BEFF]/60 sm:text-base">
+									All changes take effect on save.
+								</p>
+							</div>
+							<button
+								type="button"
+								onclick={closeEdit}
+								class="flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-[#E2BEFF]/20 text-2xl text-[#E2BEFF]/60 transition-colors hover:border-[#E2BEFF]/50 hover:text-[#E2BEFF]"
+								aria-label="Close">×</button
+							>
+						</div>
+					</div>
 
-                    <!-- Step 01 — Title -->
-                    <div class="rounded-[1.5rem] border-4 border-secondary/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-secondary sm:px-8">
-                        <div class="mb-3 flex items-center gap-3">
-                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-text">01</div>
-                            <label class="text-2xl text-[#E2BEFF]" for="edit-title">Title</label>
-                            <span class="ml-auto text-xs tracking-widest text-accent-red uppercase">Required</span>
-                        </div>
-                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Give your project a cool name!</p>
-                        <input type="text" id="edit-title" name="title" class="w-full rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 text-xl text-[#E2BEFF] outline-none transition-colors focus:border-secondary" bind:value={draft.title} required />
-                    </div>
+					<!-- Step 01 — Title -->
+					<div
+						class="rounded-[1.5rem] border-4 border-secondary/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-secondary sm:px-8"
+					>
+						<div class="mb-3 flex items-center gap-3">
+							<div
+								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-text"
+							>
+								01
+							</div>
+							<label class="text-2xl text-[#E2BEFF]" for="edit-title">Title</label>
+							<span class="ml-auto text-xs tracking-widest text-accent-red uppercase">Required</span
+							>
+						</div>
+						<p class="mb-3 text-sm text-[#E2BEFF]/60">Give your project a cool name!</p>
+						<input
+							type="text"
+							id="edit-title"
+							name="title"
+							class="w-full rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 text-xl text-[#E2BEFF] transition-colors outline-none focus:border-secondary"
+							bind:value={draft.title}
+							required
+						/>
+					</div>
 
-                    <!-- Step 02 — Description -->
-                    <div class="rounded-[1.5rem] border-4 border-accent-purple/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-accent-purple sm:px-8">
-                        <div class="mb-3 flex items-center gap-3">
-                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-purple text-xs font-bold text-text">02</div>
-                            <label class="text-2xl text-[#E2BEFF]" for="edit-description">Description</label>
-                            <span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase">Optional</span>
-                        </div>
-                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Describe what your project is in detail.</p>
-                        <textarea id="edit-description" name="description" rows="5" class="w-full resize-none rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 text-xl text-[#E2BEFF] outline-none transition-colors focus:border-accent-purple" bind:value={draft.description}></textarea>
-                    </div>
+					<!-- Step 02 — Description -->
+					<div
+						class="rounded-[1.5rem] border-4 border-accent-purple/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-accent-purple sm:px-8"
+					>
+						<div class="mb-3 flex items-center gap-3">
+							<div
+								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-purple text-xs font-bold text-text"
+							>
+								02
+							</div>
+							<label class="text-2xl text-[#E2BEFF]" for="edit-description">Description</label>
+							<span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase"
+								>Optional</span
+							>
+						</div>
+						<p class="mb-3 text-sm text-[#E2BEFF]/60">Describe what your project is in detail.</p>
+						<textarea
+							id="edit-description"
+							name="description"
+							rows="5"
+							class="w-full resize-none rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 text-xl text-[#E2BEFF] transition-colors outline-none focus:border-accent-purple"
+							bind:value={draft.description}
+						></textarea>
+					</div>
 
-                    <!-- Step 03 — Category -->
-                    <div class="rounded-[1.5rem] border-4 border-primary/40 bg-text px-6 py-8 shadow-xl/20 sm:px-8 sm:pb-12">
-                        <div class="mb-3 flex items-center gap-3">
-                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-text">03</div>
-                            <span class="text-2xl text-[#E2BEFF]">Category</span>
-                        </div>
-                        <p class="mb-16 text-sm text-[#E2BEFF]/60">What kind of project are ya making?</p>
-                        <div class="flex justify-center overflow-visible">
-                            {#each sortedCategories as option, i}
-                                {@const meta = CATEGORY_META[option.value]}
-                                {@const selected = editSelectedCategory === option.value}
-                                {@const hovered = editHoveredIndex === i && !selected}
-                                {@const rot = selected ? 0 : CATEGORY_ROTATIONS[option.value]}
-                                {@const txSelected = i < editSelectedIndex ? -28 : i > editSelectedIndex ? 28 : 0}
-                                {@const txHover = !selected && editHoveredIndex !== -1 ? (i < editHoveredIndex ? -14 : i > editHoveredIndex ? 14 : 0) : 0}
-                                {@const tx = txSelected + txHover}
-                                {@const ty = hovered ? -10 : 0}
-                                {@const scale = selected ? 1.06 : hovered ? 1.04 : 1}
-                                <label
-                                    class="w-44 cursor-pointer flex-shrink-0"
-                                    style="transform: rotate({rot}deg) translate({tx}px, {ty}px) scale({scale}); margin-left: {i === 0 ? '0' : '-18px'}; z-index: {selected ? 10 : hovered ? 9 : i}; transition: transform 0.25s ease;"
-                                    onmouseenter={() => editHoveredIndex = i}
-                                    onmouseleave={() => editHoveredIndex = -1}
-                                >
-                                    <input type="radio" name="category" value={option.value} class="sr-only" bind:group={editSelectedCategory} />
-                                    <div class="rounded-2xl p-1 transition-colors duration-200 drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)] {selected ? 'bg-linear-to-br from-primary to-[#8FD82A]' : 'bg-linear-to-br from-secondary to-[#53C1D7]'}">
-                                        <div class="relative flex flex-col items-center justify-center rounded-xl bg-text px-5 pb-5 pt-24">
-                                            <div class="pointer-events-none absolute -top-24 left-1/2 flex h-44 w-4/5 -translate-x-1/2 items-end justify-center">
-                                                <img src={meta.img} alt={meta.displayLabel} class="h-full w-full object-contain object-bottom" />
-                                            </div>
-                                            <p class="text-center text-base tracking-widest text-[#E2BEFF]/50 uppercase leading-none">{meta.pathway}</p>
-                                            <BoldText class="text-center! font-jua text-2xl leading-tight">{meta.displayLabel}</BoldText>
-                                        </div>
-                                    </div>
-                                </label>
-                            {/each}
-                        </div>
-                    </div>
+					<!-- Step 03 — Category -->
+					<div
+						class="rounded-[1.5rem] border-4 border-primary/40 bg-text px-6 py-8 shadow-xl/20 sm:px-8 sm:pb-12"
+					>
+						<div class="mb-3 flex items-center gap-3">
+							<div
+								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-text"
+							>
+								03
+							</div>
+							<span class="text-2xl text-[#E2BEFF]">Category</span>
+						</div>
+						<p class="mb-16 text-sm text-[#E2BEFF]/60">What kind of project are ya making?</p>
+						<div class="flex justify-center overflow-visible">
+							{#each sortedCategories as option, i}
+								{@const meta = CATEGORY_META[option.value]}
+								{@const selected = editSelectedCategory === option.value}
+								{@const hovered = editHoveredIndex === i && !selected}
+								{@const rot = selected ? 0 : CATEGORY_ROTATIONS[option.value]}
+								{@const txSelected = i < editSelectedIndex ? -28 : i > editSelectedIndex ? 28 : 0}
+								{@const txHover =
+									!selected && editHoveredIndex !== -1
+										? i < editHoveredIndex
+											? -14
+											: i > editHoveredIndex
+												? 14
+												: 0
+										: 0}
+								{@const tx = txSelected + txHover}
+								{@const ty = hovered ? -10 : 0}
+								{@const scale = selected ? 1.06 : hovered ? 1.04 : 1}
+								<label
+									class="w-44 flex-shrink-0 cursor-pointer"
+									style="transform: rotate({rot}deg) translate({tx}px, {ty}px) scale({scale}); margin-left: {i ===
+									0
+										? '0'
+										: '-18px'}; z-index: {selected
+										? 10
+										: hovered
+											? 9
+											: i}; transition: transform 0.25s ease;"
+									onmouseenter={() => (editHoveredIndex = i)}
+									onmouseleave={() => (editHoveredIndex = -1)}
+								>
+									<input
+										type="radio"
+										name="category"
+										value={option.value}
+										class="sr-only"
+										bind:group={editSelectedCategory}
+									/>
+									<div
+										class="rounded-2xl p-1 drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)] transition-colors duration-200 {selected
+											? 'bg-linear-to-br from-primary to-[#8FD82A]'
+											: 'bg-linear-to-br from-secondary to-[#53C1D7]'}"
+									>
+										<div
+											class="relative flex flex-col items-center justify-center rounded-xl bg-text px-5 pt-24 pb-5"
+										>
+											<div
+												class="pointer-events-none absolute -top-24 left-1/2 flex h-44 w-4/5 -translate-x-1/2 items-end justify-center"
+											>
+												<img
+													src={meta.img}
+													alt={meta.displayLabel}
+													class="h-full w-full object-contain object-bottom"
+												/>
+											</div>
+											<p
+												class="text-center text-base leading-none tracking-widest text-[#E2BEFF]/50 uppercase"
+											>
+												{meta.pathway}
+											</p>
+											<BoldText class="text-center! font-jua text-2xl leading-tight"
+												>{meta.displayLabel}</BoldText
+											>
+										</div>
+									</div>
+								</label>
+							{/each}
+						</div>
+					</div>
 
-                    <!-- Step 04 — Hackatime Projects -->
-                    <div class="rounded-[1.5rem] border-4 border-accent-red/40 bg-text px-6 py-5 shadow-xl/20 sm:px-8">
-                        <div class="mb-3 flex items-center gap-3">
-                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-red text-xs font-bold text-text">04</div>
-                            <span class="text-2xl text-[#E2BEFF]">Hackatime Projects</span>
-                        </div>
-                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Select all projects that count towards this submission.</p>
-                        <div class="project-scroll max-h-72 overflow-y-auto rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] p-2">
-                            {#if hackatimeProjects === null}
-                                <p class="px-4 py-6 text-center text-[#E2BEFF]/40">Loading...</p>
-                            {:else if hackatimeProjects.filter((p: any) => p.claimedBy == null || p.claimedBy == data.project!.id).length > 0}
-                                {#each hackatimeProjects.filter((p: any) => p.claimedBy == null || p.claimedBy == data.project!.id) as proj}
-                                    <label class="group relative flex cursor-pointer items-center gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-[#E2BEFF]/5 has-[:checked]:bg-primary/10">
-                                        <input type="checkbox" name="hackatimeProjects" value={(proj as any).name} bind:group={editSelectedHackatimeProjects} class="peer sr-only" />
-                                        <div class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 border-[#8B81FF]/50 bg-[#0d0f1a] transition-all peer-checked:border-primary peer-checked:bg-primary">
-                                            <svg class="h-3 w-3 text-text opacity-0 transition-opacity group-has-[:checked]:opacity-100" viewBox="0 0 12 10" fill="none" aria-hidden="true">
-                                                <path d="M1.5 5l3 3.5 6-8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-                                        </div>
-                                        <span class="flex-1 text-lg text-[#E2BEFF]">{(proj as any).name}</span>
-                                        {#if (proj as any).totalSeconds > 0}
-                                            <span class="font-mono text-sm text-[#E2BEFF]/40">{formatTime((proj as any).totalSeconds)}</span>
-                                        {/if}
-                                    </label>
-                                {/each}
-                            {:else}
-                                <p class="px-4 py-6 text-center text-[#E2BEFF]/40">No projects found</p>
-                            {/if}
-                        </div>
-                    </div>
+					<!-- Step 04 — Hackatime Projects -->
+					<div
+						class="rounded-[1.5rem] border-4 border-accent-red/40 bg-text px-6 py-5 shadow-xl/20 sm:px-8"
+					>
+						<div class="mb-3 flex items-center gap-3">
+							<div
+								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-red text-xs font-bold text-text"
+							>
+								04
+							</div>
+							<span class="text-2xl text-[#E2BEFF]">Hackatime Projects</span>
+						</div>
+						<p class="mb-3 text-sm text-[#E2BEFF]/60">
+							Select all projects that count towards this submission.
+						</p>
+						<div
+							class="project-scroll max-h-72 overflow-y-auto rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] p-2"
+						>
+							{#if hackatimeProjects === null}
+								<p class="px-4 py-6 text-center text-[#E2BEFF]/40">Loading...</p>
+							{:else if hackatimeProjects.filter((p: any) => p.claimedBy == null || p.claimedBy == data.project!.id).length > 0}
+								{#each hackatimeProjects.filter((p: any) => p.claimedBy == null || p.claimedBy == data.project!.id) as proj}
+									<label
+										class="group relative flex cursor-pointer items-center gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-[#E2BEFF]/5 has-[:checked]:bg-primary/10"
+									>
+										<input
+											type="checkbox"
+											name="hackatimeProjects"
+											value={(proj as any).name}
+											bind:group={editSelectedHackatimeProjects}
+											class="peer sr-only"
+										/>
+										<div
+											class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 border-[#8B81FF]/50 bg-[#0d0f1a] transition-all peer-checked:border-primary peer-checked:bg-primary"
+										>
+											<svg
+												class="h-3 w-3 text-text opacity-0 transition-opacity group-has-[:checked]:opacity-100"
+												viewBox="0 0 12 10"
+												fill="none"
+												aria-hidden="true"
+											>
+												<path
+													d="M1.5 5l3 3.5 6-8"
+													stroke="currentColor"
+													stroke-width="2.2"
+													stroke-linecap="round"
+													stroke-linejoin="round"
+												/>
+											</svg>
+										</div>
+										<span class="flex-1 text-lg text-[#E2BEFF]">{(proj as any).name}</span>
+										{#if (proj as any).totalSeconds > 0}
+											<span class="font-mono text-sm text-[#E2BEFF]/40"
+												>{formatTime((proj as any).totalSeconds)}</span
+											>
+										{/if}
+									</label>
+								{/each}
+							{:else}
+								<p class="px-4 py-6 text-center text-[#E2BEFF]/40">No projects found</p>
+							{/if}
+						</div>
+					</div>
 
-                    <!-- Step 05 — Screenshot -->
-                    <div class="rounded-[1.5rem] border-4 border-[#8B81FF]/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-[#8B81FF] sm:px-8">
-                        <div class="mb-3 flex items-center gap-3">
-                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#8B81FF] text-xs font-bold text-text">05</div>
-                            <label class="text-2xl text-[#E2BEFF]" for="edit-screenshotFile">Screenshot</label>
-                            <span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase">Optional</span>
-                        </div>
-                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Upload a screenshot of your project. Required before shipping.</p>
-                        {#if draft.coverArt}
-                            <img src={draft.coverArt} alt="Current screenshot" class="mb-3 h-32 w-full rounded-xl object-cover object-center" onerror={(e: any) => (e.currentTarget.src = '/404.jpg')} />
-                        {/if}
-                        <input type="file" id="edit-screenshotFile" accept="image/*" class="w-full cursor-pointer rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 text-lg text-[#E2BEFF] outline-none file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-[#8B81FF]/30 file:px-4 file:py-2 file:font-jua file:text-[#E2BEFF]" disabled={screenshotUploading} onchange={handleScreenshotChange} />
-                        {#if screenshotUploading}<p class="mt-2 text-sm text-[#E2BEFF]/60">Uploading…</p>{/if}
-                        {#if screenshotError}<p class="mt-2 text-sm text-accent-red">{screenshotError}</p>{/if}
-                        <input type="hidden" name="coverArt" value={draft.coverArt ?? ''} />
-                    </div>
+					<!-- Step 05 — Screenshot -->
+					<div
+						class="rounded-[1.5rem] border-4 border-[#8B81FF]/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-[#8B81FF] sm:px-8"
+					>
+						<div class="mb-3 flex items-center gap-3">
+							<div
+								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#8B81FF] text-xs font-bold text-text"
+							>
+								05
+							</div>
+							<label class="text-2xl text-[#E2BEFF]" for="edit-screenshotFile">Screenshot</label>
+							<span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase"
+								>Optional</span
+							>
+						</div>
+						<p class="mb-3 text-sm text-[#E2BEFF]/60">
+							Upload a screenshot of your project. Required before shipping.
+						</p>
+						{#if draft.coverArt}
+							<img
+								src={draft.coverArt}
+								alt="Current screenshot"
+								class="mb-3 h-32 w-full rounded-xl object-cover object-center"
+								onerror={(e: any) => (e.currentTarget.src = '/404.jpg')}
+							/>
+						{/if}
+						<input
+							type="file"
+							id="edit-screenshotFile"
+							accept="image/*"
+							class="w-full cursor-pointer rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 text-lg text-[#E2BEFF] outline-none file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-[#8B81FF]/30 file:px-4 file:py-2 file:font-jua file:text-[#E2BEFF]"
+							disabled={screenshotUploading}
+							onchange={handleScreenshotChange}
+						/>
+						{#if screenshotUploading}<p class="mt-2 text-sm text-[#E2BEFF]/60">Uploading…</p>{/if}
+						{#if screenshotError}<p class="mt-2 text-sm text-accent-red">{screenshotError}</p>{/if}
+						<input type="hidden" name="coverArt" value={draft.coverArt ?? ''} />
+					</div>
 
-                    <!-- Step 06 — Repository URL -->
-                    <div class="rounded-[1.5rem] border-4 border-secondary/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-secondary sm:px-8">
-                        <div class="mb-3 flex items-center gap-3">
-                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-text">06</div>
-                            <label class="text-2xl text-[#E2BEFF]" for="edit-githubUrl">Repository URL</label>
-                            <span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase">Optional</span>
-                        </div>
-                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Link to your project's source code.</p>
-                        <input type="url" id="edit-githubUrl" name="githubUrl" class="w-full rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 font-mono text-sm text-[#E2BEFF] outline-none transition-colors focus:border-secondary" bind:value={draft.githubUrl} />
-                    </div>
+					<!-- Step 06 — Repository URL -->
+					<div
+						class="rounded-[1.5rem] border-4 border-secondary/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-secondary sm:px-8"
+					>
+						<div class="mb-3 flex items-center gap-3">
+							<div
+								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-text"
+							>
+								06
+							</div>
+							<label class="text-2xl text-[#E2BEFF]" for="edit-githubUrl">Repository URL</label>
+							<span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase"
+								>Optional</span
+							>
+						</div>
+						<p class="mb-3 text-sm text-[#E2BEFF]/60">Link to your project's source code.</p>
+						<input
+							type="url"
+							id="edit-githubUrl"
+							name="githubUrl"
+							class="w-full rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 font-mono text-sm text-[#E2BEFF] transition-colors outline-none focus:border-secondary"
+							bind:value={draft.githubUrl}
+						/>
+					</div>
 
-                    <!-- Step 07 — Demo URL -->
-                    <div class="rounded-[1.5rem] border-4 border-accent-purple/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-accent-purple sm:px-8">
-                        <div class="mb-3 flex items-center gap-3">
-                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-purple text-xs font-bold text-text">07</div>
-                            <label class="text-2xl text-[#E2BEFF]" for="edit-demoUrl">Demo URL</label>
-                            <span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase">Optional</span>
-                        </div>
-                        <p class="mb-3 text-sm text-[#E2BEFF]/60">Link to a live demo of your project.</p>
-                        <input type="url" id="edit-demoUrl" name="demoUrl" class="w-full rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 font-mono text-sm text-[#E2BEFF] outline-none transition-colors focus:border-accent-purple" bind:value={draft.demoUrl} />
-                    </div>
+					<!-- Step 07 — Demo URL -->
+					<div
+						class="rounded-[1.5rem] border-4 border-accent-purple/40 bg-text px-6 py-5 shadow-xl/20 transition-colors focus-within:border-accent-purple sm:px-8"
+					>
+						<div class="mb-3 flex items-center gap-3">
+							<div
+								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-purple text-xs font-bold text-text"
+							>
+								07
+							</div>
+							<label class="text-2xl text-[#E2BEFF]" for="edit-demoUrl">Demo URL</label>
+							<span class="ml-auto text-xs tracking-widest text-[#E2BEFF]/40 uppercase"
+								>Optional</span
+							>
+						</div>
+						<p class="mb-3 text-sm text-[#E2BEFF]/60">Link to a live demo of your project.</p>
+						<input
+							type="url"
+							id="edit-demoUrl"
+							name="demoUrl"
+							class="w-full rounded-xl border-2 border-[#8B81FF]/50 bg-[#0d1a2d] px-5 py-3 font-mono text-sm text-[#E2BEFF] transition-colors outline-none focus:border-accent-purple"
+							bind:value={draft.demoUrl}
+						/>
+					</div>
 
-                    <!-- Save button -->
-                    <div class="flex justify-center pb-4">
-                        <button type="submit" class="hover-effect-shadow inline-flex cursor-pointer items-center gap-3 rounded-xl border-4 border-[#8B81FF] bg-text px-10 py-2 text-center text-2xl text-[#E2BEFF]">
-                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-                                <circle cx="14" cy="14" r="13" fill="#E2BEFF"/>
-                                <text x="14" y="14" text-anchor="middle" dominant-baseline="central" font-family="Jua" font-size="16" fill="#1B2A42">A</text>
-                            </svg>
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+					<!-- Save button -->
+					<div class="flex justify-center pb-4">
+						<button
+							type="submit"
+							class="hover-effect-shadow inline-flex cursor-pointer items-center gap-3 rounded-xl border-4 border-[#8B81FF] bg-text px-10 py-2 text-center text-2xl text-[#E2BEFF]"
+						>
+							<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+								<circle cx="14" cy="14" r="13" fill="#E2BEFF" />
+								<text
+									x="14"
+									y="14"
+									text-anchor="middle"
+									dominant-baseline="central"
+									font-family="Jua"
+									font-size="16"
+									fill="#1B2A42">A</text
+								>
+							</svg>
+							Save Changes
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
 {/if}
 
 <!-- Main Layout -->
-<div class="relative flex min-h-screen w-full flex-col overflow-hidden pb-0 lg:flex-row lg:gap-4 lg:pb-32">
+<div
+	class="relative flex min-h-screen w-full flex-col overflow-hidden pb-0 lg:flex-row lg:gap-4 lg:pb-32"
+>
 	<!-- Left Side -->
-	<div class="flex w-full shrink-0 flex-col gap-6 px-6 pt-8 sm:px-10 lg:w-[55%] lg:gap-10 lg:pl-20 lg:pr-0 lg:pt-16">
+	<div
+		class="flex w-full shrink-0 flex-col gap-6 px-6 pt-8 sm:px-10 lg:w-[55%] lg:gap-10 lg:pt-16 lg:pr-0 lg:pl-20"
+	>
 		<!-- Screenshot area -->
 		<div class="relative -rotate-3">
 			<!-- Disc behind screenshot -->
 			<img
 				src="/project/disc.png"
 				alt=""
-				class="absolute -top-6 left-2 z-0 aspect-square w-52 object-cover sm:w-64 lg:-top-8 lg:left-4 lg:w-88 anim-disc"
+				class="anim-disc absolute -top-6 left-2 z-0 aspect-square w-52 object-cover sm:w-64 lg:-top-8 lg:left-4 lg:w-88"
 				class:anim-active={anim}
 			/>
 
 			<!-- Screenshot Cover -->
-			<div class="pointer-events-none relative z-10 mt-14 flex w-fit sm:mt-16 lg:mt-20 anim-cover" class:anim-active={anim}>
+			<div
+				class="anim-cover pointer-events-none relative z-10 mt-14 flex w-fit sm:mt-16 lg:mt-20"
+				class:anim-active={anim}
+			>
 				<!-- Category Sidebar -->
 				<div
 					class="flex h-[200px] w-10 shrink-0 items-center justify-center overflow-hidden bg-[#1d3047] sm:h-[250px] sm:w-11 lg:h-[310px] lg:w-12"
 				>
 					<p
-						class="-rotate-90 whitespace-nowrap font-nikkyou text-[20px] tracking-tight text-[#8b81ff] text-shadow-flat sm:text-[24px] lg:text-[28px]"
+						class="-rotate-90 font-nikkyou text-[20px] tracking-tight whitespace-nowrap text-[#8b81ff] text-shadow-flat sm:text-[24px] lg:text-[28px]"
 					>
 						{formatProjectCategory(data.project!.category).toUpperCase()}
 					</p>
 				</div>
 				<!-- Screenshot Image -->
-				<div class="h-[200px] w-[200px] shrink-0 overflow-hidden shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] sm:h-[250px] sm:w-[250px] lg:h-[310px] lg:w-[305px]">
-					<CoverArt
-						src={draft.coverArt}
-						class="h-full w-full object-cover"
-					/>
+				<div
+					class="h-[200px] w-[200px] shrink-0 overflow-hidden shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] sm:h-[250px] sm:w-[250px] lg:h-[310px] lg:w-[305px]"
+				>
+					<CoverArt src={draft.coverArt} class="h-full w-full object-cover" />
 				</div>
 			</div>
 
 			<!-- Repo / Demo Buttons - tucked behind screenshot on desktop -->
 			<div class="hidden lg:absolute lg:top-28 lg:left-[340px] lg:z-5 lg:flex lg:flex-col lg:gap-7">
 				{#if validUrl(draft.githubUrl)}
-					<a href={draft.githubUrl} target="_blank" rel="noopener noreferrer" class="skew-btn group relative block w-96 anim-btn-repo" class:anim-active={anim} class:anim-done={animDone}>
+					<a
+						href={draft.githubUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="skew-btn group anim-btn-repo relative block w-96"
+						class:anim-active={anim}
+						class:anim-done={animDone}
+					>
 						<img
 							src="/project/skew-btn-bg.svg"
 							alt=""
 							class="pointer-events-none h-24 w-full -scale-y-100 skew-x-2"
 						/>
-						<div class="absolute inset-0 flex flex-col items-start justify-center pl-14 rotate-1">
+						<div class="absolute inset-0 flex rotate-1 flex-col items-start justify-center pl-14">
 							<p class="font-nikkyou text-[32px] tracking-tight text-[#e2beff] text-shadow-flat">
 								REPO
 							</p>
-							<p class="font-nikkyou text-[16px] tracking-tight text-[#e2beff] text-shadow-flat opacity-80">
+							<p
+								class="font-nikkyou text-[16px] tracking-tight text-[#e2beff] opacity-80 text-shadow-flat"
+							>
 								View the source code!
 							</p>
 						</div>
 					</a>
 				{/if}
 				{#if validUrl(draft.demoUrl)}
-					<a href={draft.demoUrl} target="_blank" rel="noopener noreferrer" class="skew-btn group relative block w-96 anim-btn-demo" class:anim-active={anim} class:anim-done={animDone}>
+					<a
+						href={draft.demoUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="skew-btn group anim-btn-demo relative block w-96"
+						class:anim-active={anim}
+						class:anim-done={animDone}
+					>
 						<img
 							src="/project/skew-btn-bg-alt.svg"
 							alt=""
-							class="pointer-events-none h-24 w-full skew-x-2 -scale-y-100"
+							class="pointer-events-none h-24 w-full -scale-y-100 skew-x-2"
 						/>
-						<div class="absolute inset-0 flex flex-col items-start justify-center pl-14 rotate-1">
+						<div class="absolute inset-0 flex rotate-1 flex-col items-start justify-center pl-14">
 							<p class="font-nikkyou text-[32px] tracking-tight text-[#e2beff] text-shadow-flat">
 								DEMO
 							</p>
-							<p class="font-nikkyou text-[16px] tracking-tight text-[#e2beff] text-shadow-flat opacity-80">
+							<p
+								class="font-nikkyou text-[16px] tracking-tight text-[#e2beff] opacity-80 text-shadow-flat"
+							>
 								Use the project!
 							</p>
 						</div>
@@ -434,15 +656,17 @@
 					{draft.title}
 				</BoldText>
 			</div>
-			<div class="flex items-end gap-2 sm:gap-3 anim-info-sub" class:anim-active={anim}>
+			<div class="anim-info-sub flex items-end gap-2 sm:gap-3" class:anim-active={anim}>
 				<CoverArt
 					src={data.user.avatarUrl ?? undefined}
 					class="h-7 w-7 shrink-0 rounded-full shadow-lg sm:h-9 sm:w-9"
 				/>
-				<p class="font-jua text-[22px] leading-none tracking-tight text-white text-shadow-flat sm:text-[26px] lg:text-[32px]">
+				<p
+					class="font-jua text-[22px] leading-none tracking-tight text-white text-shadow-flat sm:text-[26px] lg:text-[32px]"
+				>
 					by <a href="/user/{data.user.id}" class="hover:underline">@{data.user.username}</a>
 					{#if data.project.hackatimeProjects.length > 0}
-						<span class="whitespace-pre"> &bull;  {hoursText}</span>
+						<span class="whitespace-pre"> &bull; {hoursText}</span>
 					{/if}
 				</p>
 			</div>
@@ -451,34 +675,52 @@
 		<!-- Mobile Repo / Demo Buttons - full width, touching left edge -->
 		<div class="-ml-9 flex flex-col gap-4 sm:-ml-14 lg:hidden">
 			{#if validUrl(draft.githubUrl)}
-				<a href={draft.githubUrl} target="_blank" rel="noopener noreferrer" class="skew-btn group relative block w-full">
+				<a
+					href={draft.githubUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="skew-btn group relative block w-full"
+				>
 					<img
 						src="/project/skew-btn-bg.svg"
 						alt=""
 						class="pointer-events-none h-20 w-full -scale-y-100 sm:h-24"
 					/>
 					<div class="absolute inset-0 flex flex-col items-start justify-center pl-8 sm:pl-12">
-						<p class="font-nikkyou text-[28px] tracking-tight text-[#e2beff] text-shadow-flat sm:text-[32px]">
+						<p
+							class="font-nikkyou text-[28px] tracking-tight text-[#e2beff] text-shadow-flat sm:text-[32px]"
+						>
 							REPO
 						</p>
-						<p class="font-nikkyou text-[14px] tracking-tight text-[#e2beff] text-shadow-flat opacity-80 sm:text-[16px]">
+						<p
+							class="font-nikkyou text-[14px] tracking-tight text-[#e2beff] opacity-80 text-shadow-flat sm:text-[16px]"
+						>
 							View the source code!
 						</p>
 					</div>
 				</a>
 			{/if}
 			{#if validUrl(draft.demoUrl)}
-				<a href={draft.demoUrl} target="_blank" rel="noopener noreferrer" class="skew-btn group relative block w-full">
+				<a
+					href={draft.demoUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="skew-btn group relative block w-full"
+				>
 					<img
 						src="/project/skew-btn-bg-alt.svg"
 						alt=""
 						class="pointer-events-none h-20 w-full -scale-y-100 sm:h-24"
 					/>
 					<div class="absolute inset-0 flex flex-col items-start justify-center pl-8 sm:pl-12">
-						<p class="font-nikkyou text-[28px] tracking-tight text-[#e2beff] text-shadow-flat sm:text-[32px]">
+						<p
+							class="font-nikkyou text-[28px] tracking-tight text-[#e2beff] text-shadow-flat sm:text-[32px]"
+						>
 							DEMO
 						</p>
-						<p class="font-nikkyou text-[14px] tracking-tight text-[#e2beff] text-shadow-flat opacity-80 sm:text-[16px]">
+						<p
+							class="font-nikkyou text-[14px] tracking-tight text-[#e2beff] opacity-80 text-shadow-flat sm:text-[16px]"
+						>
 							Use the project!
 						</p>
 					</div>
@@ -488,28 +730,49 @@
 	</div>
 
 	<!-- Right Side -->
-	<div class="relative mt-8 flex w-full grow flex-col items-center px-6 pb-48 sm:px-10 lg:mt-0 lg:items-end lg:px-0 lg:pb-0 lg:pt-0 anim-sidebar" class:anim-active={anim}>
+	<div
+		class="anim-sidebar relative mt-8 flex w-full grow flex-col items-center px-6 pb-48 sm:px-10 lg:mt-0 lg:items-end lg:px-0 lg:pt-0 lg:pb-0"
+		class:anim-active={anim}
+	>
 		<!-- Mobile: solid background -->
 		<div class="absolute inset-0 bg-[#1c2c44] lg:hidden"></div>
 		<!-- Desktop: tilted SVG panel -->
-		<svg preserveAspectRatio="none" overflow="visible" viewBox="0 0 779.186 1007.73" fill="none" xmlns="http://www.w3.org/2000/svg"
+		<svg
+			preserveAspectRatio="none"
+			overflow="visible"
+			viewBox="0 0 779.186 1007.73"
+			fill="none"
+			xmlns="http://www.w3.org/2000/svg"
 			class="pointer-events-none absolute -top-24 -right-32 hidden h-[120vh] w-[900px] -rotate-3 select-none lg:block"
 			style="filter: drop-shadow(-16px -16px 0px #083f91)"
-			aria-hidden="true">
-			<path d="M138.716 51.6958L779.186 16L612.865 956.205L16 1007.73L138.716 51.6958Z" fill="url(#paint0_linear_0_9)"/>
+			aria-hidden="true"
+		>
+			<path
+				d="M138.716 51.6958L779.186 16L612.865 956.205L16 1007.73L138.716 51.6958Z"
+				fill="url(#paint0_linear_0_9)"
+			/>
 			<defs>
-				<linearGradient id="paint0_linear_0_9" x1="-72.7156" y1="282.29" x2="1409.96" y2="282.29" gradientUnits="userSpaceOnUse">
-					<stop stop-color="#1D3047"/>
-					<stop offset="1" stop-color="#1B2A42"/>
+				<linearGradient
+					id="paint0_linear_0_9"
+					x1="-72.7156"
+					y1="282.29"
+					x2="1409.96"
+					y2="282.29"
+					gradientUnits="userSpaceOnUse"
+				>
+					<stop stop-color="#1D3047" />
+					<stop offset="1" stop-color="#1B2A42" />
 				</linearGradient>
 			</defs>
 		</svg>
 
 		<!-- Right content overlay -->
-		<div class="relative z-10 flex w-full flex-col gap-8 pt-10 sm:pt-12 lg:w-[400px] lg:gap-11 lg:pt-16 lg:pr-16">
+		<div
+			class="relative z-10 flex w-full flex-col gap-8 pt-10 sm:pt-12 lg:w-[400px] lg:gap-11 lg:pt-16 lg:pr-16"
+		>
 			<!-- Description -->
 			<div
-				class="description-scroll prose max-h-[55vh] overflow-y-auto text-left font-jua text-xl leading-normal tracking-tight text-[#f2e2ff] prose-a:text-secondary prose-strong:text-[#f2e2ff] sm:text-2xl lg:text-right"
+				class="description-scroll prose max-h-[55vh] overflow-y-auto text-left font-jua text-xl leading-normal tracking-tight text-[#f2e2ff] sm:text-2xl lg:text-right prose-a:text-secondary prose-strong:text-[#f2e2ff]"
 			>
 				{@html data.descriptionHtml}
 			</div>
@@ -518,7 +781,7 @@
 			{#if isOwner}
 				<div class="flex w-full items-center gap-1">
 					<button
-						class="flex h-[48px] grow cursor-pointer items-center justify-center gap-4 rounded-[20px] border-4 border-[#8b81ff] bg-[#1c2c44] px-4 shadow-md hover-effect-shadow font-jua text-xl tracking-tight text-[#f2e2ff] lg:h-[53px] lg:text-2xl"
+						class="hover-effect-shadow flex h-[48px] grow cursor-pointer items-center justify-center gap-4 rounded-[20px] border-4 border-[#8b81ff] bg-[#1c2c44] px-4 font-jua text-xl tracking-tight text-[#f2e2ff] shadow-md lg:h-[53px] lg:text-2xl"
 						onclick={startEdit}
 					>
 						<img src="/project/icon-edit.svg" alt="" class="h-5 w-5" />
@@ -526,20 +789,26 @@
 					</button>
 					{#if showShipButton}
 						<button
-							class="flex h-[48px] grow cursor-pointer items-center justify-center gap-2.5 rounded-[20px] border-4 border-secondary bg-[#1c2c44] px-4 shadow-md hover-effect-shadow font-jua text-xl tracking-tight lg:h-[53px] lg:text-2xl"
+							class="hover-effect-shadow flex h-[48px] grow cursor-pointer items-center justify-center gap-2.5 rounded-[20px] border-4 border-secondary bg-[#1c2c44] px-4 font-jua text-xl tracking-tight shadow-md lg:h-[53px] lg:text-2xl"
 							class:opacity-50={!canShip}
 							popovertarget={canShip ? 'shipProject' : undefined}
 							disabled={!canShip}
 						>
 							<img src="/project/icon-ship.svg" alt="" class="h-5 w-5" />
 							<div class="relative">
-								<span class="text-stroke text-stroke-1 bg-linear-to-r from-[#6EF5FB] to-[#938BEC] p-1">Ship</span>
-								<span class="absolute top-0 left-0 bg-linear-to-b from-[#3E236D] to-[#42518E] bg-clip-text p-1 pt-0 text-transparent">Ship</span>
+								<span
+									class="text-stroke text-stroke-1 bg-linear-to-r from-[#6EF5FB] to-[#938BEC] p-1"
+									>Ship</span
+								>
+								<span
+									class="absolute top-0 left-0 bg-linear-to-b from-[#3E236D] to-[#42518E] bg-clip-text p-1 pt-0 text-transparent"
+									>Ship</span
+								>
 							</div>
 						</button>
 					{:else if data.pendingShips.length > 0}
 						<button
-							class="flex h-[48px] grow cursor-pointer items-center justify-center gap-2.5 rounded-[20px] border-4 border-secondary bg-[#1c2c44] px-4 shadow-md hover-effect-shadow font-jua text-xl tracking-tight text-[#f2e2ff] lg:h-[53px] lg:text-2xl"
+							class="hover-effect-shadow flex h-[48px] grow cursor-pointer items-center justify-center gap-2.5 rounded-[20px] border-4 border-secondary bg-[#1c2c44] px-4 font-jua text-xl tracking-tight text-[#f2e2ff] shadow-md lg:h-[53px] lg:text-2xl"
 							popovertarget="cancelShip"
 						>
 							Cancel Ship
@@ -563,7 +832,8 @@
 									class="text-sm"
 									class:text-green-400={ship.status === 'APPROVED'}
 									class:text-red-400={ship.status === 'REJECTED'}
-									class:text-yellow-400={ship.status === 'PENDING' || ship.status === 'REVIEWER_APPROVED'}
+									class:text-yellow-400={ship.status === 'PENDING' ||
+										ship.status === 'REVIEWER_APPROVED'}
 								>
 									{ship.status === 'REVIEWER_APPROVED' || ship.status === 'PENDING'
 										? 'IN REVIEW'
@@ -606,16 +876,28 @@
 	/* --- Entrance animations --- */
 
 	@keyframes cover-enter {
-		from { transform: translateY(60px) scale(0.92); }
-		to { transform: translateY(0) scale(1); }
+		from {
+			transform: translateY(60px) scale(0.92);
+		}
+		to {
+			transform: translateY(0) scale(1);
+		}
 	}
 	@keyframes disc-enter {
-		from { transform: translateY(80px) rotate(0deg); }
-		to { transform: translateY(0) rotate(-173.97deg); }
+		from {
+			transform: translateY(80px) rotate(0deg);
+		}
+		to {
+			transform: translateY(0) rotate(-173.97deg);
+		}
 	}
 	@keyframes sidebar-enter {
-		from { transform: translateX(300px); }
-		to { transform: translateX(0); }
+		from {
+			transform: translateX(300px);
+		}
+		to {
+			transform: translateX(0);
+		}
 	}
 
 	.anim-cover {
@@ -651,8 +933,14 @@
 	}
 
 	@keyframes info-enter {
-		from { opacity: 0; transform: translateY(20px); }
-		to { opacity: 1; transform: translateY(0); }
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 
 	.anim-info-title {
