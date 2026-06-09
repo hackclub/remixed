@@ -66,6 +66,7 @@ function formatProject(
 		demoUrl: project.demoUrl ?? undefined,
 		screenshotUrl: project.coverArt ?? undefined,
 		authorId: actorIdFromUser(user),
+		hackatimeId: user.slackId,
 		hackatimeProjectKeys: project.hackatimeProjects,
 		ships: projectShips.map((s) => ({
 			id: String(s.id),
