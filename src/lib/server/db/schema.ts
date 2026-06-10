@@ -44,6 +44,7 @@ export const users = pgTable('users', {
 	username: text('username').notNull(),
 	avatarUrl: text('avatar_url'),
 	accessToken: text('access_token'), // encrypted Hackatime token
+	hackatimeId: text('hackatime_id'),
 	notesBalance: integer('notes_balance').notNull().default(0),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	roles: roleEnum('roles').array().notNull().default(['USER']),
