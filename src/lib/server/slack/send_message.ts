@@ -6,12 +6,20 @@ type SlackMessageResponse = {
 	channel?: string;
 };
 
+function isMessagingDisabled(): boolean {
+	return env.DISABLE_SLACK_MESSAGES === 'true' || !env.SLACK_BOT_USER_OAUTH_TOKEN;
+}
+
 export async function sendMessage(
 	slackId: string | undefined,
 	message: string,
 ): Promise<SlackMessageResponse> {
 	if (!slackId) {
 		return { ok: false };
+	}
+	if (isMessagingDisabled()) {
+		console.warn(`Slack messaging disabled, would send to ${slackId}: ${message}`);
+		return { ok: true };
 	}
 	const resp = await fetch('https://slack.com/api/chat.postMessage', {
 		method: 'POST',
@@ -29,6 +37,10 @@ export async function editMessage(
 	ts: string,
 	message: string,
 ): Promise<SlackMessageResponse> {
+	if (isMessagingDisabled()) {
+		console.warn(`Slack messaging disabled, would edit ${channel}/${ts}: ${message}`);
+		return { ok: true };
+	}
 	const resp = await fetch('https://slack.com/api/chat.update', {
 		method: 'POST',
 		body: JSON.stringify({ channel, ts, text: message }),
