@@ -146,15 +146,7 @@
 	<div class="p-5">
 		<form action="?/hqReject" method="POST" class="space-y-3">
 			<input type="hidden" name="shipId" value={activeShipId} />
-			<fieldset class="fieldset p-0">
-				<legend class="fieldset-legend font-normal text-xs">Internal comment (required, shipper NOT notified)</legend>
-				<textarea
-					required
-					name="internalComment"
-					class="textarea textarea-bordered textarea-sm w-full"
-					placeholder="Why is this being sent back to review?"
-				></textarea>
-			</fieldset>
+			<p class="text-sm text-base-content/60">This will return the ship to the review queue. The shipper will not be notified.</p>
 			<div class="flex gap-2 pt-1">
 				<button
 					type="button"
@@ -367,6 +359,33 @@
 				{@const r = form.backfillResult}
 				<div class="mt-4 text-sm space-y-1">
 					<p>Total to migrate: {r.total}</p>
+					<p class="text-success">Succeeded: {r.succeeded}</p>
+					{#if r.failed > 0}
+						<p class="text-error">Failed: {r.failed}</p>
+						{#each r.errors as err}
+							<p class="text-error text-xs">{err}</p>
+						{/each}
+					{/if}
+				</div>
+			{/if}
+		</div>
+	</div>
+
+	<!-- Hackatime ID backfill -->
+	<div class="card bg-base-100 border border-base-300">
+		<div class="card-body p-5">
+			<h2 class="font-semibold text-sm mb-1">Backfill Hackatime IDs</h2>
+			<p class="text-xs text-base-content/60 mb-4">
+				Fetches the Hackatime user ID for all users who have linked Hackatime but are missing their
+				ID. Required for Sidekick integration.
+			</p>
+			<form action="?/backfillHackatimeIds" method="POST">
+				<button type="submit" class="btn btn-sm btn-outline">Run Hackatime ID Backfill</button>
+			</form>
+			{#if form && 'backfillHackatimeResult' in form && form.backfillHackatimeResult}
+				{@const r = form.backfillHackatimeResult}
+				<div class="mt-4 text-sm space-y-1">
+					<p>Total to backfill: {r.total}</p>
 					<p class="text-success">Succeeded: {r.succeeded}</p>
 					{#if r.failed > 0}
 						<p class="text-error">Failed: {r.failed}</p>
