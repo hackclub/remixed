@@ -55,6 +55,7 @@ export const load: PageServerLoad = async ({ url, cookies, locals }) => {
 				username: slackIdentity.username,
 				avatarUrl: slackIdentity.avatarUrl,
 				accessToken: encrypt(accessToken),
+				hackatimeId: hackatimeInfo.id ?? null,
 			})
 			.where(eq(users.id, locals.user.id));
 

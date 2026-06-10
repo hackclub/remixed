@@ -8,6 +8,7 @@ import {
 	users,
 	shopItems,
 	orders,
+	notesLedger,
 } from '$lib/server/db/schema';
 import { eq, and, sql, desc, asc, inArray, or, ilike, count } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
@@ -22,8 +23,10 @@ function err(status: number, error: string, message: string) {
 	return json({ error, message }, { status });
 }
 
-function mapShipStatus(status: string): 'pending' | 'approved' | 'rejected' {
+function mapShipStatus(status: string): 'pending' | 'pending_hq' | 'approved' | 'rejected' {
 	switch (status) {
+		case 'REVIEWER_APPROVED':
+			return 'pending_hq';
 		case 'APPROVED':
 			return 'approved';
 		case 'REJECTED':
@@ -55,8 +58,9 @@ async function resolveActorId(actorId: string): Promise<number | null> {
 
 function formatProject(
 	project: typeof projects.$inferSelect,
-	user: { slackId: string; hcaId: string | null },
+	user: { slackId: string; hcaId: string | null; hackatimeId: string | null },
 	projectShips: (typeof ships.$inferSelect)[],
+	reviewerApprovals?: Map<number, { reviewerId: string; adjustedHours: number; feedbackMessage: string; justification: string; timestamp: string }>,
 ) {
 	return {
 		id: String(project.id),
@@ -66,14 +70,21 @@ function formatProject(
 		demoUrl: project.demoUrl ?? undefined,
 		screenshotUrl: project.coverArt ?? undefined,
 		authorId: actorIdFromUser(user),
-		hackatimeId: user.slackId,
+		hackatimeId: user.hackatimeId ?? undefined,
 		hackatimeProjectKeys: project.hackatimeProjects,
-		ships: projectShips.map((s) => ({
-			id: String(s.id),
-			hoursSubmitted: s.seconds / 3600,
-			submittedAt: s.submittedAt.toISOString(),
-			status: mapShipStatus(s.status),
-		})),
+		ships: projectShips.map((s) => {
+			const base = {
+				id: String(s.id),
+				hoursSubmitted: s.seconds / 3600,
+				submittedAt: s.submittedAt.toISOString(),
+				status: mapShipStatus(s.status),
+			};
+			const approval = reviewerApprovals?.get(s.id);
+			if (approval && s.status === 'REVIEWER_APPROVED') {
+				return { ...base, reviewerApproval: approval };
+			}
+			return base;
+		}),
 		metadata: {},
 	};
 }
@@ -113,6 +124,34 @@ function formatOrder(
 	};
 }
 
+async function fetchReviewerApprovals(shipIds: number[]) {
+	if (shipIds.length === 0) return new Map<number, { reviewerId: string; adjustedHours: number; feedbackMessage: string; justification: string; timestamp: string }>();
+
+	const approvals = await db
+		.select({
+			review: shipReviews,
+			reviewer: { slackId: users.slackId, hcaId: users.hcaId },
+		})
+		.from(shipReviews)
+		.innerJoin(users, eq(shipReviews.reviewerId, users.id))
+		.where(and(inArray(shipReviews.shipId, shipIds), eq(shipReviews.type, 'APPROVAL')))
+		.orderBy(desc(shipReviews.createdAt));
+
+	const map = new Map<number, { reviewerId: string; adjustedHours: number; feedbackMessage: string; justification: string; timestamp: string }>();
+	for (const { review, reviewer } of approvals) {
+		if (!map.has(review.shipId)) {
+			map.set(review.shipId, {
+				reviewerId: actorIdFromUser(reviewer),
+				adjustedHours: review.adjustedHours ?? 0,
+				feedbackMessage: review.userComment ?? '',
+				justification: review.internalComment ?? '',
+				timestamp: review.createdAt.toISOString(),
+			});
+		}
+	}
+	return map;
+}
+
 async function healthCheck() {
 	return json({ ok: true, version: VERSION });
 }
@@ -125,6 +164,13 @@ async function getProgramStats() {
 			sql`EXISTS (SELECT 1 FROM ships WHERE ships.project_id = projects.id AND ships.status = 'PENDING')`,
 		);
 
+	const [pendingHq] = await db
+		.select({ count: count() })
+		.from(projects)
+		.where(
+			sql`EXISTS (SELECT 1 FROM ships WHERE ships.project_id = projects.id AND ships.status = 'REVIEWER_APPROVED')`,
+		);
+
 	const [pendingFulfillment] = await db
 		.select({ count: count() })
 		.from(orders)
@@ -132,6 +178,7 @@ async function getProgramStats() {
 
 	return json({
 		pendingReviewCount: pendingReview.count,
+		pendingHqCount: pendingHq.count,
 		pendingFulfillmentCount: pendingFulfillment.count,
 	});
 }
@@ -145,7 +192,9 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 		const sidekickStatus = input.status;
 		let dbStatuses: string[];
 		if (sidekickStatus === 'pending') {
-			dbStatuses = ['PENDING', 'REVIEWER_APPROVED'];
+			dbStatuses = ['PENDING'];
+		} else if (sidekickStatus === 'pending_hq') {
+			dbStatuses = ['REVIEWER_APPROVED'];
 		} else if (sidekickStatus === 'approved') {
 			dbStatuses = ['APPROVED'];
 		} else if (sidekickStatus === 'rejected') {
@@ -154,10 +203,8 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 			dbStatuses = [];
 		}
 		if (dbStatuses.length > 0) {
-			statusFilter = sql`EXISTS (SELECT 1 FROM ships WHERE ships.project_id = projects.id AND ships.status IN (${sql.join(
-				dbStatuses.map((s) => sql`${s}`),
-				sql`, `,
-			)}))`;
+			const inList = sql.raw(dbStatuses.map((s) => `'${s}'`).join(', '));
+			statusFilter = sql`EXISTS (SELECT 1 FROM ships WHERE ships.project_id = projects.id AND ships.status IN (${inList}))`;
 		}
 	}
 
@@ -174,7 +221,7 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 		.where(statusFilter ?? undefined);
 
 	const projectRows = await db
-		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId } })
+		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId, hackatimeId: users.hackatimeId } })
 		.from(projects)
 		.innerJoin(users, eq(projects.userId, users.id))
 		.where(whereClause)
@@ -193,14 +240,18 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 		.orderBy(asc(ships.submittedAt));
 
 	const shipsByProject = new Map<number, (typeof ships.$inferSelect)[]>();
+	const reviewerApprovedShipIds: number[] = [];
 	for (const ship of allShips) {
 		const list = shipsByProject.get(ship.projectId) ?? [];
 		list.push(ship);
 		shipsByProject.set(ship.projectId, list);
+		if (ship.status === 'REVIEWER_APPROVED') reviewerApprovedShipIds.push(ship.id);
 	}
 
+	const reviewerApprovals = await fetchReviewerApprovals(reviewerApprovedShipIds);
+
 	const formatted = projectRows.map((r) =>
-		formatProject(r.project, r.user, shipsByProject.get(r.project.id) ?? []),
+		formatProject(r.project, r.user, shipsByProject.get(r.project.id) ?? [], reviewerApprovals),
 	);
 
 	const lastId = projectRows[projectRows.length - 1].project.id;
@@ -216,7 +267,7 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 async function fetchProjectDetail(input: { projectId: string }) {
 	const id = Number(input.projectId);
 	const [row] = await db
-		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId } })
+		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId, hackatimeId: users.hackatimeId } })
 		.from(projects)
 		.innerJoin(users, eq(projects.userId, users.id))
 		.where(eq(projects.id, id));
@@ -229,7 +280,12 @@ async function fetchProjectDetail(input: { projectId: string }) {
 		.where(eq(ships.projectId, id))
 		.orderBy(asc(ships.submittedAt));
 
-	return json(formatProject(row.project, row.user, projectShips));
+	const reviewerApprovedIds = projectShips
+		.filter((s) => s.status === 'REVIEWER_APPROVED')
+		.map((s) => s.id);
+	const reviewerApprovals = await fetchReviewerApprovals(reviewerApprovedIds);
+
+	return json(formatProject(row.project, row.user, projectShips, reviewerApprovals));
 }
 
 async function fetchProjectTimeline(input: { projectId: string }) {
@@ -491,6 +547,126 @@ async function submitReviewAction(input: {
 			actorId: input.reviewerId,
 			message: comment,
 			isInternal,
+			timestamp: new Date().toISOString(),
+		};
+
+		return json({ success: true, event });
+	}
+
+	if (input.action === 'authorize') {
+		if (shipInfo.ship.status !== 'REVIEWER_APPROVED')
+			return err(400, 'VALIDATION_ERROR', 'Ship is not pending HQ review.');
+
+		const [priorApproval] = await db
+			.select()
+			.from(shipReviews)
+			.where(and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'APPROVAL')))
+			.orderBy(desc(shipReviews.createdAt))
+			.limit(1);
+
+		const adjustedHours = priorApproval?.adjustedHours ?? shipInfo.ship.seconds / 3600;
+		const notesPerHour = priorApproval?.notesPerHour ?? NOTES_PER_HOUR;
+		const notesPayout = Math.ceil(adjustedHours * notesPerHour);
+		const userComment = priorApproval?.userComment ?? '';
+		const internalComment = priorApproval?.internalComment ?? '';
+
+		await db.transaction(async (tx) => {
+			await tx
+				.update(ships)
+				.set({ status: 'APPROVED', feedback: userComment })
+				.where(eq(ships.id, shipId));
+
+			await tx.insert(shipReviews).values({
+				shipId,
+				reviewerId: reviewerUserId,
+				type: 'HQ_APPROVAL',
+				userComment,
+				internalComment,
+				adjustedHours,
+				notesPerHour,
+				slackMessageTs: null,
+				slackChannelId: null,
+			});
+
+			await tx
+				.update(projects)
+				.set({ committedSeconds: sql`${projects.committedSeconds} + ${shipInfo.ship.seconds}` })
+				.where(eq(projects.id, shipInfo.project.id));
+
+			await tx
+				.update(users)
+				.set({ notesBalance: sql`${users.notesBalance} + ${notesPayout}` })
+				.where(eq(users.id, shipInfo.user.id));
+
+			await tx.insert(notesLedger).values({
+				userId: shipInfo.user.id,
+				delta: notesPayout,
+				reason: 'ship_approved',
+				refId: shipId,
+			});
+
+			await recordAuditLog(tx, {
+				actorUserId: reviewerUserId,
+				category: 'SHIP_REVIEW',
+				entityType: 'ship',
+				entityId: shipId,
+				changeType: 'hq_approve',
+				data: { adjustedHours, notesPerHour, notesPayout, source: 'sidekick' },
+			});
+		});
+
+		const slackResult = await sendReviewDM(
+			shipInfo.user.slackId,
+			shipInfo.project.title,
+			shipInfo.project.id,
+			'approved',
+			userComment,
+		);
+
+		const event = {
+			type: 'approval' as const,
+			shipId: String(shipId),
+			actorId: input.reviewerId,
+			hoursAssigned: adjustedHours,
+			feedbackMessage: userComment,
+			justification: internalComment,
+			timestamp: new Date().toISOString(),
+		};
+
+		return json({ success: true, event });
+	}
+
+	if (input.action === 'deauthorize') {
+		if (shipInfo.ship.status !== 'REVIEWER_APPROVED')
+			return err(400, 'VALIDATION_ERROR', 'Ship is not pending HQ review.');
+
+		await Promise.all([
+			db
+				.update(ships)
+				.set({ status: 'PENDING', feedback: null })
+				.where(eq(ships.id, shipId)),
+			db.insert(shipReviews).values({
+				shipId,
+				reviewerId: reviewerUserId,
+				type: 'HQ_REJECTION',
+				internalComment: null,
+				isInternal: true,
+			}),
+			recordAuditLog(db, {
+				actorUserId: reviewerUserId,
+				category: 'SHIP_REVIEW',
+				entityType: 'ship',
+				entityId: shipId,
+				changeType: 'hq_reject',
+				data: { source: 'sidekick' },
+			}),
+		]);
+
+		const event = {
+			type: 'rejection' as const,
+			shipId: String(shipId),
+			actorId: input.reviewerId,
+			feedbackMessage: '',
 			timestamp: new Date().toISOString(),
 		};
 
