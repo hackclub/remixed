@@ -30,7 +30,6 @@ function mapShipStatus(status: string): 'pending' | 'pending_hq' | 'approved' | 
 		case 'APPROVED':
 			return 'approved';
 		case 'REJECTED':
-		case 'CANCELLED':
 			return 'rejected';
 		default:
 			return 'pending';
@@ -72,7 +71,7 @@ function formatProject(
 		authorId: actorIdFromUser(user),
 		hackatimeId: user.hackatimeId ?? undefined,
 		hackatimeProjectKeys: project.hackatimeProjects,
-		ships: projectShips.map((s) => {
+		ships: projectShips.filter((s) => s.status !== 'CANCELLED').map((s) => {
 			const base = {
 				id: String(s.id),
 				hoursSubmitted: s.seconds / 3600,
@@ -198,7 +197,7 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 		} else if (sidekickStatus === 'approved') {
 			dbStatuses = ['APPROVED'];
 		} else if (sidekickStatus === 'rejected') {
-			dbStatuses = ['REJECTED', 'CANCELLED'];
+			dbStatuses = ['REJECTED'];
 		} else {
 			dbStatuses = [];
 		}
@@ -297,7 +296,7 @@ async function fetchProjectTimeline(input: { projectId: string }) {
 	const projectShips = await db
 		.select()
 		.from(ships)
-		.where(eq(ships.projectId, projectId))
+		.where(and(eq(ships.projectId, projectId), sql`${ships.status} != 'CANCELLED'`))
 		.orderBy(asc(ships.submittedAt));
 
 	if (projectShips.length === 0) return json({ events: [] });
