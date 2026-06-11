@@ -3,9 +3,13 @@ import type { Actions, PageServerLoad } from './$types';
 import { recordAuditLog } from '$lib/server/audit';
 import { db } from '$lib/server/db';
 import { projects, shipReviews, ships, users } from '$lib/server/db/schema';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, and, desc, inArray } from 'drizzle-orm';
 import { sendReviewDM, editReviewDM } from '$lib/server/slack/review_message';
-import { NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR } from '$lib';
+import { createAirtableShipRecord, extractGithubUsername } from '$lib/server/airtable';
+import { decrypt } from '$lib/server/crypto';
+import { NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR, formatHours } from '$lib';
+
+const decryptOrNull = (val: string | null) => (val ? decrypt(val) : null);
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const projectId = Number(params.id);
@@ -322,6 +326,98 @@ export const actions: Actions = {
 			entityId: reviewId,
 			changeType: 'edit_review',
 			data: { userComment, internalComment, adjustedHours },
+		});
+	},
+	syncAirtable: async ({ request, locals }) => {
+		const data = await request.formData();
+		const shipId = Number(data.get('shipId'));
+
+		if (!Number.isFinite(shipId) || shipId <= 0) {
+			return fail(400, { error: 'Invalid ship id' });
+		}
+
+		const [shipInfo] = await db
+			.select({ ship: ships, project: projects, user: users })
+			.from(ships)
+			.innerJoin(projects, eq(ships.projectId, projects.id))
+			.innerJoin(users, eq(projects.userId, users.id))
+			.where(eq(ships.id, shipId));
+
+		if (!shipInfo || shipInfo.ship.status !== 'APPROVED') {
+			return fail(400, { error: 'Ship not found or not approved' });
+		}
+
+		const [approvalRow] = await db
+			.select({
+				review: shipReviews,
+				reviewer: { username: users.username },
+			})
+			.from(shipReviews)
+			.innerJoin(users, eq(shipReviews.reviewerId, users.id))
+			.where(and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'APPROVAL')))
+			.orderBy(desc(shipReviews.createdAt))
+			.limit(1);
+
+		const [hqApprovalRow] = await db
+			.select({
+				review: shipReviews,
+				reviewer: { username: users.username },
+			})
+			.from(shipReviews)
+			.innerJoin(users, eq(shipReviews.reviewerId, users.id))
+			.where(and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'HQ_APPROVAL')))
+			.orderBy(desc(shipReviews.createdAt))
+			.limit(1);
+
+		const approval = approvalRow?.review;
+		const adjustedHours = approval?.adjustedHours ?? hqApprovalRow?.review.adjustedHours ?? shipInfo.ship.seconds / 3600;
+
+		const totalShipTime = formatHours(shipInfo.ship.seconds);
+		const adjustedTime = `${Math.floor(adjustedHours)}h ${Math.round((adjustedHours % 1) * 60)}m`;
+		const shipDate = shipInfo.ship.submittedAt.toISOString().slice(0, 10);
+		const reviewDate = (approval?.createdAt ?? hqApprovalRow?.review.createdAt ?? new Date()).toISOString().slice(0, 10);
+		const hackatimeProjectsList = shipInfo.project.hackatimeProjects.join(', ') || 'None';
+		const reviewerName = approvalRow?.reviewer.username ?? 'Unknown';
+		const hqReviewerName = hqApprovalRow?.reviewer.username ?? 'Unknown';
+
+		const enrichedJustification = [
+			`This user tracked ${totalShipTime} on Hackatime. This was adjusted to ${adjustedTime} after review.`,
+			'',
+			approval?.internalComment ?? hqApprovalRow?.review.internalComment ?? '',
+			'',
+			`Project was submitted by ${shipInfo.user.username} on ${shipDate}`,
+			`The Hackatime projects submitted were: ${hackatimeProjectsList} and included time from 2026-03-07 to ${shipDate}`,
+			`Project was reviewed by ${reviewerName} on ${reviewDate}.`,
+			`Project was HQ approved by ${hqReviewerName} on ${reviewDate}.`,
+		].join('\n');
+
+		await createAirtableShipRecord({
+			codeUrl: shipInfo.project.githubUrl,
+			playableUrl: shipInfo.project.demoUrl,
+			firstName: shipInfo.user.firstName,
+			lastName: shipInfo.user.lastName,
+			email: shipInfo.user.email,
+			screenshot: shipInfo.project.coverArt,
+			description: shipInfo.project.description,
+			githubUsername: extractGithubUsername(shipInfo.project.githubUrl),
+			addressLine1: decryptOrNull(shipInfo.user.addressLine1),
+			addressLine2: decryptOrNull(shipInfo.user.addressLine2),
+			city: decryptOrNull(shipInfo.user.city),
+			state: decryptOrNull(shipInfo.user.state),
+			country: decryptOrNull(shipInfo.user.country),
+			zipCode: decryptOrNull(shipInfo.user.zipCode),
+			birthday: decryptOrNull(shipInfo.user.birthday),
+			overrideHoursSpent: adjustedHours,
+			overrideHoursJustification: enrichedJustification,
+		});
+
+		await recordAuditLog(db, {
+			actorUserId: locals.user!.id,
+			category: 'SHIP_REVIEW',
+			entityType: 'ship',
+			entityId: shipId,
+			changeType: 'sync_airtable',
+			data: { adjustedHours, source: 'admin_ship_detail' },
 		});
 	},
 };

@@ -14,11 +14,14 @@ import { eq, and, sql, desc, asc, inArray, or, ilike, count } from 'drizzle-orm'
 import { env } from '$env/dynamic/private';
 import { decrypt } from '$lib/server/crypto';
 import { recordAuditLog } from '$lib/server/audit';
-import { NOTES_PER_HOUR } from '$lib';
+import { NOTES_PER_HOUR, formatHours } from '$lib';
 import { sendReviewDM } from '$lib/server/slack/review_message';
+import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
+import { createAirtableShipRecord, extractGithubUsername } from '$lib/server/airtable';
 import { HackatimeClient } from '$lib/server/hackatime';
 
 const VERSION = '1.0.0';
+const decryptOrNull = (val: string | null) => (val ? decrypt(val) : null);
 
 function err(status: number, error: string, message: string) {
 	return json({ error, message }, { status });
@@ -153,20 +156,37 @@ async function fetchReviewerApprovals(shipIds: number[]) {
 }
 
 async function resolveHackatimeIds(
-	rows: { user: { slackId: string; hackatimeId: string | null } }[],
+	rows: { user: { slackId: string; hackatimeId: string | null; accessToken: string | null } }[],
 ) {
 	const missing = rows.filter((r) => !r.user.hackatimeId);
 	if (missing.length === 0) return;
 
-	const uniqueSlackIds = [...new Set(missing.map((r) => r.user.slackId))];
 	const resolved = new Map<string, string>();
 
 	await Promise.allSettled(
-		uniqueSlackIds.map(async (slackId) => {
-			const htId = await HackatimeClient.lookupSlackId(slackId);
+		missing.map(async (r) => {
+			if (resolved.has(r.user.slackId)) return;
+
+			let htId: string | null = null;
+
+			if (r.user.accessToken) {
+				try {
+					const token = decrypt(r.user.accessToken);
+					const client = new HackatimeClient(token);
+					const profile = await client.getProfile();
+					htId = profile.id ? String(profile.id) : null;
+				} catch {
+					// fall through to Slack ID lookup
+				}
+			}
+
+			if (!htId) {
+				htId = await HackatimeClient.lookupSlackId(r.user.slackId);
+			}
+
 			if (htId) {
-				resolved.set(slackId, htId);
-				await db.update(users).set({ hackatimeId: htId }).where(eq(users.slackId, slackId));
+				resolved.set(r.user.slackId, htId);
+				await db.update(users).set({ hackatimeId: htId }).where(eq(users.slackId, r.user.slackId));
 			}
 		}),
 	);
@@ -247,7 +267,7 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 		.where(statusFilter ?? undefined);
 
 	const projectRows = await db
-		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId, hackatimeId: users.hackatimeId } })
+		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId, hackatimeId: users.hackatimeId, accessToken: users.accessToken } })
 		.from(projects)
 		.innerJoin(users, eq(projects.userId, users.id))
 		.where(whereClause)
@@ -295,7 +315,7 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 async function fetchProjectDetail(input: { projectId: string }) {
 	const id = Number(input.projectId);
 	const [row] = await db
-		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId, hackatimeId: users.hackatimeId } })
+		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId, hackatimeId: users.hackatimeId, accessToken: users.accessToken } })
 		.from(projects)
 		.innerJoin(users, eq(projects.userId, users.id))
 		.where(eq(projects.id, id));
@@ -587,20 +607,30 @@ async function submitReviewAction(input: {
 		if (shipInfo.ship.status !== 'REVIEWER_APPROVED')
 			return err(400, 'VALIDATION_ERROR', 'Ship is not pending HQ review.');
 
-		const [priorApproval] = await db
-			.select()
+		const [priorApprovalRow] = await db
+			.select({
+				review: shipReviews,
+				reviewer: { username: users.username },
+			})
 			.from(shipReviews)
+			.innerJoin(users, eq(shipReviews.reviewerId, users.id))
 			.where(and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'APPROVAL')))
 			.orderBy(desc(shipReviews.createdAt))
 			.limit(1);
 
+		const priorApproval = priorApprovalRow?.review;
 		const adjustedHours = priorApproval?.adjustedHours ?? shipInfo.ship.seconds / 3600;
 		const notesPerHour = priorApproval?.notesPerHour ?? NOTES_PER_HOUR;
 		const notesPayout = Math.ceil(adjustedHours * notesPerHour);
 		const userComment = priorApproval?.userComment ?? '';
 		const internalComment = priorApproval?.internalComment ?? '';
 
-		await db.transaction(async (tx) => {
+		const [hqReviewer] = await db
+			.select({ username: users.username })
+			.from(users)
+			.where(eq(users.id, reviewerUserId));
+
+		const { oldBalance, newBalance } = await db.transaction(async (tx) => {
 			await tx
 				.update(ships)
 				.set({ status: 'APPROVED', feedback: userComment })
@@ -623,10 +653,11 @@ async function submitReviewAction(input: {
 				.set({ committedSeconds: sql`${projects.committedSeconds} + ${shipInfo.ship.seconds}` })
 				.where(eq(projects.id, shipInfo.project.id));
 
-			await tx
+			const [updatedUser] = await tx
 				.update(users)
 				.set({ notesBalance: sql`${users.notesBalance} + ${notesPayout}` })
-				.where(eq(users.id, shipInfo.user.id));
+				.where(eq(users.id, shipInfo.user.id))
+				.returning({ notesBalance: users.notesBalance });
 
 			await tx.insert(notesLedger).values({
 				userId: shipInfo.user.id,
@@ -643,15 +674,62 @@ async function submitReviewAction(input: {
 				changeType: 'hq_approve',
 				data: { adjustedHours, notesPerHour, notesPayout, source: 'sidekick' },
 			});
+
+			return {
+				oldBalance: updatedUser.notesBalance - notesPayout,
+				newBalance: updatedUser.notesBalance,
+			};
 		});
 
-		const slackResult = await sendReviewDM(
+		await sendReviewDM(
 			shipInfo.user.slackId,
 			shipInfo.project.title,
 			shipInfo.project.id,
 			'approved',
 			userComment,
 		);
+
+		const totalShipTime = formatHours(shipInfo.ship.seconds);
+		const adjustedTime = `${Math.floor(adjustedHours)}h ${Math.round((adjustedHours % 1) * 60)}m`;
+		const shipDate = shipInfo.ship.submittedAt.toISOString().slice(0, 10);
+		const reviewDate = new Date().toISOString().slice(0, 10);
+		const hackatimeProjectsList = shipInfo.project.hackatimeProjects.join(', ') || 'None';
+		const reviewerName = priorApprovalRow?.reviewer.username ?? 'Unknown';
+		const hqReviewerName = hqReviewer?.username ?? 'Unknown';
+
+		const enrichedJustification = [
+			`This user tracked ${totalShipTime} on Hackatime. This was adjusted to ${adjustedTime} after review.`,
+			'',
+			internalComment,
+			'',
+			`Project was submitted by ${shipInfo.user.username} on ${shipDate}`,
+			`The Hackatime projects submitted were: ${hackatimeProjectsList} and included time from 2026-03-07 to ${shipDate}`,
+			`Project was reviewed by ${reviewerName} on ${reviewDate}.`,
+			`Project was HQ approved by ${hqReviewerName} on ${reviewDate}.`,
+		].join('\n');
+
+		await Promise.all([
+			sendUpdatedBalance(shipInfo.user.slackId, oldBalance, newBalance),
+			createAirtableShipRecord({
+				codeUrl: shipInfo.project.githubUrl,
+				playableUrl: shipInfo.project.demoUrl,
+				firstName: shipInfo.user.firstName,
+				lastName: shipInfo.user.lastName,
+				email: shipInfo.user.email,
+				screenshot: shipInfo.project.coverArt,
+				description: shipInfo.project.description,
+				githubUsername: extractGithubUsername(shipInfo.project.githubUrl),
+				addressLine1: decryptOrNull(shipInfo.user.addressLine1),
+				addressLine2: decryptOrNull(shipInfo.user.addressLine2),
+				city: decryptOrNull(shipInfo.user.city),
+				state: decryptOrNull(shipInfo.user.state),
+				country: decryptOrNull(shipInfo.user.country),
+				zipCode: decryptOrNull(shipInfo.user.zipCode),
+				birthday: decryptOrNull(shipInfo.user.birthday),
+				overrideHoursSpent: adjustedHours,
+				overrideHoursJustification: enrichedJustification,
+			}),
+		]);
 
 		const event = {
 			type: 'approval' as const,

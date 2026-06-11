@@ -290,6 +290,12 @@
 									<span class="font-semibold text-sm">@{data.user.username}</span>
 									<span class="text-sm text-base-content/60">shipped {formatHours(ship.seconds)}</span>
 									<span class="badge {shipStatusBadge(ship.status)} badge-sm">{shipStatusLabel(ship.status)}</span>
+									{#if ship.status === 'APPROVED'}
+										<form action="?/syncAirtable" method="POST" class="contents">
+											<input type="hidden" name="shipId" value={ship.id} />
+											<button type="submit" class="btn btn-xs btn-outline">Sync to Airtable</button>
+										</form>
+									{/if}
 									<span class="text-xs text-base-content/40 ml-auto">
 										{new Date(ship.submittedAt).toLocaleString()} ({timeAgo(ship.submittedAt)})
 									</span>
