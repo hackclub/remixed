@@ -2,9 +2,10 @@ import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { recordAuditLog } from '$lib/server/audit';
 import { db } from '$lib/server/db';
-import { projects, shipReviews, ships, users } from '$lib/server/db/schema';
-import { eq, and, desc, inArray } from 'drizzle-orm';
+import { projects, shipReviews, ships, users, notesLedger } from '$lib/server/db/schema';
+import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import { sendReviewDM, editReviewDM } from '$lib/server/slack/review_message';
+import { sendMessage, deleteMessage, findAndDeleteMessages } from '$lib/server/slack/send_message';
 import { createAirtableShipRecord, extractGithubUsername } from '$lib/server/airtable';
 import { decrypt } from '$lib/server/crypto';
 import { NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR, formatHours } from '$lib';
@@ -419,5 +420,93 @@ export const actions: Actions = {
 			changeType: 'sync_airtable',
 			data: { adjustedHours, source: 'admin_ship_detail' },
 		});
+	},
+	reverseApproval: async ({ request, locals }) => {
+		const data = await request.formData();
+		const shipId = Number(data.get('shipId'));
+
+		const [shipInfo] = await db
+			.select({ ship: ships, project: projects, user: users })
+			.from(ships)
+			.innerJoin(projects, eq(ships.projectId, projects.id))
+			.innerJoin(users, eq(projects.userId, users.id))
+			.where(eq(ships.id, shipId));
+
+		if (!shipInfo || shipInfo.ship.status !== 'APPROVED') {
+			return fail(400, { error: 'Ship not found or not approved' });
+		}
+
+		const [hqApproval] = await db
+			.select()
+			.from(shipReviews)
+			.where(and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'HQ_APPROVAL')))
+			.orderBy(desc(shipReviews.createdAt))
+			.limit(1);
+
+		if (!hqApproval) {
+			return fail(400, { error: 'No HQ approval review found for this ship' });
+		}
+
+		const adjustedHours = hqApproval.adjustedHours ?? 0;
+		const notesPerHour = hqApproval.notesPerHour ?? NOTES_PER_HOUR;
+		const notesPayout = Math.ceil(adjustedHours * notesPerHour);
+
+		const { newBalance } = await db.transaction(async (tx) => {
+			await tx
+				.update(ships)
+				.set({ status: 'REVIEWER_APPROVED' })
+				.where(eq(ships.id, shipId));
+
+			await tx
+				.delete(shipReviews)
+				.where(eq(shipReviews.id, hqApproval.id));
+
+			await tx
+				.update(projects)
+				.set({ committedSeconds: sql`${projects.committedSeconds} - ${shipInfo.ship.seconds}` })
+				.where(eq(projects.id, shipInfo.project.id));
+
+			const [updatedUser] = await tx
+				.update(users)
+				.set({ notesBalance: sql`${users.notesBalance} - ${notesPayout}` })
+				.where(eq(users.id, shipInfo.user.id))
+				.returning({ notesBalance: users.notesBalance });
+
+			await tx
+				.delete(notesLedger)
+				.where(
+					and(
+						eq(notesLedger.userId, shipInfo.user.id),
+						eq(notesLedger.reason, 'ship_approved'),
+						eq(notesLedger.refId, shipId),
+					),
+				);
+
+			await recordAuditLog(tx, {
+				actorUserId: locals.user!.id,
+				category: 'SHIP_REVIEW',
+				entityType: 'ship',
+				entityId: shipId,
+				changeType: 'reverse_hq_approve',
+				data: { adjustedHours, notesPayout, source: 'admin_ship_detail' },
+			});
+
+			return { newBalance: updatedUser.notesBalance };
+		});
+
+		if (hqApproval.slackMessageTs && hqApproval.slackChannelId) {
+			await deleteMessage(hqApproval.slackChannelId, hqApproval.slackMessageTs);
+		} else {
+			const projectLink = `projects/${shipInfo.project.id}|${shipInfo.project.title}`;
+			await findAndDeleteMessages(shipInfo.user.slackId, [
+				(text) => text.includes(projectLink) && text.includes('has been approved'),
+				(text) => text.includes(`recieved *${notesPayout}* notes`),
+			]);
+		}
+
+		await sendMessage(
+			shipInfo.user.slackId,
+			`*${notesPayout}* notes have been deducted from your balance due to a review reversal.\nYour new balance is *${newBalance}* notes.`,
+		);
 	},
 };
