@@ -16,6 +16,7 @@ import { decrypt } from '$lib/server/crypto';
 import { recordAuditLog } from '$lib/server/audit';
 import { NOTES_PER_HOUR } from '$lib';
 import { sendReviewDM } from '$lib/server/slack/review_message';
+import { HackatimeClient } from '$lib/server/hackatime';
 
 const VERSION = '1.0.0';
 
@@ -151,6 +152,32 @@ async function fetchReviewerApprovals(shipIds: number[]) {
 	return map;
 }
 
+async function resolveHackatimeIds(
+	rows: { user: { slackId: string; hackatimeId: string | null } }[],
+) {
+	const missing = rows.filter((r) => !r.user.hackatimeId);
+	if (missing.length === 0) return;
+
+	const uniqueSlackIds = [...new Set(missing.map((r) => r.user.slackId))];
+	const resolved = new Map<string, string>();
+
+	await Promise.allSettled(
+		uniqueSlackIds.map(async (slackId) => {
+			const htId = await HackatimeClient.lookupSlackId(slackId);
+			if (htId) {
+				resolved.set(slackId, htId);
+				await db.update(users).set({ hackatimeId: htId }).where(eq(users.slackId, slackId));
+			}
+		}),
+	);
+
+	for (const row of rows) {
+		if (!row.user.hackatimeId) {
+			row.user.hackatimeId = resolved.get(row.user.slackId) ?? null;
+		}
+	}
+}
+
 async function healthCheck() {
 	return json({ ok: true, version: VERSION });
 }
@@ -231,6 +258,8 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 		return json({ projects: [], totalCount: totalResult.count });
 	}
 
+	await resolveHackatimeIds(projectRows);
+
 	const projectIds = projectRows.map((r) => r.project.id);
 	const allShips = await db
 		.select()
@@ -272,6 +301,8 @@ async function fetchProjectDetail(input: { projectId: string }) {
 		.where(eq(projects.id, id));
 
 	if (!row) return err(404, 'NOT_FOUND', `No project found with ID ${input.projectId}.`);
+
+	await resolveHackatimeIds([row]);
 
 	const projectShips = await db
 		.select()
