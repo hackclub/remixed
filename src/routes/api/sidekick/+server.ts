@@ -619,7 +619,8 @@ async function submitReviewAction(input: {
 			.limit(1);
 
 		const priorApproval = priorApprovalRow?.review;
-		const adjustedHours = priorApproval?.adjustedHours ?? shipInfo.ship.seconds / 3600;
+		const adjustedHours =
+			input.hoursAssigned ?? priorApproval?.adjustedHours ?? shipInfo.ship.seconds / 3600;
 		const notesPerHour = priorApproval?.notesPerHour ?? NOTES_PER_HOUR;
 		const notesPayout = Math.ceil(adjustedHours * notesPerHour);
 		const userComment = priorApproval?.userComment ?? '';
