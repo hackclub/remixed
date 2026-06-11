@@ -61,6 +61,23 @@ export class HackatimeClient {
 		return this.get<HackatimeProjectsResponse>('/api/v1/authenticated/projects', query);
 	}
 
+	static async lookupSlackId(slackId: string): Promise<string | null> {
+		const apiKey = env.HACKATIME_STATS_API_KEY;
+		if (!apiKey) return null;
+
+		try {
+			const response = await fetch(
+				`${BASE_URL}/api/v1/users/lookup_slack_uid/${encodeURIComponent(slackId)}`,
+				{ headers: { Authorization: `Bearer ${apiKey}` } },
+			);
+			if (!response.ok) return null;
+			const data = (await response.json()) as { user_id?: number };
+			return data.user_id != null ? String(data.user_id) : null;
+		} catch {
+			return null;
+		}
+	}
+
 	static async exchangeCode(code: string, redirectUri: string): Promise<string> {
 		if (!publicEnv.PUBLIC_HACKATIME_OAUTH_UID || !env.HACKATIME_OAUTH_SECRET) {
 			throw new Error('Hackatime credentials are not configured');
