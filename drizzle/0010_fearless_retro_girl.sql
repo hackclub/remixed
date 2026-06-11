@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "hackatime_id" text;

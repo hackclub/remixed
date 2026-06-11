@@ -44,6 +44,7 @@ export const users = pgTable('users', {
 	username: text('username').notNull(),
 	avatarUrl: text('avatar_url'),
 	accessToken: text('access_token'), // encrypted Hackatime token
+	hackatimeId: text('hackatime_id'),
 	notesBalance: integer('notes_balance').notNull().default(0),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	roles: roleEnum('roles').array().notNull().default(['USER']),
@@ -124,6 +125,7 @@ export const shopItems = pgTable('shop_items', {
 	id: serial('id').primaryKey(),
 	name: text('name').notNull(),
 	description: text('description'),
+	fulfillerContext: text('fulfiller_context'),
 	cost: integer('cost').notNull(),
 	imageUrl: text('imageUrl'),
 	categories: text('categories').array().default([]),
@@ -199,7 +201,11 @@ export const orders = pgTable('orders', {
 	state: text('state').notNull(),
 	country: text('country').notNull(),
 	zipCode: text('zipcode').notNull(),
+	reference: text('reference'),
+	adminNotes: text('admin_notes'),
+	userNotes: text('user_notes'),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
+	fulfilledAt: timestamp('fulfilled_at'),
 });
 
 export const auditLogs = pgTable('audit_logs', {

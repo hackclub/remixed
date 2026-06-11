@@ -543,14 +543,48 @@ export const actions: Actions = {
 
 		return { backfillResult: { total: toMigrate.length, succeeded, failed, errors } };
 	},
+	backfillHackatimeIds: async ({ locals }) => {
+		if (!locals.user) return fail(401, { error: 'Unauthorized' });
+
+		const { HackatimeClient } = await import('$lib/server/hackatime');
+
+		const usersToBackfill = await db
+			.select({ id: users.id, accessToken: users.accessToken })
+			.from(users)
+			.where(and(isNotNull(users.accessToken), sql`${users.hackatimeId} IS NULL`));
+
+		let succeeded = 0;
+		let failed = 0;
+		const errors: string[] = [];
+
+		for (const user of usersToBackfill) {
+			try {
+				const token = decrypt(user.accessToken!);
+				const client = new HackatimeClient(token);
+				const profile = await client.getProfile();
+
+				if (profile.id) {
+					await db
+						.update(users)
+						.set({ hackatimeId: String(profile.id) })
+						.where(eq(users.id, user.id));
+					succeeded++;
+				} else {
+					failed++;
+					errors.push(`User ${user.id}: no id in profile response`);
+				}
+			} catch (err) {
+				failed++;
+				errors.push(`User ${user.id}: ${err}`);
+				console.error(`Hackatime ID backfill failed for user ${user.id}:`, err);
+			}
+		}
+
+		return { backfillHackatimeResult: { total: usersToBackfill.length, succeeded, failed, errors } };
+	},
 	hqReject: async ({ request, locals }) => {
 		const data = await request.formData();
 		const shipId = Number(data.get('shipId'));
-		const internalComment = (data.get('internalComment') as string).trim();
-
-		if (!internalComment) {
-			return fail(400, { error: 'Internal comment is required' });
-		}
 
 		const [ship] = await db.select().from(ships).where(eq(ships.id, shipId));
 
@@ -567,7 +601,6 @@ export const actions: Actions = {
 				shipId,
 				reviewerId: locals.user!.id,
 				type: 'HQ_REJECTION',
-				internalComment,
 				isInternal: true,
 			}),
 			recordAuditLog(db, {
@@ -576,7 +609,7 @@ export const actions: Actions = {
 				entityType: 'ship',
 				entityId: shipId,
 				changeType: 'hq_reject',
-				data: { internalComment },
+				data: {},
 			}),
 		]);
 	},

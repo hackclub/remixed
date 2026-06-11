@@ -4,6 +4,7 @@ import { env as publicEnv } from '$env/dynamic/public';
 const BASE_URL = 'https://hackatime.hackclub.com';
 
 export type HackatimeProfile = {
+	id?: string;
 	slack_id?: string;
 };
 
