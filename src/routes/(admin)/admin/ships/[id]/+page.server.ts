@@ -5,7 +5,7 @@ import { db } from '$lib/server/db';
 import { projects, shipReviews, ships, users, notesLedger } from '$lib/server/db/schema';
 import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import { sendReviewDM, editReviewDM } from '$lib/server/slack/review_message';
-import { sendMessage, deleteMessage, findAndDeleteMessages } from '$lib/server/slack/send_message';
+import { deleteMessage, findAndDeleteMessages } from '$lib/server/slack/send_message';
 import { createAirtableShipRecord, extractGithubUsername } from '$lib/server/airtable';
 import { decrypt } from '$lib/server/crypto';
 import { NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR, formatHours } from '$lib';
@@ -504,9 +504,5 @@ export const actions: Actions = {
 			]);
 		}
 
-		await sendMessage(
-			shipInfo.user.slackId,
-			`*${notesPayout}* notes have been deducted from your balance due to a review reversal.\nYour new balance is *${newBalance}* notes.`,
-		);
 	},
 };
