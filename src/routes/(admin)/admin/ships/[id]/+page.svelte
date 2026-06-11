@@ -295,6 +295,10 @@
 											<input type="hidden" name="shipId" value={ship.id} />
 											<button type="submit" class="btn btn-xs btn-outline">Sync to Airtable</button>
 										</form>
+										<form action="?/reverseApproval" method="POST" class="contents" onsubmit={(e) => { if (!confirm('Reverse this approval? This will deduct notes and notify the user.')) e.preventDefault(); }}>
+											<input type="hidden" name="shipId" value={ship.id} />
+											<button type="submit" class="btn btn-xs btn-outline btn-error">Reverse Approval</button>
+										</form>
 									{/if}
 									<span class="text-xs text-base-content/40 ml-auto">
 										{new Date(ship.submittedAt).toLocaleString()} ({timeAgo(ship.submittedAt)})
