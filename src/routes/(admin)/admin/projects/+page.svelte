@@ -272,6 +272,7 @@
 <div class="space-y-8">
 	<div class="flex items-center justify-between">
 		<h1 class="text-xl font-bold">Projects</h1>
+		<a href="/admin/export/not-shipped" class="btn btn-sm btn-outline" download>Export Not Shipped (CSV)</a>
 	</div>
 
 	{#if form?.error}
