@@ -799,6 +799,7 @@ async function updateReviewAction(input: {
 	feedbackMessage?: string;
 	justification?: string;
 	internalMessage?: string;
+	hoursAssigned?: number;
 }) {
 	const shipId = Number(input.shipId);
 	const reviewerUserId = await resolveActorId(input.reviewerId);
@@ -826,6 +827,7 @@ async function updateReviewAction(input: {
 	if (input.feedbackMessage !== undefined) updates.userComment = input.feedbackMessage;
 	if (input.justification !== undefined) updates.internalComment = input.justification;
 	if (input.internalMessage !== undefined) updates.internalComment = input.internalMessage;
+	if (input.hoursAssigned !== undefined) updates.adjustedHours = input.hoursAssigned;
 
 	await db.update(shipReviews).set(updates).where(eq(shipReviews.id, review.id));
 
