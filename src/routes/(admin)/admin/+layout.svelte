@@ -9,6 +9,7 @@
 		Package,
 		FolderOpen,
 		ScrollText,
+		KeyRound,
 	} from 'lucide-svelte';
 	import type { Component } from 'svelte';
 
@@ -26,6 +27,7 @@
 		'/admin/orders': Package,
 		'/admin/projects': FolderOpen,
 		'/admin/audit': ScrollText,
+		'/admin/mcp': KeyRound,
 	};
 </script>
 
