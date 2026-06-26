@@ -208,6 +208,19 @@ export const orders = pgTable('orders', {
 	fulfilledAt: timestamp('fulfilled_at'),
 });
 
+export const mcpTokens = pgTable('mcp_tokens', {
+	id: serial('id').primaryKey(),
+	name: text('name').notNull(),
+	tokenHash: text('token_hash').notNull().unique(),
+	tokenPrefix: text('token_prefix').notNull(),
+	createdByUserId: integer('created_by_user_id')
+		.notNull()
+		.references(() => users.id),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	lastUsedAt: timestamp('last_used_at'),
+	revokedAt: timestamp('revoked_at'),
+});
+
 export const auditLogs = pgTable('audit_logs', {
 	id: serial('id').primaryKey(),
 	userId: integer('user_id')
