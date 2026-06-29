@@ -322,7 +322,7 @@
 				<div use:blockReveal={3}>
 					<FAQCard title="When does this end?">
 						<p class="font-jua text-xl text-light">
-							May 14th, 2026! You will have a couple of weeks to redeem your prizes after it ends,
+							June 14th, 2026! You will have a couple of weeks to redeem your prizes after it ends,
 							though.
 						</p>
 					</FAQCard>
@@ -341,7 +341,7 @@
 				<BoldText stroke="2">Hack Club</BoldText>, built by
 				<BoldText stroke="2">kc</BoldText>,
 				<BoldText stroke="2">fireentity</BoldText>,
-				<BoldText stroke="2">hellonearth311</BoldText>,
+				<BoldText stroke="2">swn</BoldText>,
 				<BoldText stroke="2">ascpixi</BoldText>, and
 				<BoldText stroke="2">Shuflduf</BoldText>.
 			</h1>
