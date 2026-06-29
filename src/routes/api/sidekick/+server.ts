@@ -477,6 +477,27 @@ async function fetchProjectTimeline(input: { projectId: string }) {
 		}
 	}
 
+	// A pending-HQ ship's reviewer approval is a suggestion, not a materialized
+	// review, so it never appears in `shipReviews` above. Surface it as an
+	// `approval` event so downstream consumers can render (and HQ-authorize) it —
+	// Sidekick relabels an approval on a pending_hq ship into a pending-approval
+	// pill. Without this, pending-HQ approvals are invisible on the detail view.
+	const reviewerApprovedIds = projectShips
+		.filter((s) => s.status === 'REVIEWER_APPROVED')
+		.map((s) => s.id);
+	const reviewerApprovals = await fetchReviewerApprovals(reviewerApprovedIds);
+	for (const [shipId, approval] of reviewerApprovals) {
+		events.push({
+			type: 'approval',
+			shipId: String(shipId),
+			actorId: approval.reviewerId,
+			hoursAssigned: approval.adjustedHours,
+			feedbackMessage: approval.feedbackMessage,
+			justification: approval.justification,
+			timestamp: approval.timestamp,
+		});
+	}
+
 	events.sort(
 		(a, b) => new Date(a.timestamp as string).getTime() - new Date(b.timestamp as string).getTime(),
 	);
