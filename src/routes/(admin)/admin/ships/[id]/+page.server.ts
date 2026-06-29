@@ -2,7 +2,7 @@ import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { recordAuditLog } from '$lib/server/audit';
 import { db } from '$lib/server/db';
-import { projects, shipReviews, ships, users } from '$lib/server/db/schema';
+import { projects, shipReviews, shipSuggestions, ships, users } from '$lib/server/db/schema';
 import { eq, and, desc, inArray } from 'drizzle-orm';
 import { sendReviewDM, editReviewDM } from '$lib/server/slack/review_message';
 import { createAirtableShipRecord, extractGithubUsername } from '$lib/server/airtable';
@@ -56,6 +56,24 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					.orderBy(shipReviews.createdAt)
 			: [];
 
+	// Pending-HQ ships carry reviewer suggestions rather than materialized reviews.
+	const suggestions =
+		shipIds.length > 0
+			? await db
+					.select({
+						suggestion: shipSuggestions,
+						reviewer: {
+							id: users.id,
+							username: users.username,
+							avatarUrl: users.avatarUrl,
+						},
+					})
+					.from(shipSuggestions)
+					.innerJoin(users, eq(shipSuggestions.reviewerId, users.id))
+					.where(inArray(shipSuggestions.shipId, shipIds))
+					.orderBy(shipSuggestions.createdAt)
+			: [];
+
 	const pendingShip = projectShips.find((s) => s.status === 'PENDING') ?? null;
 
 	return {
@@ -63,6 +81,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		user: projectInfo.user,
 		projectShips,
 		reviews,
+		suggestions,
 		pendingShip,
 		notesPerHour: NOTES_PER_HOUR,
 		currentUserId: locals.user!.id,
@@ -79,8 +98,14 @@ export const actions: Actions = {
 		const userComment = (data.get('userComment') as string).trim();
 		const internalComment = (data.get('internalComment') as string).trim();
 
-		if (!Number.isFinite(notesPerHour) || notesPerHour < MIN_NOTES_PER_HOUR || notesPerHour > MAX_NOTES_PER_HOUR) {
-			return fail(400, { error: `Notes per hour must be between ${MIN_NOTES_PER_HOUR} and ${MAX_NOTES_PER_HOUR}` });
+		if (
+			!Number.isFinite(notesPerHour) ||
+			notesPerHour < MIN_NOTES_PER_HOUR ||
+			notesPerHour > MAX_NOTES_PER_HOUR
+		) {
+			return fail(400, {
+				error: `Notes per hour must be between ${MIN_NOTES_PER_HOUR} and ${MAX_NOTES_PER_HOUR}`,
+			});
 		}
 
 		if (!userComment || !internalComment) {
@@ -103,15 +128,12 @@ export const actions: Actions = {
 			return fail(400, { error: `Hours must be between 0 and ${maxHours.toFixed(1)}` });
 		}
 
+		// A reviewer approval is a suggestion to HQ, not a review event yet.
 		await Promise.all([
-			db
-				.update(ships)
-				.set({ status: 'REVIEWER_APPROVED', feedback: userComment })
-				.where(eq(ships.id, shipId)),
-			db.insert(shipReviews).values({
+			db.update(ships).set({ status: 'REVIEWER_APPROVED' }).where(eq(ships.id, shipId)),
+			db.insert(shipSuggestions).values({
 				shipId,
 				reviewerId: locals.user!.id,
-				type: 'APPROVAL',
 				userComment,
 				internalComment,
 				adjustedHours,
@@ -296,17 +318,11 @@ export const actions: Actions = {
 			})
 			.where(eq(shipReviews.id, reviewId));
 
-		if (
-			reviewInfo.review.slackMessageTs &&
-			reviewInfo.review.slackChannelId &&
-			userComment
-		) {
+		if (reviewInfo.review.slackMessageTs && reviewInfo.review.slackChannelId && userComment) {
 			const type =
-				reviewInfo.review.type === 'APPROVAL' ||
-				reviewInfo.review.type === 'HQ_APPROVAL'
+				reviewInfo.review.type === 'APPROVAL' || reviewInfo.review.type === 'HQ_APPROVAL'
 					? 'approved'
-					: reviewInfo.review.type === 'REJECTION' ||
-						  reviewInfo.review.type === 'HQ_REJECTION'
+					: reviewInfo.review.type === 'REJECTION' || reviewInfo.review.type === 'HQ_REJECTION'
 						? 'rejected'
 						: 'comment';
 			await editReviewDM(
@@ -370,12 +386,17 @@ export const actions: Actions = {
 			.limit(1);
 
 		const approval = approvalRow?.review;
-		const adjustedHours = approval?.adjustedHours ?? hqApprovalRow?.review.adjustedHours ?? shipInfo.ship.seconds / 3600;
+		const adjustedHours =
+			approval?.adjustedHours ??
+			hqApprovalRow?.review.adjustedHours ??
+			shipInfo.ship.seconds / 3600;
 
 		const totalShipTime = formatHours(shipInfo.ship.seconds);
 		const adjustedTime = `${Math.floor(adjustedHours)}h ${Math.round((adjustedHours % 1) * 60)}m`;
 		const shipDate = shipInfo.ship.submittedAt.toISOString().slice(0, 10);
-		const reviewDate = (approval?.createdAt ?? hqApprovalRow?.review.createdAt ?? new Date()).toISOString().slice(0, 10);
+		const reviewDate = (approval?.createdAt ?? hqApprovalRow?.review.createdAt ?? new Date())
+			.toISOString()
+			.slice(0, 10);
 		const hackatimeProjectsList = shipInfo.project.hackatimeProjects.join(', ') || 'None';
 		const reviewerName = approvalRow?.reviewer.username ?? 'Unknown';
 		const hqReviewerName = hqApprovalRow?.reviewer.username ?? 'Unknown';

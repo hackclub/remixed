@@ -1,9 +1,16 @@
 import { db } from '$lib/server/db';
-import { projects, ships, shipReviews, users, notesLedger } from '$lib/server/db/schema';
+import {
+	projects,
+	ships,
+	shipReviews,
+	shipSuggestions,
+	users,
+	notesLedger,
+} from '$lib/server/db/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { decrypt } from '$lib/server/crypto';
 import { recordAuditLog } from '$lib/server/audit';
-import { NOTES_PER_HOUR, formatHours } from '$lib';
+import { NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR, formatHours } from '$lib';
 import { sendReviewDM } from '$lib/server/slack/review_message';
 import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
 import { sendMessage, deleteMessage, findAndDeleteMessages } from '$lib/server/slack/send_message';
@@ -35,6 +42,8 @@ export type ReviewActionInput = {
 	actorId: string;
 	action: string;
 	hoursAssigned?: number;
+	/** Notes awarded per approved hour. Chosen by the reviewer when approving. */
+	notesPerHour?: number;
 	feedbackMessage?: string;
 	justification?: string;
 	internalMessage?: string;
@@ -75,22 +84,33 @@ export async function performReviewAction(
 		if (hoursAssigned <= 0 || hoursAssigned > maxHours + 0.1)
 			return fail(400, 'VALIDATION_ERROR', `Hours must be between 0 and ${maxHours.toFixed(1)}`);
 
+		const notesPerHour = input.notesPerHour ?? NOTES_PER_HOUR;
+		if (
+			!Number.isFinite(notesPerHour) ||
+			notesPerHour < MIN_NOTES_PER_HOUR ||
+			notesPerHour > MAX_NOTES_PER_HOUR
+		)
+			return fail(
+				400,
+				'VALIDATION_ERROR',
+				`Notes per hour must be between ${MIN_NOTES_PER_HOUR} and ${MAX_NOTES_PER_HOUR}.`,
+			);
+
 		const userComment = input.feedbackMessage ?? '';
 		const internalComment = input.justification ?? '';
 
+		// A reviewer approval is a *suggestion* to HQ, not a review event. It does
+		// not appear on the timeline; HQ later authorizes it (which materializes the
+		// real reviewer + HQ approvals) or discards it.
 		await Promise.all([
-			db
-				.update(ships)
-				.set({ status: 'REVIEWER_APPROVED', feedback: userComment })
-				.where(eq(ships.id, shipId)),
-			db.insert(shipReviews).values({
+			db.update(ships).set({ status: 'REVIEWER_APPROVED' }).where(eq(ships.id, shipId)),
+			db.insert(shipSuggestions).values({
 				shipId,
 				reviewerId: reviewerUserId,
-				type: 'APPROVAL',
 				userComment,
 				internalComment,
 				adjustedHours: hoursAssigned,
-				notesPerHour: NOTES_PER_HOUR,
+				notesPerHour,
 			}),
 			recordAuditLog(db, {
 				actorUserId: reviewerUserId,
@@ -100,8 +120,8 @@ export async function performReviewAction(
 				changeType: 'reviewer_approve',
 				data: {
 					adjustedHours: hoursAssigned,
-					notesPerHour: NOTES_PER_HOUR,
-					notesPayout: Math.ceil(hoursAssigned * NOTES_PER_HOUR),
+					notesPerHour,
+					notesPayout: Math.ceil(hoursAssigned * notesPerHour),
 					userComment,
 					internalComment,
 					source,
@@ -236,24 +256,26 @@ export async function performReviewAction(
 		if (shipInfo.ship.status !== 'REVIEWER_APPROVED')
 			return fail(400, 'VALIDATION_ERROR', 'Ship is not pending HQ review.');
 
-		const [priorApprovalRow] = await db
+		const [suggestionRow] = await db
 			.select({
-				review: shipReviews,
-				reviewer: { username: users.username },
+				suggestion: shipSuggestions,
+				reviewer: { id: users.id, username: users.username },
 			})
-			.from(shipReviews)
-			.innerJoin(users, eq(shipReviews.reviewerId, users.id))
-			.where(and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'APPROVAL')))
-			.orderBy(desc(shipReviews.createdAt))
+			.from(shipSuggestions)
+			.innerJoin(users, eq(shipSuggestions.reviewerId, users.id))
+			.where(eq(shipSuggestions.shipId, shipId))
+			.orderBy(desc(shipSuggestions.createdAt))
 			.limit(1);
 
-		const priorApproval = priorApprovalRow?.review;
+		if (!suggestionRow) return fail(404, 'NOT_FOUND', 'No pending suggestion found for this ship.');
+
+		const suggestion = suggestionRow.suggestion;
 		const adjustedHours =
-			input.hoursAssigned ?? priorApproval?.adjustedHours ?? shipInfo.ship.seconds / 3600;
-		const notesPerHour = priorApproval?.notesPerHour ?? NOTES_PER_HOUR;
+			input.hoursAssigned ?? suggestion.adjustedHours ?? shipInfo.ship.seconds / 3600;
+		const notesPerHour = suggestion.notesPerHour ?? NOTES_PER_HOUR;
 		const notesPayout = Math.ceil(adjustedHours * notesPerHour);
-		const userComment = priorApproval?.userComment ?? '';
-		const internalComment = priorApproval?.internalComment ?? '';
+		const userComment = suggestion.userComment ?? '';
+		const internalComment = suggestion.internalComment ?? '';
 
 		const [hqReviewer] = await db
 			.select({ username: users.username })
@@ -265,6 +287,23 @@ export async function performReviewAction(
 				.update(ships)
 				.set({ status: 'APPROVED', feedback: userComment })
 				.where(eq(ships.id, shipId));
+
+			// Materialize the reviewer's suggestion into a real APPROVAL review,
+			// attributed to the original reviewer and timestamped when they reviewed,
+			// then drop the suggestion now that HQ has acted on it.
+			await tx.insert(shipReviews).values({
+				shipId,
+				reviewerId: suggestion.reviewerId,
+				type: 'APPROVAL',
+				userComment,
+				internalComment,
+				adjustedHours: suggestion.adjustedHours,
+				notesPerHour: suggestion.notesPerHour,
+				createdAt: suggestion.createdAt,
+				updatedAt: suggestion.updatedAt,
+			});
+
+			await tx.delete(shipSuggestions).where(eq(shipSuggestions.id, suggestion.id));
 
 			const [hqReview] = await tx
 				.insert(shipReviews)
@@ -335,7 +374,7 @@ export async function performReviewAction(
 		const shipDate = shipInfo.ship.submittedAt.toISOString().slice(0, 10);
 		const reviewDate = new Date().toISOString().slice(0, 10);
 		const hackatimeProjectsList = shipInfo.project.hackatimeProjects.join(', ') || 'None';
-		const reviewerName = priorApprovalRow?.reviewer.username ?? 'Unknown';
+		const reviewerName = suggestionRow.reviewer.username ?? 'Unknown';
 		const hqReviewerName = hqReviewer?.username ?? 'Unknown';
 
 		const enrichedJustification = [
@@ -392,37 +431,23 @@ export async function performReviewAction(
 		if (shipInfo.ship.status !== 'REVIEWER_APPROVED')
 			return fail(400, 'VALIDATION_ERROR', 'Ship is not pending HQ review.');
 
+		// Discarding a suggestion simply drops it and returns the ship to the review
+		// queue. It is NOT a rejection of the ship, so no review/timeline event is
+		// created — the suggestion never was a review.
 		await Promise.all([
 			db.update(ships).set({ status: 'PENDING', feedback: null }).where(eq(ships.id, shipId)),
-			db.insert(shipReviews).values({
-				shipId,
-				reviewerId: reviewerUserId,
-				type: 'HQ_REJECTION',
-				internalComment: null,
-				isInternal: true,
-			}),
+			db.delete(shipSuggestions).where(eq(shipSuggestions.shipId, shipId)),
 			recordAuditLog(db, {
 				actorUserId: reviewerUserId,
 				category: 'SHIP_REVIEW',
 				entityType: 'ship',
 				entityId: shipId,
-				changeType: 'hq_reject',
+				changeType: 'discard_suggestion',
 				data: { source },
 			}),
 		]);
 
-		return {
-			ok: true,
-			data: {
-				event: {
-					type: 'rejection',
-					shipId: String(shipId),
-					actorId: input.actorId,
-					feedbackMessage: '',
-					timestamp: new Date().toISOString(),
-				},
-			},
-		};
+		return { ok: true, data: {} };
 	}
 
 	if (input.action === 'reverse_authorize') {
@@ -442,10 +467,38 @@ export async function performReviewAction(
 		const notesPerHour = hqApproval.notesPerHour ?? NOTES_PER_HOUR;
 		const notesPayout = Math.ceil(adjustedHours * notesPerHour);
 
+		// Reverting to the pending-HQ state means the ship should once again carry a
+		// live suggestion rather than a materialized reviewer approval. Pull the
+		// reviewer's APPROVAL back out into a suggestion (falling back to the HQ
+		// approval's own data for legacy ships that never had a separate APPROVAL).
+		const [reviewerApproval] = await db
+			.select()
+			.from(shipReviews)
+			.where(and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'APPROVAL')))
+			.orderBy(desc(shipReviews.createdAt))
+			.limit(1);
+
 		const { newBalance } = await db.transaction(async (tx) => {
 			await tx.update(ships).set({ status: 'REVIEWER_APPROVED' }).where(eq(ships.id, shipId));
 
 			await tx.delete(shipReviews).where(eq(shipReviews.id, hqApproval.id));
+
+			const restored = reviewerApproval ?? hqApproval;
+			await tx.insert(shipSuggestions).values({
+				shipId,
+				reviewerId: restored.reviewerId,
+				userComment: restored.userComment,
+				internalComment: restored.internalComment,
+				adjustedHours: restored.adjustedHours,
+				notesPerHour: restored.notesPerHour,
+				...(reviewerApproval
+					? { createdAt: reviewerApproval.createdAt, updatedAt: reviewerApproval.updatedAt }
+					: {}),
+			});
+
+			if (reviewerApproval) {
+				await tx.delete(shipReviews).where(eq(shipReviews.id, reviewerApproval.id));
+			}
 
 			await tx
 				.update(projects)
@@ -537,6 +590,48 @@ export async function performUpdateReview(
 		)
 		.orderBy(desc(shipReviews.createdAt))
 		.limit(1);
+
+	// While a ship is pending HQ, the reviewer's "approval" is still a suggestion
+	// (not yet a review), so an approval edit targets the suggestion instead.
+	if (!review && reviewType === 'APPROVAL') {
+		const [suggestion] = await db
+			.select()
+			.from(shipSuggestions)
+			.where(
+				and(eq(shipSuggestions.shipId, shipId), eq(shipSuggestions.reviewerId, reviewerUserId)),
+			)
+			.orderBy(desc(shipSuggestions.createdAt))
+			.limit(1);
+
+		if (!suggestion) return fail(404, 'NOT_FOUND', 'Review not found.');
+
+		const suggestionUpdates: Partial<typeof shipSuggestions.$inferInsert> = {
+			updatedAt: new Date(),
+		};
+		if (input.feedbackMessage !== undefined) suggestionUpdates.userComment = input.feedbackMessage;
+		if (input.justification !== undefined) suggestionUpdates.internalComment = input.justification;
+		if (input.hoursAssigned !== undefined) suggestionUpdates.adjustedHours = input.hoursAssigned;
+
+		await db
+			.update(shipSuggestions)
+			.set(suggestionUpdates)
+			.where(eq(shipSuggestions.id, suggestion.id));
+
+		await recordAuditLog(db, {
+			actorUserId: reviewerUserId,
+			category: 'SHIP_REVIEW',
+			entityType: 'review',
+			entityId: suggestion.id,
+			changeType: 'edit_suggestion',
+			data: {
+				feedbackMessage: input.feedbackMessage,
+				justification: input.justification,
+				source,
+			},
+		});
+
+		return { ok: true, data: {} };
+	}
 
 	if (!review) return fail(404, 'NOT_FOUND', 'Review not found.');
 

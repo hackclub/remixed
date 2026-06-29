@@ -9,6 +9,7 @@ import {
 	orders,
 	projects,
 	shipReviews,
+	shipSuggestions,
 	ships,
 	shopItems,
 	users,
@@ -59,7 +60,8 @@ function optNum(args: Record<string, unknown>, key: string): number | undefined 
 	if (args[key] === undefined || args[key] === null) return undefined;
 	const value = args[key];
 	const n = typeof value === 'string' ? Number(value) : value;
-	if (typeof n !== 'number' || !Number.isFinite(n)) throw new ToolError(`"${key}" must be a number.`);
+	if (typeof n !== 'number' || !Number.isFinite(n))
+		throw new ToolError(`"${key}" must be a number.`);
 	return n;
 }
 
@@ -282,7 +284,7 @@ export const TOOLS: ToolDefinition[] = [
 	{
 		name: 'get_user_address',
 		description:
-			'Decrypts and returns a user\'s stored shipping/PII fields (name, address, birthday). Sensitive — every call is recorded in the audit log.',
+			"Decrypts and returns a user's stored shipping/PII fields (name, address, birthday). Sensitive — every call is recorded in the audit log.",
 		inputSchema: {
 			type: 'object',
 			properties: {
@@ -459,11 +461,24 @@ export const TOOLS: ToolDefinition[] = [
 						.orderBy(asc(shipReviews.createdAt))
 				: [];
 
+			const suggestions = shipIds.length
+				? await db
+						.select({
+							suggestion: shipSuggestions,
+							reviewer: { id: users.id, username: users.username, slackId: users.slackId },
+						})
+						.from(shipSuggestions)
+						.innerJoin(users, eq(shipSuggestions.reviewerId, users.id))
+						.where(inArray(shipSuggestions.shipId, shipIds))
+						.orderBy(asc(shipSuggestions.createdAt))
+				: [];
+
 			return {
 				project: row.project,
 				owner: publicUser(row.owner),
 				ships: projectShips,
 				reviews: reviews.map((r) => ({ ...r.review, reviewer: r.reviewer })),
+				suggestions: suggestions.map((s) => ({ ...s.suggestion, reviewer: s.reviewer })),
 			};
 		},
 	},
@@ -538,11 +553,22 @@ export const TOOLS: ToolDefinition[] = [
 				.where(eq(shipReviews.shipId, shipId))
 				.orderBy(asc(shipReviews.createdAt));
 
+			const suggestions = await db
+				.select({
+					suggestion: shipSuggestions,
+					reviewer: { id: users.id, username: users.username, slackId: users.slackId },
+				})
+				.from(shipSuggestions)
+				.innerJoin(users, eq(shipSuggestions.reviewerId, users.id))
+				.where(eq(shipSuggestions.shipId, shipId))
+				.orderBy(asc(shipSuggestions.createdAt));
+
 			return {
 				ship: row.ship,
 				project: row.project,
 				owner: publicUser(row.owner),
 				reviews: reviews.map((r) => ({ ...r.review, reviewer: r.reviewer })),
+				suggestions: suggestions.map((s) => ({ ...s.suggestion, reviewer: s.reviewer })),
 			};
 		},
 	},
@@ -588,7 +614,12 @@ export const TOOLS: ToolDefinition[] = [
 						createdAt: orders.createdAt,
 						fulfilledAt: orders.fulfilledAt,
 					},
-					user: { id: users.id, username: users.username, email: users.email, slackId: users.slackId },
+					user: {
+						id: users.id,
+						username: users.username,
+						email: users.email,
+						slackId: users.slackId,
+					},
 					item: { id: shopItems.id, name: shopItems.name, cost: shopItems.cost },
 				})
 				.from(orders)
@@ -618,7 +649,12 @@ export const TOOLS: ToolDefinition[] = [
 			const [row] = await db
 				.select({
 					order: orders,
-					user: { id: users.id, username: users.username, email: users.email, slackId: users.slackId },
+					user: {
+						id: users.id,
+						username: users.username,
+						email: users.email,
+						slackId: users.slackId,
+					},
 					item: shopItems,
 				})
 				.from(orders)
@@ -626,8 +662,17 @@ export const TOOLS: ToolDefinition[] = [
 				.innerJoin(shopItems, eq(orders.itemId, shopItems.id))
 				.where(eq(orders.id, orderId));
 			if (!row) throw new ToolError(`No order with id ${orderId}.`);
-			const { fullName, addressLine1, addressLine2, city, state, country, zipCode, email, ...safe } =
-				row.order;
+			const {
+				fullName,
+				addressLine1,
+				addressLine2,
+				city,
+				state,
+				country,
+				zipCode,
+				email,
+				...safe
+			} = row.order;
 			void fullName;
 			void addressLine1;
 			void addressLine2;
@@ -744,10 +789,7 @@ export const TOOLS: ToolDefinition[] = [
 		description: 'List soft-deleted (archived) projects with who deleted them.',
 		inputSchema: { type: 'object', properties: {} },
 		handler: async () => {
-			const rows = await db
-				.select()
-				.from(deletedProjects)
-				.orderBy(desc(deletedProjects.deletedAt));
+			const rows = await db.select().from(deletedProjects).orderBy(desc(deletedProjects.deletedAt));
 			return { deletedProjects: rows };
 		},
 	},
@@ -794,7 +836,11 @@ export const TOOLS: ToolDefinition[] = [
 				hcaId: { type: 'string' },
 				avatarUrl: { type: 'string' },
 				email: { type: 'string' },
-				notesBalance: { type: 'integer', description: 'Sets the absolute balance. Prefer adjust_user_balance for relative changes (it writes a ledger entry).' },
+				notesBalance: {
+					type: 'integer',
+					description:
+						'Sets the absolute balance. Prefer adjust_user_balance for relative changes (it writes a ledger entry).',
+				},
 				referrals: { type: 'integer' },
 				roles: {
 					type: 'array',
@@ -839,11 +885,7 @@ export const TOOLS: ToolDefinition[] = [
 
 			if (Object.keys(updates).length === 0) throw new ToolError('No fields to update.');
 
-			const [updated] = await db
-				.update(users)
-				.set(updates)
-				.where(eq(users.id, userId))
-				.returning();
+			const [updated] = await db.update(users).set(updates).where(eq(users.id, userId)).returning();
 			await recordAuditLog(db, {
 				actorUserId: ctx.actor.id,
 				category: 'EDIT_USER',
@@ -858,7 +900,7 @@ export const TOOLS: ToolDefinition[] = [
 	{
 		name: 'adjust_user_balance',
 		description:
-			'Apply a relative change to a user\'s notes balance and record it in the notes ledger. Use a negative delta to deduct. Audit-logged.',
+			"Apply a relative change to a user's notes balance and record it in the notes ledger. Use a negative delta to deduct. Audit-logged.",
 		mutates: true,
 		inputSchema: {
 			type: 'object',
@@ -906,7 +948,7 @@ export const TOOLS: ToolDefinition[] = [
 	{
 		name: 'update_project',
 		description:
-			'Update a project\'s fields. Omitted fields are left unchanged. hackatimeProjects replaces the full list. Audit-logged.',
+			"Update a project's fields. Omitted fields are left unchanged. hackatimeProjects replaces the full list. Audit-logged.",
 		mutates: true,
 		inputSchema: {
 			type: 'object',
@@ -932,7 +974,10 @@ export const TOOLS: ToolDefinition[] = [
 			const updates: Partial<typeof projects.$inferInsert> = {};
 			if (args.userId !== undefined) {
 				const newOwnerId = reqInt(args, 'userId');
-				const [owner] = await db.select({ id: users.id }).from(users).where(eq(users.id, newOwnerId));
+				const [owner] = await db
+					.select({ id: users.id })
+					.from(users)
+					.where(eq(users.id, newOwnerId));
 				if (!owner) throw new ToolError(`No user with id ${newOwnerId} to assign as owner.`);
 				updates.userId = newOwnerId;
 			}
@@ -950,10 +995,13 @@ export const TOOLS: ToolDefinition[] = [
 				if (!Array.isArray(args.hackatimeProjects))
 					throw new ToolError('"hackatimeProjects" must be an array of strings.');
 				updates.hackatimeProjects = Array.from(
-					new Set((args.hackatimeProjects as unknown[]).map((p) => String(p).trim()).filter(Boolean)),
+					new Set(
+						(args.hackatimeProjects as unknown[]).map((p) => String(p).trim()).filter(Boolean),
+					),
 				);
 			}
-			if (args.hackatimeSeconds !== undefined) updates.hackatimeSeconds = reqInt(args, 'hackatimeSeconds');
+			if (args.hackatimeSeconds !== undefined)
+				updates.hackatimeSeconds = reqInt(args, 'hackatimeSeconds');
 
 			if (Object.keys(updates).length === 0) throw new ToolError('No fields to update.');
 
@@ -1109,7 +1157,9 @@ export const TOOLS: ToolDefinition[] = [
 			if (args.imageUrl !== undefined) updates.imageUrl = optStr(args, 'imageUrl') ?? '';
 			if (args.categories !== undefined) {
 				if (!Array.isArray(args.categories)) throw new ToolError('"categories" must be an array.');
-				updates.categories = (args.categories as unknown[]).map((c) => String(c).trim()).filter(Boolean);
+				updates.categories = (args.categories as unknown[])
+					.map((c) => String(c).trim())
+					.filter(Boolean);
 			}
 			if (Object.keys(updates).length === 0) throw new ToolError('No fields to update.');
 
@@ -1241,7 +1291,7 @@ export const TOOLS: ToolDefinition[] = [
 	{
 		name: 'review_ship',
 		description:
-			'Drive the ship review workflow as the token\'s admin account. Actions: approve / reject / comment / internal_comment (reviewer stage), authorize / deauthorize (HQ stage), reverse_authorize (undo an HQ approval). Sends Slack DMs and adjusts balances exactly like the dashboard. Audit-logged.',
+			"Drive the ship review workflow as the token's admin account. Actions: approve / reject / comment / internal_comment (reviewer stage), authorize / deauthorize (HQ stage), reverse_authorize (undo an HQ approval). Sends Slack DMs and adjusts balances exactly like the dashboard. Audit-logged.",
 		mutates: true,
 		inputSchema: {
 			type: 'object',
@@ -1263,6 +1313,11 @@ export const TOOLS: ToolDefinition[] = [
 					type: 'number',
 					description: 'For approve/authorize: hours credited (defaults to submitted hours).',
 				},
+				notesPerHour: {
+					type: 'integer',
+					description:
+						'For approve: notes awarded per approved hour (defaults to the standard rate).',
+				},
 				feedbackMessage: { type: 'string', description: 'User-facing feedback (approve/reject).' },
 				justification: { type: 'string', description: 'Internal note (approve).' },
 				internalMessage: { type: 'string', description: 'Internal note (reject).' },
@@ -1277,6 +1332,7 @@ export const TOOLS: ToolDefinition[] = [
 				actorId: ctx.actor.slackId,
 				action: reqStr(args, 'action'),
 				hoursAssigned: optNum(args, 'hoursAssigned'),
+				notesPerHour: optNum(args, 'notesPerHour'),
 				feedbackMessage: optStr(args, 'feedbackMessage'),
 				justification: optStr(args, 'justification'),
 				internalMessage: optStr(args, 'internalMessage'),
@@ -1290,7 +1346,7 @@ export const TOOLS: ToolDefinition[] = [
 	{
 		name: 'update_review',
 		description:
-			"Edit the latest approval or rejection this admin made on a ship (feedback, internal note, or adjusted hours). Re-syncs the Slack DM when the user-facing feedback changes. Audit-logged.",
+			'Edit the latest approval or rejection this admin made on a ship (feedback, internal note, or adjusted hours). Re-syncs the Slack DM when the user-facing feedback changes. Audit-logged.',
 		mutates: true,
 		inputSchema: {
 			type: 'object',
