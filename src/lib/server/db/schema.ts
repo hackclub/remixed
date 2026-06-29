@@ -110,6 +110,29 @@ export const shipReviews = pgTable('ship_reviews', {
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+/**
+ * A community reviewer's proposed approval of a ship. A suggestion is NOT a
+ * review event — it is a recommendation surfaced to HQ members, who either
+ * authorize it (which materializes the real reviewer + HQ approval reviews) or
+ * discard it (which simply drops the suggestion). A ship is `REVIEWER_APPROVED`
+ * exactly while it has a live suggestion awaiting HQ action.
+ */
+export const shipSuggestions = pgTable('ship_suggestions', {
+	id: serial('id').primaryKey(),
+	shipId: integer('ship_id')
+		.notNull()
+		.references(() => ships.id),
+	reviewerId: integer('reviewer_id')
+		.notNull()
+		.references(() => users.id),
+	userComment: text('user_comment'),
+	internalComment: text('internal_comment'),
+	adjustedHours: real('adjusted_hours'),
+	notesPerHour: integer('notes_per_hour'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 export const notesLedger = pgTable('notes_ledger', {
 	id: serial('id').primaryKey(),
 	userId: integer('user_id')
@@ -206,6 +229,19 @@ export const orders = pgTable('orders', {
 	userNotes: text('user_notes'),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	fulfilledAt: timestamp('fulfilled_at'),
+});
+
+export const mcpTokens = pgTable('mcp_tokens', {
+	id: serial('id').primaryKey(),
+	name: text('name').notNull(),
+	tokenHash: text('token_hash').notNull().unique(),
+	tokenPrefix: text('token_prefix').notNull(),
+	createdByUserId: integer('created_by_user_id')
+		.notNull()
+		.references(() => users.id),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	lastUsedAt: timestamp('last_used_at'),
+	revokedAt: timestamp('revoked_at'),
 });
 
 export const auditLogs = pgTable('audit_logs', {

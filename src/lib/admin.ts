@@ -52,6 +52,12 @@ export const ADMIN_PAGES: AdminPageDefinition[] = [
 		description: 'Review admin actions, entity changes, and sensitive access events in a table.',
 		roles: ['ORGANIZER'],
 	},
+	{
+		href: '/admin/mcp',
+		title: 'Admin MCP',
+		description: 'Create and revoke MCP tokens to query and manage the program from Claude Code.',
+		roles: ['ORGANIZER'],
+	},
 ];
 
 export function getAllowedAdminPages(roles: RoleEnumPub[] | null | undefined): AdminPageLink[] {

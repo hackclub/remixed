@@ -5,23 +5,34 @@ import {
 	projects,
 	ships,
 	shipReviews,
+	shipSuggestions,
 	users,
 	shopItems,
 	orders,
-	notesLedger,
 } from '$lib/server/db/schema';
 import { eq, and, sql, desc, asc, inArray, or, ilike, count } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import { decrypt } from '$lib/server/crypto';
-import { recordAuditLog } from '$lib/server/audit';
-import { NOTES_PER_HOUR, formatHours } from '$lib';
-import { sendReviewDM } from '$lib/server/slack/review_message';
-import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
-import { createAirtableShipRecord, extractGithubUsername } from '$lib/server/airtable';
+import { performReviewAction, performUpdateReview } from '$lib/server/reviews';
 import { HackatimeClient } from '$lib/server/hackatime';
+import { MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR, NOTES_PER_HOUR } from '$lib';
 
 const VERSION = '1.0.0';
-const decryptOrNull = (val: string | null) => (val ? decrypt(val) : null);
+
+/**
+ * Custom review fields shown to reviewers when approving a ship. Lets the
+ * reviewer pick the notes-per-hour rate that drives the eventual payout.
+ */
+const APPROVE_FIELDS = [
+	{
+		name: 'notes_per_hour',
+		label: 'Notes per hour',
+		type: 'integer',
+		required: true,
+		placeholder: `${MIN_NOTES_PER_HOUR}–${MAX_NOTES_PER_HOUR} notes per approved hour`,
+		defaultValue: NOTES_PER_HOUR,
+	},
+];
 
 function err(status: number, error: string, message: string) {
 	return json({ error, message }, { status });
@@ -63,7 +74,16 @@ function formatProject(
 	project: typeof projects.$inferSelect,
 	user: { slackId: string; hcaId: string | null; hackatimeId: string | null },
 	projectShips: (typeof ships.$inferSelect)[],
-	reviewerApprovals?: Map<number, { reviewerId: string; adjustedHours: number; feedbackMessage: string; justification: string; timestamp: string }>,
+	reviewerApprovals?: Map<
+		number,
+		{
+			reviewerId: string;
+			adjustedHours: number;
+			feedbackMessage: string;
+			justification: string;
+			timestamp: string;
+		}
+	>,
 ) {
 	return {
 		id: String(project.id),
@@ -75,19 +95,22 @@ function formatProject(
 		authorId: actorIdFromUser(user),
 		hackatimeId: user.hackatimeId ?? undefined,
 		hackatimeProjectKeys: project.hackatimeProjects,
-		ships: projectShips.filter((s) => s.status !== 'CANCELLED').map((s) => {
-			const base = {
-				id: String(s.id),
-				hoursSubmitted: s.seconds / 3600,
-				submittedAt: s.submittedAt.toISOString(),
-				status: mapShipStatus(s.status),
-			};
-			const approval = reviewerApprovals?.get(s.id);
-			if (approval && s.status === 'REVIEWER_APPROVED') {
-				return { ...base, reviewerApproval: approval };
-			}
-			return base;
-		}),
+		ships: projectShips
+			.filter((s) => s.status !== 'CANCELLED')
+			.map((s) => {
+				const base = {
+					id: String(s.id),
+					hoursSubmitted: s.seconds / 3600,
+					submittedAt: s.submittedAt.toISOString(),
+					status: mapShipStatus(s.status),
+					...(s.status === 'PENDING' ? { approveFields: APPROVE_FIELDS } : {}),
+				};
+				const approval = reviewerApprovals?.get(s.id);
+				if (approval && s.status === 'REVIEWER_APPROVED') {
+					return { ...base, reviewerApproval: approval };
+				}
+				return base;
+			}),
 		metadata: {},
 	};
 }
@@ -128,27 +151,48 @@ function formatOrder(
 }
 
 async function fetchReviewerApprovals(shipIds: number[]) {
-	if (shipIds.length === 0) return new Map<number, { reviewerId: string; adjustedHours: number; feedbackMessage: string; justification: string; timestamp: string }>();
+	if (shipIds.length === 0)
+		return new Map<
+			number,
+			{
+				reviewerId: string;
+				adjustedHours: number;
+				feedbackMessage: string;
+				justification: string;
+				timestamp: string;
+			}
+		>();
 
-	const approvals = await db
+	// A pending-HQ ship's reviewer "approval" is a suggestion awaiting HQ action,
+	// not a materialized review event.
+	const suggestions = await db
 		.select({
-			review: shipReviews,
+			suggestion: shipSuggestions,
 			reviewer: { slackId: users.slackId, hcaId: users.hcaId },
 		})
-		.from(shipReviews)
-		.innerJoin(users, eq(shipReviews.reviewerId, users.id))
-		.where(and(inArray(shipReviews.shipId, shipIds), eq(shipReviews.type, 'APPROVAL')))
-		.orderBy(desc(shipReviews.createdAt));
+		.from(shipSuggestions)
+		.innerJoin(users, eq(shipSuggestions.reviewerId, users.id))
+		.where(inArray(shipSuggestions.shipId, shipIds))
+		.orderBy(desc(shipSuggestions.createdAt));
 
-	const map = new Map<number, { reviewerId: string; adjustedHours: number; feedbackMessage: string; justification: string; timestamp: string }>();
-	for (const { review, reviewer } of approvals) {
-		if (!map.has(review.shipId)) {
-			map.set(review.shipId, {
+	const map = new Map<
+		number,
+		{
+			reviewerId: string;
+			adjustedHours: number;
+			feedbackMessage: string;
+			justification: string;
+			timestamp: string;
+		}
+	>();
+	for (const { suggestion, reviewer } of suggestions) {
+		if (!map.has(suggestion.shipId)) {
+			map.set(suggestion.shipId, {
 				reviewerId: actorIdFromUser(reviewer),
-				adjustedHours: review.adjustedHours ?? 0,
-				feedbackMessage: review.userComment ?? '',
-				justification: review.internalComment ?? '',
-				timestamp: review.createdAt.toISOString(),
+				adjustedHours: suggestion.adjustedHours ?? 0,
+				feedbackMessage: suggestion.userComment ?? '',
+				justification: suggestion.internalComment ?? '',
+				timestamp: suggestion.createdAt.toISOString(),
 			});
 		}
 	}
@@ -267,7 +311,15 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 		.where(statusFilter ?? undefined);
 
 	const projectRows = await db
-		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId, hackatimeId: users.hackatimeId, accessToken: users.accessToken } })
+		.select({
+			project: projects,
+			user: {
+				slackId: users.slackId,
+				hcaId: users.hcaId,
+				hackatimeId: users.hackatimeId,
+				accessToken: users.accessToken,
+			},
+		})
 		.from(projects)
 		.innerJoin(users, eq(projects.userId, users.id))
 		.where(whereClause)
@@ -315,7 +367,15 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 async function fetchProjectDetail(input: { projectId: string }) {
 	const id = Number(input.projectId);
 	const [row] = await db
-		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId, hackatimeId: users.hackatimeId, accessToken: users.accessToken } })
+		.select({
+			project: projects,
+			user: {
+				slackId: users.slackId,
+				hcaId: users.hcaId,
+				hackatimeId: users.hackatimeId,
+				accessToken: users.accessToken,
+			},
+		})
 		.from(projects)
 		.innerJoin(users, eq(projects.userId, users.id))
 		.where(eq(projects.id, id));
@@ -394,7 +454,10 @@ async function fetchProjectTimeline(input: { projectId: string }) {
 				justification: review.internalComment ?? '',
 				timestamp: review.createdAt.toISOString(),
 			});
-		} else if (review.type === 'REJECTION' || review.type === 'HQ_REJECTION') {
+		} else if (review.type === 'REJECTION') {
+			// Only a genuine reviewer rejection is a rejection event. HQ_REJECTION is
+			// a legacy "returned to queue" marker (discarded suggestion) and must not
+			// surface as a rejection of the ship.
 			events.push({
 				type: 'rejection',
 				shipId: String(review.shipId),
@@ -415,8 +478,7 @@ async function fetchProjectTimeline(input: { projectId: string }) {
 	}
 
 	events.sort(
-		(a, b) =>
-			new Date(a.timestamp as string).getTime() - new Date(b.timestamp as string).getTime(),
+		(a, b) => new Date(a.timestamp as string).getTime() - new Date(b.timestamp as string).getTime(),
 	);
 
 	return json({ events });
@@ -431,365 +493,40 @@ async function submitReviewAction(input: {
 	justification?: string;
 	internalMessage?: string;
 	commentText?: string;
+	fields?: Record<string, unknown>;
 }) {
-	const shipId = Number(input.shipId);
 	const reviewerUserId = await resolveActorId(input.reviewerId);
 	if (reviewerUserId === null)
 		return err(404, 'NOT_FOUND', `Reviewer ${input.reviewerId} not found.`);
 
-	const [shipInfo] = await db
-		.select({ ship: ships, project: projects, user: users })
-		.from(ships)
-		.innerJoin(projects, eq(ships.projectId, projects.id))
-		.innerJoin(users, eq(projects.userId, users.id))
-		.where(eq(ships.id, shipId));
+	const rawNotesPerHour = input.fields?.notes_per_hour;
+	const notesPerHour =
+		typeof rawNotesPerHour === 'number'
+			? rawNotesPerHour
+			: typeof rawNotesPerHour === 'string' && rawNotesPerHour.trim() !== ''
+				? Number(rawNotesPerHour)
+				: undefined;
 
-	if (!shipInfo) return err(404, 'NOT_FOUND', `Ship ${input.shipId} not found.`);
+	const result = await performReviewAction({
+		shipId: Number(input.shipId),
+		reviewerUserId,
+		actorId: input.reviewerId,
+		action: input.action,
+		hoursAssigned: input.hoursAssigned,
+		notesPerHour,
+		feedbackMessage: input.feedbackMessage,
+		justification: input.justification,
+		internalMessage: input.internalMessage,
+		commentText: input.commentText,
+		source: 'sidekick',
+	});
 
-	if (input.action === 'approve') {
-		if (shipInfo.ship.status !== 'PENDING')
-			return err(400, 'VALIDATION_ERROR', 'Ship is not pending review.');
+	if (!result.ok) return err(result.status, result.error, result.message);
 
-		const hoursAssigned = input.hoursAssigned ?? shipInfo.ship.seconds / 3600;
-		const maxHours = shipInfo.ship.seconds / 3600;
-		if (hoursAssigned <= 0 || hoursAssigned > maxHours + 0.1)
-			return err(400, 'VALIDATION_ERROR', `Hours must be between 0 and ${maxHours.toFixed(1)}`);
-
-		const userComment = input.feedbackMessage ?? '';
-		const internalComment = input.justification ?? '';
-
-		await Promise.all([
-			db
-				.update(ships)
-				.set({ status: 'REVIEWER_APPROVED', feedback: userComment })
-				.where(eq(ships.id, shipId)),
-			db.insert(shipReviews).values({
-				shipId,
-				reviewerId: reviewerUserId,
-				type: 'APPROVAL',
-				userComment,
-				internalComment,
-				adjustedHours: hoursAssigned,
-				notesPerHour: NOTES_PER_HOUR,
-			}),
-			recordAuditLog(db, {
-				actorUserId: reviewerUserId,
-				category: 'SHIP_REVIEW',
-				entityType: 'ship',
-				entityId: shipId,
-				changeType: 'reviewer_approve',
-				data: {
-					adjustedHours: hoursAssigned,
-					notesPerHour: NOTES_PER_HOUR,
-					notesPayout: Math.ceil(hoursAssigned * NOTES_PER_HOUR),
-					userComment,
-					internalComment,
-					source: 'sidekick',
-				},
-			}),
-		]);
-
-		const event = {
-			type: 'approval' as const,
-			shipId: String(shipId),
-			actorId: input.reviewerId,
-			hoursAssigned,
-			feedbackMessage: userComment,
-			justification: internalComment,
-			timestamp: new Date().toISOString(),
-		};
-
-		return json({ success: true, event });
+	if (result.data.reversedNotes !== undefined) {
+		return json({ success: true, reversedNotes: result.data.reversedNotes });
 	}
-
-	if (input.action === 'reject') {
-		if (shipInfo.ship.status !== 'PENDING')
-			return err(400, 'VALIDATION_ERROR', 'Ship is not pending review.');
-
-		const userComment = input.feedbackMessage ?? '';
-		const internalComment = input.internalMessage ?? '';
-
-		const slackResult = await sendReviewDM(
-			shipInfo.user.slackId,
-			shipInfo.project.title,
-			shipInfo.project.id,
-			'rejected',
-			userComment,
-		);
-
-		await Promise.all([
-			db
-				.update(ships)
-				.set({ status: 'REJECTED', feedback: userComment })
-				.where(eq(ships.id, shipId)),
-			db.insert(shipReviews).values({
-				shipId,
-				reviewerId: reviewerUserId,
-				type: 'REJECTION',
-				userComment,
-				internalComment,
-				slackMessageTs: slackResult.ts ?? null,
-				slackChannelId: slackResult.channel ?? null,
-			}),
-			recordAuditLog(db, {
-				actorUserId: reviewerUserId,
-				category: 'SHIP_REVIEW',
-				entityType: 'ship',
-				entityId: shipId,
-				changeType: 'reject',
-				data: { userComment, internalComment, source: 'sidekick' },
-			}),
-		]);
-
-		const event = {
-			type: 'rejection' as const,
-			shipId: String(shipId),
-			actorId: input.reviewerId,
-			feedbackMessage: userComment,
-			timestamp: new Date().toISOString(),
-		};
-
-		return json({ success: true, event });
-	}
-
-	if (input.action === 'comment' || input.action === 'internal_comment') {
-		const isInternal = input.action === 'internal_comment';
-		const comment = input.commentText ?? '';
-
-		let slackTs: string | undefined;
-		let slackChannel: string | undefined;
-
-		if (!isInternal) {
-			const slackResult = await sendReviewDM(
-				shipInfo.user.slackId,
-				shipInfo.project.title,
-				shipInfo.project.id,
-				'comment',
-				comment,
-			);
-			slackTs = slackResult.ts;
-			slackChannel = slackResult.channel;
-		}
-
-		await Promise.all([
-			db.insert(shipReviews).values({
-				shipId,
-				reviewerId: reviewerUserId,
-				type: 'COMMENT',
-				userComment: isInternal ? null : comment,
-				internalComment: isInternal ? comment : null,
-				isInternal,
-				slackMessageTs: slackTs ?? null,
-				slackChannelId: slackChannel ?? null,
-			}),
-			recordAuditLog(db, {
-				actorUserId: reviewerUserId,
-				category: 'SHIP_REVIEW',
-				entityType: 'ship',
-				entityId: shipId,
-				changeType: 'comment',
-				data: { comment, isInternal, source: 'sidekick' },
-			}),
-		]);
-
-		const event = {
-			type: 'comment' as const,
-			actorId: input.reviewerId,
-			message: comment,
-			isInternal,
-			timestamp: new Date().toISOString(),
-		};
-
-		return json({ success: true, event });
-	}
-
-	if (input.action === 'authorize') {
-		if (shipInfo.ship.status !== 'REVIEWER_APPROVED')
-			return err(400, 'VALIDATION_ERROR', 'Ship is not pending HQ review.');
-
-		const [priorApprovalRow] = await db
-			.select({
-				review: shipReviews,
-				reviewer: { username: users.username },
-			})
-			.from(shipReviews)
-			.innerJoin(users, eq(shipReviews.reviewerId, users.id))
-			.where(and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'APPROVAL')))
-			.orderBy(desc(shipReviews.createdAt))
-			.limit(1);
-
-		const priorApproval = priorApprovalRow?.review;
-		const adjustedHours =
-			input.hoursAssigned ?? priorApproval?.adjustedHours ?? shipInfo.ship.seconds / 3600;
-		const notesPerHour = priorApproval?.notesPerHour ?? NOTES_PER_HOUR;
-		const notesPayout = Math.ceil(adjustedHours * notesPerHour);
-		const userComment = priorApproval?.userComment ?? '';
-		const internalComment = priorApproval?.internalComment ?? '';
-
-		const [hqReviewer] = await db
-			.select({ username: users.username })
-			.from(users)
-			.where(eq(users.id, reviewerUserId));
-
-		const { oldBalance, newBalance, hqReviewId } = await db.transaction(async (tx) => {
-			await tx
-				.update(ships)
-				.set({ status: 'APPROVED', feedback: userComment })
-				.where(eq(ships.id, shipId));
-
-			const [hqReview] = await tx.insert(shipReviews).values({
-				shipId,
-				reviewerId: reviewerUserId,
-				type: 'HQ_APPROVAL',
-				userComment,
-				internalComment,
-				adjustedHours,
-				notesPerHour,
-				slackMessageTs: null,
-				slackChannelId: null,
-			}).returning({ id: shipReviews.id });
-
-			await tx
-				.update(projects)
-				.set({ committedSeconds: sql`${projects.committedSeconds} + ${shipInfo.ship.seconds}` })
-				.where(eq(projects.id, shipInfo.project.id));
-
-			const [updatedUser] = await tx
-				.update(users)
-				.set({ notesBalance: sql`${users.notesBalance} + ${notesPayout}` })
-				.where(eq(users.id, shipInfo.user.id))
-				.returning({ notesBalance: users.notesBalance });
-
-			await tx.insert(notesLedger).values({
-				userId: shipInfo.user.id,
-				delta: notesPayout,
-				reason: 'ship_approved',
-				refId: shipId,
-			});
-
-			await recordAuditLog(tx, {
-				actorUserId: reviewerUserId,
-				category: 'SHIP_REVIEW',
-				entityType: 'ship',
-				entityId: shipId,
-				changeType: 'hq_approve',
-				data: { adjustedHours, notesPerHour, notesPayout, source: 'sidekick' },
-			});
-
-			return {
-				oldBalance: updatedUser.notesBalance - notesPayout,
-				newBalance: updatedUser.notesBalance,
-				hqReviewId: hqReview.id,
-			};
-		});
-
-		const dmResult = await sendReviewDM(
-			shipInfo.user.slackId,
-			shipInfo.project.title,
-			shipInfo.project.id,
-			'approved',
-			userComment,
-		);
-
-		if (dmResult.ts && dmResult.channel) {
-			await db.update(shipReviews)
-				.set({ slackMessageTs: dmResult.ts, slackChannelId: dmResult.channel })
-				.where(eq(shipReviews.id, hqReviewId));
-		}
-
-		const totalShipTime = formatHours(shipInfo.ship.seconds);
-		const adjustedTime = `${Math.floor(adjustedHours)}h ${Math.round((adjustedHours % 1) * 60)}m`;
-		const shipDate = shipInfo.ship.submittedAt.toISOString().slice(0, 10);
-		const reviewDate = new Date().toISOString().slice(0, 10);
-		const hackatimeProjectsList = shipInfo.project.hackatimeProjects.join(', ') || 'None';
-		const reviewerName = priorApprovalRow?.reviewer.username ?? 'Unknown';
-		const hqReviewerName = hqReviewer?.username ?? 'Unknown';
-
-		const enrichedJustification = [
-			`This user tracked ${totalShipTime} on Hackatime. This was adjusted to ${adjustedTime} after review.`,
-			'',
-			internalComment,
-			'',
-			`Project was submitted by ${shipInfo.user.username} on ${shipDate}`,
-			`The Hackatime projects submitted were: ${hackatimeProjectsList} and included time from 2026-03-07 to ${shipDate}`,
-			`Project was reviewed by ${reviewerName} on ${reviewDate}.`,
-			`Project was HQ approved by ${hqReviewerName} on ${reviewDate}.`,
-		].join('\n');
-
-		await Promise.all([
-			sendUpdatedBalance(shipInfo.user.slackId, oldBalance, newBalance),
-			createAirtableShipRecord({
-				codeUrl: shipInfo.project.githubUrl,
-				playableUrl: shipInfo.project.demoUrl,
-				firstName: shipInfo.user.firstName,
-				lastName: shipInfo.user.lastName,
-				email: shipInfo.user.email,
-				screenshot: shipInfo.project.coverArt,
-				description: shipInfo.project.description,
-				githubUsername: extractGithubUsername(shipInfo.project.githubUrl),
-				addressLine1: decryptOrNull(shipInfo.user.addressLine1),
-				addressLine2: decryptOrNull(shipInfo.user.addressLine2),
-				city: decryptOrNull(shipInfo.user.city),
-				state: decryptOrNull(shipInfo.user.state),
-				country: decryptOrNull(shipInfo.user.country),
-				zipCode: decryptOrNull(shipInfo.user.zipCode),
-				birthday: decryptOrNull(shipInfo.user.birthday),
-				overrideHoursSpent: adjustedHours,
-				overrideHoursJustification: enrichedJustification,
-			}),
-		]);
-
-		const event = {
-			type: 'approval' as const,
-			shipId: String(shipId),
-			actorId: input.reviewerId,
-			hoursAssigned: adjustedHours,
-			feedbackMessage: userComment,
-			justification: internalComment,
-			timestamp: new Date().toISOString(),
-		};
-
-		return json({ success: true, event });
-	}
-
-	if (input.action === 'deauthorize') {
-		if (shipInfo.ship.status !== 'REVIEWER_APPROVED')
-			return err(400, 'VALIDATION_ERROR', 'Ship is not pending HQ review.');
-
-		await Promise.all([
-			db
-				.update(ships)
-				.set({ status: 'PENDING', feedback: null })
-				.where(eq(ships.id, shipId)),
-			db.insert(shipReviews).values({
-				shipId,
-				reviewerId: reviewerUserId,
-				type: 'HQ_REJECTION',
-				internalComment: null,
-				isInternal: true,
-			}),
-			recordAuditLog(db, {
-				actorUserId: reviewerUserId,
-				category: 'SHIP_REVIEW',
-				entityType: 'ship',
-				entityId: shipId,
-				changeType: 'hq_reject',
-				data: { source: 'sidekick' },
-			}),
-		]);
-
-		const event = {
-			type: 'rejection' as const,
-			shipId: String(shipId),
-			actorId: input.reviewerId,
-			feedbackMessage: '',
-			timestamp: new Date().toISOString(),
-		};
-
-		return json({ success: true, event });
-	}
-
-	return err(400, 'VALIDATION_ERROR', `Unknown review action: ${input.action}`);
+	return json({ success: true, event: result.data.event });
 }
 
 async function updateReviewAction(input: {
@@ -801,71 +538,22 @@ async function updateReviewAction(input: {
 	internalMessage?: string;
 	hoursAssigned?: number;
 }) {
-	const shipId = Number(input.shipId);
 	const reviewerUserId = await resolveActorId(input.reviewerId);
 	if (reviewerUserId === null)
 		return err(404, 'NOT_FOUND', `Reviewer ${input.reviewerId} not found.`);
 
-	const reviewType = input.type === 'approval' ? 'APPROVAL' : 'REJECTION';
-
-	const [review] = await db
-		.select()
-		.from(shipReviews)
-		.where(
-			and(
-				eq(shipReviews.shipId, shipId),
-				eq(shipReviews.reviewerId, reviewerUserId),
-				eq(shipReviews.type, reviewType),
-			),
-		)
-		.orderBy(desc(shipReviews.createdAt))
-		.limit(1);
-
-	if (!review) return err(404, 'NOT_FOUND', 'Review not found.');
-
-	const updates: Partial<typeof shipReviews.$inferInsert> = { updatedAt: new Date() };
-	if (input.feedbackMessage !== undefined) updates.userComment = input.feedbackMessage;
-	if (input.justification !== undefined) updates.internalComment = input.justification;
-	if (input.internalMessage !== undefined) updates.internalComment = input.internalMessage;
-	if (input.hoursAssigned !== undefined) updates.adjustedHours = input.hoursAssigned;
-
-	await db.update(shipReviews).set(updates).where(eq(shipReviews.id, review.id));
-
-	if (review.slackMessageTs && review.slackChannelId && input.feedbackMessage) {
-		const { editReviewDM } = await import('$lib/server/slack/review_message');
-		const [shipInfo] = await db
-			.select({ project: projects })
-			.from(ships)
-			.innerJoin(projects, eq(ships.projectId, projects.id))
-			.where(eq(ships.id, shipId));
-
-		if (shipInfo) {
-			const dmType = reviewType === 'APPROVAL' ? 'approved' : 'rejected';
-			await editReviewDM(
-				review.slackChannelId,
-				review.slackMessageTs,
-				shipInfo.project.title,
-				shipInfo.project.id,
-				dmType,
-				input.feedbackMessage,
-			);
-		}
-	}
-
-	await recordAuditLog(db, {
-		actorUserId: reviewerUserId,
-		category: 'SHIP_REVIEW',
-		entityType: 'review',
-		entityId: review.id,
-		changeType: 'edit_review',
-		data: {
-			feedbackMessage: input.feedbackMessage,
-			justification: input.justification,
-			internalMessage: input.internalMessage,
-			source: 'sidekick',
-		},
+	const result = await performUpdateReview({
+		shipId: Number(input.shipId),
+		reviewerUserId,
+		type: input.type,
+		feedbackMessage: input.feedbackMessage,
+		justification: input.justification,
+		internalMessage: input.internalMessage,
+		hoursAssigned: input.hoursAssigned,
+		source: 'sidekick',
 	});
 
+	if (!result.ok) return err(result.status, result.error, result.message);
 	return json({ success: true });
 }
 
