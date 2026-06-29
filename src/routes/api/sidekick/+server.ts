@@ -1,14 +1,38 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { projects, ships, shipReviews, users, shopItems, orders } from '$lib/server/db/schema';
+import {
+	projects,
+	ships,
+	shipReviews,
+	shipSuggestions,
+	users,
+	shopItems,
+	orders,
+} from '$lib/server/db/schema';
 import { eq, and, sql, desc, asc, inArray, or, ilike, count } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import { decrypt } from '$lib/server/crypto';
 import { performReviewAction, performUpdateReview } from '$lib/server/reviews';
 import { HackatimeClient } from '$lib/server/hackatime';
+import { MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR, NOTES_PER_HOUR } from '$lib';
 
 const VERSION = '1.0.0';
+
+/**
+ * Custom review fields shown to reviewers when approving a ship. Lets the
+ * reviewer pick the notes-per-hour rate that drives the eventual payout.
+ */
+const APPROVE_FIELDS = [
+	{
+		name: 'notes_per_hour',
+		label: 'Notes per hour',
+		type: 'integer',
+		required: true,
+		placeholder: `${MIN_NOTES_PER_HOUR}–${MAX_NOTES_PER_HOUR} notes per approved hour`,
+		defaultValue: NOTES_PER_HOUR,
+	},
+];
 
 function err(status: number, error: string, message: string) {
 	return json({ error, message }, { status });
@@ -50,7 +74,16 @@ function formatProject(
 	project: typeof projects.$inferSelect,
 	user: { slackId: string; hcaId: string | null; hackatimeId: string | null },
 	projectShips: (typeof ships.$inferSelect)[],
-	reviewerApprovals?: Map<number, { reviewerId: string; adjustedHours: number; feedbackMessage: string; justification: string; timestamp: string }>,
+	reviewerApprovals?: Map<
+		number,
+		{
+			reviewerId: string;
+			adjustedHours: number;
+			feedbackMessage: string;
+			justification: string;
+			timestamp: string;
+		}
+	>,
 ) {
 	return {
 		id: String(project.id),
@@ -62,19 +95,22 @@ function formatProject(
 		authorId: actorIdFromUser(user),
 		hackatimeId: user.hackatimeId ?? undefined,
 		hackatimeProjectKeys: project.hackatimeProjects,
-		ships: projectShips.filter((s) => s.status !== 'CANCELLED').map((s) => {
-			const base = {
-				id: String(s.id),
-				hoursSubmitted: s.seconds / 3600,
-				submittedAt: s.submittedAt.toISOString(),
-				status: mapShipStatus(s.status),
-			};
-			const approval = reviewerApprovals?.get(s.id);
-			if (approval && s.status === 'REVIEWER_APPROVED') {
-				return { ...base, reviewerApproval: approval };
-			}
-			return base;
-		}),
+		ships: projectShips
+			.filter((s) => s.status !== 'CANCELLED')
+			.map((s) => {
+				const base = {
+					id: String(s.id),
+					hoursSubmitted: s.seconds / 3600,
+					submittedAt: s.submittedAt.toISOString(),
+					status: mapShipStatus(s.status),
+					...(s.status === 'PENDING' ? { approveFields: APPROVE_FIELDS } : {}),
+				};
+				const approval = reviewerApprovals?.get(s.id);
+				if (approval && s.status === 'REVIEWER_APPROVED') {
+					return { ...base, reviewerApproval: approval };
+				}
+				return base;
+			}),
 		metadata: {},
 	};
 }
@@ -115,27 +151,48 @@ function formatOrder(
 }
 
 async function fetchReviewerApprovals(shipIds: number[]) {
-	if (shipIds.length === 0) return new Map<number, { reviewerId: string; adjustedHours: number; feedbackMessage: string; justification: string; timestamp: string }>();
+	if (shipIds.length === 0)
+		return new Map<
+			number,
+			{
+				reviewerId: string;
+				adjustedHours: number;
+				feedbackMessage: string;
+				justification: string;
+				timestamp: string;
+			}
+		>();
 
-	const approvals = await db
+	// A pending-HQ ship's reviewer "approval" is a suggestion awaiting HQ action,
+	// not a materialized review event.
+	const suggestions = await db
 		.select({
-			review: shipReviews,
+			suggestion: shipSuggestions,
 			reviewer: { slackId: users.slackId, hcaId: users.hcaId },
 		})
-		.from(shipReviews)
-		.innerJoin(users, eq(shipReviews.reviewerId, users.id))
-		.where(and(inArray(shipReviews.shipId, shipIds), eq(shipReviews.type, 'APPROVAL')))
-		.orderBy(desc(shipReviews.createdAt));
+		.from(shipSuggestions)
+		.innerJoin(users, eq(shipSuggestions.reviewerId, users.id))
+		.where(inArray(shipSuggestions.shipId, shipIds))
+		.orderBy(desc(shipSuggestions.createdAt));
 
-	const map = new Map<number, { reviewerId: string; adjustedHours: number; feedbackMessage: string; justification: string; timestamp: string }>();
-	for (const { review, reviewer } of approvals) {
-		if (!map.has(review.shipId)) {
-			map.set(review.shipId, {
+	const map = new Map<
+		number,
+		{
+			reviewerId: string;
+			adjustedHours: number;
+			feedbackMessage: string;
+			justification: string;
+			timestamp: string;
+		}
+	>();
+	for (const { suggestion, reviewer } of suggestions) {
+		if (!map.has(suggestion.shipId)) {
+			map.set(suggestion.shipId, {
 				reviewerId: actorIdFromUser(reviewer),
-				adjustedHours: review.adjustedHours ?? 0,
-				feedbackMessage: review.userComment ?? '',
-				justification: review.internalComment ?? '',
-				timestamp: review.createdAt.toISOString(),
+				adjustedHours: suggestion.adjustedHours ?? 0,
+				feedbackMessage: suggestion.userComment ?? '',
+				justification: suggestion.internalComment ?? '',
+				timestamp: suggestion.createdAt.toISOString(),
 			});
 		}
 	}
@@ -254,7 +311,15 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 		.where(statusFilter ?? undefined);
 
 	const projectRows = await db
-		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId, hackatimeId: users.hackatimeId, accessToken: users.accessToken } })
+		.select({
+			project: projects,
+			user: {
+				slackId: users.slackId,
+				hcaId: users.hcaId,
+				hackatimeId: users.hackatimeId,
+				accessToken: users.accessToken,
+			},
+		})
 		.from(projects)
 		.innerJoin(users, eq(projects.userId, users.id))
 		.where(whereClause)
@@ -302,7 +367,15 @@ async function fetchProjects(input: { status?: string; cursor?: string; limit?: 
 async function fetchProjectDetail(input: { projectId: string }) {
 	const id = Number(input.projectId);
 	const [row] = await db
-		.select({ project: projects, user: { slackId: users.slackId, hcaId: users.hcaId, hackatimeId: users.hackatimeId, accessToken: users.accessToken } })
+		.select({
+			project: projects,
+			user: {
+				slackId: users.slackId,
+				hcaId: users.hcaId,
+				hackatimeId: users.hackatimeId,
+				accessToken: users.accessToken,
+			},
+		})
 		.from(projects)
 		.innerJoin(users, eq(projects.userId, users.id))
 		.where(eq(projects.id, id));
@@ -381,7 +454,10 @@ async function fetchProjectTimeline(input: { projectId: string }) {
 				justification: review.internalComment ?? '',
 				timestamp: review.createdAt.toISOString(),
 			});
-		} else if (review.type === 'REJECTION' || review.type === 'HQ_REJECTION') {
+		} else if (review.type === 'REJECTION') {
+			// Only a genuine reviewer rejection is a rejection event. HQ_REJECTION is
+			// a legacy "returned to queue" marker (discarded suggestion) and must not
+			// surface as a rejection of the ship.
 			events.push({
 				type: 'rejection',
 				shipId: String(review.shipId),
@@ -402,8 +478,7 @@ async function fetchProjectTimeline(input: { projectId: string }) {
 	}
 
 	events.sort(
-		(a, b) =>
-			new Date(a.timestamp as string).getTime() - new Date(b.timestamp as string).getTime(),
+		(a, b) => new Date(a.timestamp as string).getTime() - new Date(b.timestamp as string).getTime(),
 	);
 
 	return json({ events });
@@ -418,10 +493,19 @@ async function submitReviewAction(input: {
 	justification?: string;
 	internalMessage?: string;
 	commentText?: string;
+	fields?: Record<string, unknown>;
 }) {
 	const reviewerUserId = await resolveActorId(input.reviewerId);
 	if (reviewerUserId === null)
 		return err(404, 'NOT_FOUND', `Reviewer ${input.reviewerId} not found.`);
+
+	const rawNotesPerHour = input.fields?.notes_per_hour;
+	const notesPerHour =
+		typeof rawNotesPerHour === 'number'
+			? rawNotesPerHour
+			: typeof rawNotesPerHour === 'string' && rawNotesPerHour.trim() !== ''
+				? Number(rawNotesPerHour)
+				: undefined;
 
 	const result = await performReviewAction({
 		shipId: Number(input.shipId),
@@ -429,6 +513,7 @@ async function submitReviewAction(input: {
 		actorId: input.reviewerId,
 		action: input.action,
 		hoursAssigned: input.hoursAssigned,
+		notesPerHour,
 		feedbackMessage: input.feedbackMessage,
 		justification: input.justification,
 		internalMessage: input.internalMessage,

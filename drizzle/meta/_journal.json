@@ -85,6 +85,13 @@
       "when": 1782420811092,
       "tag": "0011_minor_romulus",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1782760371336,
+      "tag": "0012_silky_paper_doll",
+      "breakpoints": true
     }
   ]
 }

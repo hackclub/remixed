@@ -7,6 +7,7 @@ import {
 	orders,
 	projects,
 	shipReviews,
+	shipSuggestions,
 	ships,
 	shopItems,
 	users,
@@ -32,26 +33,23 @@ export const load: PageServerLoad = async () => {
 		.orderBy(ships.submittedAt);
 
 	const shipIds = pendingHqShips.map((s) => s.ship.id);
-	const approvalReviews =
+	// A pending-HQ ship carries a reviewer *suggestion* (not yet a review) for HQ
+	// to authorize or discard.
+	const suggestionRows =
 		shipIds.length > 0
 			? await db
 					.select({
-						review: shipReviews,
+						review: shipSuggestions,
 						reviewer: { id: users.id, username: users.username },
 					})
-					.from(shipReviews)
-					.innerJoin(users, eq(shipReviews.reviewerId, users.id))
-					.where(
-						and(inArray(shipReviews.shipId, shipIds), eq(shipReviews.type, 'APPROVAL')),
-					)
-					.orderBy(desc(shipReviews.createdAt))
+					.from(shipSuggestions)
+					.innerJoin(users, eq(shipSuggestions.reviewerId, users.id))
+					.where(inArray(shipSuggestions.shipId, shipIds))
+					.orderBy(desc(shipSuggestions.createdAt))
 			: [];
 
-	const latestApprovalByShip = new Map<
-		number,
-		(typeof approvalReviews)[number]
-	>();
-	for (const r of approvalReviews) {
+	const latestApprovalByShip = new Map<number, (typeof suggestionRows)[number]>();
+	for (const r of suggestionRows) {
 		if (!latestApprovalByShip.has(r.review.shipId)) {
 			latestApprovalByShip.set(r.review.shipId, r);
 		}
@@ -112,8 +110,14 @@ export const actions: Actions = {
 			return fail(400, { error: 'Invalid ship id' });
 		}
 
-		if (!Number.isFinite(notesPerHour) || notesPerHour < MIN_NOTES_PER_HOUR || notesPerHour > MAX_NOTES_PER_HOUR) {
-			return fail(400, { error: `Notes per hour must be between ${MIN_NOTES_PER_HOUR} and ${MAX_NOTES_PER_HOUR}` });
+		if (
+			!Number.isFinite(notesPerHour) ||
+			notesPerHour < MIN_NOTES_PER_HOUR ||
+			notesPerHour > MAX_NOTES_PER_HOUR
+		) {
+			return fail(400, {
+				error: `Notes per hour must be between ${MIN_NOTES_PER_HOUR} and ${MAX_NOTES_PER_HOUR}`,
+			});
 		}
 
 		if (!userComment || !internalComment) {
@@ -138,6 +142,15 @@ export const actions: Actions = {
 
 		const notesPayout = Math.ceil(adjustedHours * notesPerHour);
 
+		// The reviewer's suggestion is materialized into a real APPROVAL review here,
+		// when HQ acts on it.
+		const [suggestionRow] = await db
+			.select({ suggestion: shipSuggestions })
+			.from(shipSuggestions)
+			.where(eq(shipSuggestions.shipId, shipId))
+			.orderBy(desc(shipSuggestions.createdAt))
+			.limit(1);
+
 		const outcome = await db.transaction(async (tx) => {
 			const [approvedShip] = await tx
 				.update(ships)
@@ -147,6 +160,22 @@ export const actions: Actions = {
 
 			if (!approvedShip) {
 				return { conflict: true as const };
+			}
+
+			if (suggestionRow) {
+				const suggestion = suggestionRow.suggestion;
+				await tx.insert(shipReviews).values({
+					shipId,
+					reviewerId: suggestion.reviewerId,
+					type: 'APPROVAL',
+					userComment: suggestion.userComment,
+					internalComment: suggestion.internalComment,
+					adjustedHours: suggestion.adjustedHours,
+					notesPerHour: suggestion.notesPerHour,
+					createdAt: suggestion.createdAt,
+					updatedAt: suggestion.updatedAt,
+				});
+				await tx.delete(shipSuggestions).where(eq(shipSuggestions.id, suggestion.id));
 			}
 
 			const [reviewRow] = await tx
@@ -301,9 +330,7 @@ export const actions: Actions = {
 		const existing = await db
 			.select({ id: shipReviews.id })
 			.from(shipReviews)
-			.where(
-				and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'HQ_APPROVAL')),
-			);
+			.where(and(eq(shipReviews.shipId, shipId), eq(shipReviews.type, 'HQ_APPROVAL')));
 
 		if (existing.length === 0) {
 			await db.insert(shipReviews).values({
@@ -373,9 +400,7 @@ export const actions: Actions = {
 			const awardedRows = await tx
 				.select({ delta: notesLedger.delta })
 				.from(notesLedger)
-				.where(
-					and(eq(notesLedger.refId, shipId), eq(notesLedger.reason, 'ship_approved')),
-				);
+				.where(and(eq(notesLedger.refId, shipId), eq(notesLedger.reason, 'ship_approved')));
 			const awardedNotes = awardedRows.reduce((sum, row) => sum + row.delta, 0);
 
 			// Cancel the ship
@@ -415,12 +440,7 @@ export const actions: Actions = {
 						.select({ order: orders, item: shopItems })
 						.from(orders)
 						.innerJoin(shopItems, eq(orders.itemId, shopItems.id))
-						.where(
-							and(
-								eq(orders.userId, shipInfo.user.id),
-								eq(orders.status, 'PENDING'),
-							),
-						)
+						.where(and(eq(orders.userId, shipInfo.user.id), eq(orders.status, 'PENDING')))
 						.orderBy(desc(orders.createdAt));
 
 					let balance = updatedUser.notesBalance;
@@ -528,10 +548,7 @@ export const actions: Actions = {
 				await uploadToS3(key, bytes, baseType);
 				const newUrl = getPublicUrl(key);
 
-				await db
-					.update(projects)
-					.set({ coverArt: newUrl })
-					.where(eq(projects.id, project.id));
+				await db.update(projects).set({ coverArt: newUrl }).where(eq(projects.id, project.id));
 
 				succeeded++;
 			} catch (err) {
@@ -580,7 +597,9 @@ export const actions: Actions = {
 			}
 		}
 
-		return { backfillHackatimeResult: { total: usersToBackfill.length, succeeded, failed, errors } };
+		return {
+			backfillHackatimeResult: { total: usersToBackfill.length, succeeded, failed, errors },
+		};
 	},
 	hqReject: async ({ request, locals }) => {
 		const data = await request.formData();
@@ -592,23 +611,17 @@ export const actions: Actions = {
 			return fail(400, { error: 'Ship not available for HQ rejection' });
 		}
 
+		// Discarding the suggestion returns the ship to the review queue. It is not a
+		// rejection, so no review/timeline event is created.
 		await Promise.all([
-			db
-				.update(ships)
-				.set({ status: 'PENDING', feedback: null })
-				.where(eq(ships.id, shipId)),
-			db.insert(shipReviews).values({
-				shipId,
-				reviewerId: locals.user!.id,
-				type: 'HQ_REJECTION',
-				isInternal: true,
-			}),
+			db.update(ships).set({ status: 'PENDING', feedback: null }).where(eq(ships.id, shipId)),
+			db.delete(shipSuggestions).where(eq(shipSuggestions.shipId, shipId)),
 			recordAuditLog(db, {
 				actorUserId: locals.user!.id,
 				category: 'SHIP_REVIEW',
 				entityType: 'ship',
 				entityId: shipId,
-				changeType: 'hq_reject',
+				changeType: 'discard_suggestion',
 				data: {},
 			}),
 		]);
