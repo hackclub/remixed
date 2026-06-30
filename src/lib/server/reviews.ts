@@ -7,7 +7,7 @@ import {
 	users,
 	notesLedger,
 } from '$lib/server/db/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { eq, and, sql, desc, isNull } from 'drizzle-orm';
 import { decrypt } from '$lib/server/crypto';
 import { recordAuditLog } from '$lib/server/audit';
 import { NOTES_PER_HOUR, MIN_NOTES_PER_HOUR, MAX_NOTES_PER_HOUR, formatHours } from '$lib';
@@ -263,7 +263,7 @@ export async function performReviewAction(
 			})
 			.from(shipSuggestions)
 			.innerJoin(users, eq(shipSuggestions.reviewerId, users.id))
-			.where(eq(shipSuggestions.shipId, shipId))
+			.where(and(eq(shipSuggestions.shipId, shipId), isNull(shipSuggestions.discardedAt)))
 			.orderBy(desc(shipSuggestions.createdAt))
 			.limit(1);
 
@@ -431,12 +431,16 @@ export async function performReviewAction(
 		if (shipInfo.ship.status !== 'REVIEWER_APPROVED')
 			return fail(400, 'VALIDATION_ERROR', 'Ship is not pending HQ review.');
 
-		// Discarding a suggestion simply drops it and returns the ship to the review
-		// queue. It is NOT a rejection of the ship, so no review/timeline event is
-		// created — the suggestion never was a review.
+		// Discarding a suggestion returns the ship to the review queue. It is NOT a
+		// rejection of the ship. The suggestion is soft-deleted (kept with a discard
+		// marker) so it remains visible in history as a "discarded approval" rather
+		// than vanishing.
 		await Promise.all([
 			db.update(ships).set({ status: 'PENDING', feedback: null }).where(eq(ships.id, shipId)),
-			db.delete(shipSuggestions).where(eq(shipSuggestions.shipId, shipId)),
+			db
+				.update(shipSuggestions)
+				.set({ discardedAt: new Date(), discardedById: reviewerUserId })
+				.where(and(eq(shipSuggestions.shipId, shipId), isNull(shipSuggestions.discardedAt))),
 			recordAuditLog(db, {
 				actorUserId: reviewerUserId,
 				category: 'SHIP_REVIEW',
