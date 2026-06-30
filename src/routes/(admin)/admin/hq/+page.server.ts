@@ -12,7 +12,7 @@ import {
 	shopItems,
 	users,
 } from '$lib/server/db/schema';
-import { and, eq, inArray, desc, sql, isNotNull } from 'drizzle-orm';
+import { and, eq, inArray, desc, sql, isNotNull, isNull } from 'drizzle-orm';
 import { sendMessage } from '$lib/server/slack/send_message';
 import { sendReviewDM } from '$lib/server/slack/review_message';
 import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
@@ -147,7 +147,7 @@ export const actions: Actions = {
 		const [suggestionRow] = await db
 			.select({ suggestion: shipSuggestions })
 			.from(shipSuggestions)
-			.where(eq(shipSuggestions.shipId, shipId))
+			.where(and(eq(shipSuggestions.shipId, shipId), isNull(shipSuggestions.discardedAt)))
 			.orderBy(desc(shipSuggestions.createdAt))
 			.limit(1);
 
@@ -612,10 +612,14 @@ export const actions: Actions = {
 		}
 
 		// Discarding the suggestion returns the ship to the review queue. It is not a
-		// rejection, so no review/timeline event is created.
+		// rejection. The suggestion is soft-deleted (kept with a discard marker) so it
+		// stays visible in history as a "discarded approval".
 		await Promise.all([
 			db.update(ships).set({ status: 'PENDING', feedback: null }).where(eq(ships.id, shipId)),
-			db.delete(shipSuggestions).where(eq(shipSuggestions.shipId, shipId)),
+			db
+				.update(shipSuggestions)
+				.set({ discardedAt: new Date(), discardedById: locals.user!.id })
+				.where(and(eq(shipSuggestions.shipId, shipId), isNull(shipSuggestions.discardedAt))),
 			recordAuditLog(db, {
 				actorUserId: locals.user!.id,
 				category: 'SHIP_REVIEW',

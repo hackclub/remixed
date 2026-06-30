@@ -129,6 +129,11 @@ export const shipSuggestions = pgTable('ship_suggestions', {
 	internalComment: text('internal_comment'),
 	adjustedHours: real('adjusted_hours'),
 	notesPerHour: integer('notes_per_hour'),
+	// A discarded suggestion is kept (soft-deleted) so the community review
+	// remains visible in history as a "discarded approval" rather than vanishing.
+	// A live, pending-HQ suggestion has discardedAt IS NULL.
+	discardedAt: timestamp('discarded_at'),
+	discardedById: integer('discarded_by_id').references(() => users.id),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

@@ -10,7 +10,8 @@ import {
 	shopItems,
 	orders,
 } from '$lib/server/db/schema';
-import { eq, and, sql, desc, asc, inArray, or, ilike, count } from 'drizzle-orm';
+import { eq, and, sql, desc, asc, inArray, or, ilike, count, isNull, isNotNull } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { env } from '$env/dynamic/private';
 import { decrypt } from '$lib/server/crypto';
 import { performReviewAction, performUpdateReview } from '$lib/server/reviews';
@@ -163,8 +164,8 @@ async function fetchReviewerApprovals(shipIds: number[]) {
 			}
 		>();
 
-	// A pending-HQ ship's reviewer "approval" is a suggestion awaiting HQ action,
-	// not a materialized review event.
+	// A pending-HQ ship's reviewer "approval" is a live (non-discarded) suggestion
+	// awaiting HQ action, not a materialized review event.
 	const suggestions = await db
 		.select({
 			suggestion: shipSuggestions,
@@ -172,7 +173,7 @@ async function fetchReviewerApprovals(shipIds: number[]) {
 		})
 		.from(shipSuggestions)
 		.innerJoin(users, eq(shipSuggestions.reviewerId, users.id))
-		.where(inArray(shipSuggestions.shipId, shipIds))
+		.where(and(inArray(shipSuggestions.shipId, shipIds), isNull(shipSuggestions.discardedAt)))
 		.orderBy(desc(shipSuggestions.createdAt));
 
 	const map = new Map<
@@ -197,6 +198,40 @@ async function fetchReviewerApprovals(shipIds: number[]) {
 		}
 	}
 	return map;
+}
+
+/**
+ * Discarded (soft-deleted) reviewer suggestions, surfaced so the timeline can
+ * show a "discarded approval" — the community review and who unauthorized it —
+ * instead of the discard silently vanishing. Unlike a live suggestion, there
+ * may be several per ship (each discard kept as history).
+ */
+async function fetchDiscardedApprovals(shipIds: number[]) {
+	if (shipIds.length === 0) return [];
+
+	const discarder = alias(users, 'discarder');
+	const rows = await db
+		.select({
+			suggestion: shipSuggestions,
+			reviewer: { slackId: users.slackId, hcaId: users.hcaId },
+			discarder: { slackId: discarder.slackId, hcaId: discarder.hcaId },
+		})
+		.from(shipSuggestions)
+		.innerJoin(users, eq(shipSuggestions.reviewerId, users.id))
+		.leftJoin(discarder, eq(shipSuggestions.discardedById, discarder.id))
+		.where(and(inArray(shipSuggestions.shipId, shipIds), isNotNull(shipSuggestions.discardedAt)))
+		.orderBy(asc(shipSuggestions.createdAt));
+
+	return rows.map((r) => ({
+		id: r.suggestion.id,
+		shipId: r.suggestion.shipId,
+		reviewerId: actorIdFromUser(r.reviewer),
+		discardedById: r.discarder?.slackId ?? null,
+		adjustedHours: r.suggestion.adjustedHours ?? 0,
+		feedbackMessage: r.suggestion.userComment ?? '',
+		justification: r.suggestion.internalComment ?? '',
+		timestamp: (r.suggestion.discardedAt ?? r.suggestion.createdAt).toISOString(),
+	}));
 }
 
 async function resolveHackatimeIds(
@@ -495,6 +530,25 @@ async function fetchProjectTimeline(input: { projectId: string }) {
 			feedbackMessage: approval.feedbackMessage,
 			justification: approval.justification,
 			timestamp: approval.timestamp,
+		});
+	}
+
+	// Discarded (unauthorized) community reviews are kept as history. Surface each
+	// as a `discarded_approval` event — Sidekick renders a "Discarded by" pill.
+	// These are emitted as their own event type (not `approval`) so they are never
+	// mistaken for a live pending approval.
+	const discardedApprovals = await fetchDiscardedApprovals(projectShips.map((s) => s.id));
+	for (const d of discardedApprovals) {
+		events.push({
+			type: 'discarded_approval',
+			id: `disc:${d.id}`,
+			shipId: String(d.shipId),
+			actorId: d.reviewerId,
+			discardedByActorId: d.discardedById ?? d.reviewerId,
+			hoursAssigned: d.adjustedHours,
+			feedbackMessage: d.feedbackMessage,
+			justification: d.justification,
+			timestamp: d.timestamp,
 		});
 	}
 

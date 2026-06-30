@@ -7,10 +7,12 @@ import {
 	deletedShips,
 	notesLedger,
 	projects,
+	shipReviews,
+	shipSuggestions,
 	ships,
 	users,
 } from '$lib/server/db/schema';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { NOTES_PER_HOUR } from '$lib';
 import { sendUpdatedBalance } from '$lib/server/slack/send_updated_balance';
 
@@ -34,9 +36,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		pendingShips: projectShips.filter(({ ship }) => ship.status === 'PENDING'),
-		reviewerApprovedShips: projectShips.filter(
-			({ ship }) => ship.status === 'REVIEWER_APPROVED',
-		),
+		reviewerApprovedShips: projectShips.filter(({ ship }) => ship.status === 'REVIEWER_APPROVED'),
 		reviewedShips: projectShips.filter(
 			({ ship }) => ship.status === 'APPROVED' || ship.status === 'REJECTED',
 		),
@@ -144,9 +144,7 @@ export const actions: Actions = {
 				const awardedRows = await tx
 					.select({ delta: notesLedger.delta })
 					.from(notesLedger)
-					.where(
-						and(eq(notesLedger.refId, shipId), eq(notesLedger.reason, 'ship_approved')),
-					);
+					.where(and(eq(notesLedger.refId, shipId), eq(notesLedger.reason, 'ship_approved')));
 
 				awardedNotes = awardedRows.reduce((sum, row) => sum + row.delta, 0);
 
@@ -176,10 +174,26 @@ export const actions: Actions = {
 				}
 			}
 
+			// Return the ship to a clean PENDING state. The materialized verdict
+			// reviews (reviewer APPROVAL + HQ_APPROVAL) only describe the now-undone
+			// approval, so they must be removed — otherwise they linger as phantom
+			// approvals that resurface downstream (e.g. duplicate pending-HQ pills in
+			// Sidekick). Any live suggestion is soft-discarded so it stays in history.
 			await tx
-				.update(ships)
-				.set({ status: 'PENDING', feedback: null })
-				.where(eq(ships.id, shipId));
+				.delete(shipReviews)
+				.where(
+					and(
+						eq(shipReviews.shipId, shipId),
+						inArray(shipReviews.type, ['APPROVAL', 'HQ_APPROVAL']),
+					),
+				);
+
+			await tx
+				.update(shipSuggestions)
+				.set({ discardedAt: new Date(), discardedById: locals.user!.id })
+				.where(and(eq(shipSuggestions.shipId, shipId), isNull(shipSuggestions.discardedAt)));
+
+			await tx.update(ships).set({ status: 'PENDING', feedback: null }).where(eq(ships.id, shipId));
 
 			await recordAuditLog(tx, {
 				actorUserId: locals.user!.id,
@@ -190,8 +204,7 @@ export const actions: Actions = {
 				data: {
 					previousStatus: shipInfo.ship.status,
 					awardedNotes,
-					revertedCommittedSeconds:
-						shipInfo.ship.status === 'APPROVED' ? shipInfo.ship.seconds : 0,
+					revertedCommittedSeconds: shipInfo.ship.status === 'APPROVED' ? shipInfo.ship.seconds : 0,
 				},
 			});
 
